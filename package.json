@@ -1,0 +1,28 @@
+{
+  "name": "departure-aa",
+  "version": "0.1.0",
+  "private": true,
+  "description": "出发AA记账 - 多人场景记账小程序 monorepo",
+  "scripts": {
+    "dev:server": "pnpm --filter @departure/server start:dev",
+    "build:server": "pnpm --filter @departure/server build",
+    "build:shared": "pnpm --filter @departure/shared build",
+    "dev:shared": "pnpm --filter @departure/shared dev",
+    "lint": "pnpm -r lint",
+    "gen-asset": "node scripts/gen-asset.js"
+  },
+  "devDependencies": {
+    "@types/multer": "^2.2.0",
+    "@types/uuid": "^11.0.0",
+    "prettier": "^3.2.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1109.0",
+    "uuid": "^14.0.1"
+  }
+}

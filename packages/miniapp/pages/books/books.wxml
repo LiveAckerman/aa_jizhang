@@ -1,0 +1,20 @@
+<view class="tab-page">
+  <view class="page-header">
+    <text class="page-title">账本</text>
+  </view>
+
+  <!-- 空状态 -->
+  <view wx:if="{{!loading && books.length === 0}}" class="empty-state">
+    <image class="empty-illustration" src="/assets/illustrations/empty-book.png" mode="aspectFit" />
+    <text class="empty-title">还没有账本</text>
+    <text class="empty-desc">创建第一个账本，开始和朋友一起记账</text>
+    <button class="btn-primary create-btn">创建账本</button>
+  </view>
+
+  <!-- 账本列表 -->
+  <view wx:else class="book-list">
+    <view wx:for="{{books}}" wx:key="id" class="glass-card book-item">
+      <text class="book-name">{{item.name}}</text>
+    </view>
+  </view>
+</view>

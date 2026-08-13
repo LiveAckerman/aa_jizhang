@@ -1,0 +1,19 @@
+.page-header {
+  padding: 24rpx 0 32rpx;
+}
+
+.page-title {
+  font-size: 48rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.placeholder {
+  padding: 80rpx 40rpx;
+  text-align: center;
+}
+
+.placeholder-text {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+}

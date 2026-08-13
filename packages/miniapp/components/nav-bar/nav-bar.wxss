@@ -1,0 +1,65 @@
+.nav-bar {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.nav-bar--fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+.nav-bar__content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 16rpx;
+}
+
+/* 左侧区域 */
+.nav-bar__left {
+  display: flex;
+  align-items: center;
+  min-width: 64rpx;
+  z-index: 2;
+}
+
+.nav-bar__back {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.nav-bar__back--hover {
+  background: rgba(47, 65, 89, 0.06);
+}
+
+/* 中间标题：绝对居中，避免被左右挤偏 */
+.nav-bar__title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 34rpx;
+  font-weight: 600;
+  z-index: 1;
+  /* 两侧留出安全距离，防止标题过长压到按钮 */
+  padding: 0 120rpx;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+/* 右侧区域 */
+.nav-bar__right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  z-index: 2;
+}

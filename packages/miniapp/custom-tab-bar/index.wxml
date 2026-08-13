@@ -1,0 +1,23 @@
+<view class="tabbar-wrap">
+  <view class="tabbar glass">
+    <!-- 滑动高亮 pill：通过 translateX 定位到激活项 -->
+    <view
+      class="pill"
+      style="width: {{100 / list.length}}%; transform: translateX({{selected * 100}}%);"
+    >
+      <view class="pill-inner"></view>
+    </view>
+
+    <!-- tab 项 -->
+    <view
+      wx:for="{{list}}"
+      wx:key="key"
+      class="tab-item {{selected === index ? 'active' : ''}}"
+      data-index="{{index}}"
+      bindtap="onTap"
+    >
+      <view class="tab-icon icon-{{item.key}}"></view>
+      <text class="tab-text">{{item.text}}</text>
+    </view>
+  </view>
+</view>

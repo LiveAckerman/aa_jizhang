@@ -1,0 +1,46 @@
+<view class="tab-page">
+  <!-- 个人信息卡片 -->
+  <view class="glass-card profile-card">
+    <view class="avatar-container" bindtap="chooseAvatar">
+      <image class="avatar" src="{{user.avatar || '/assets/default-avatar.png'}}" mode="aspectFill" />
+      <view class="avatar-edit-tip">点击修改</view>
+    </view>
+    <view class="profile-info">
+      <text class="nickname">{{user.nickname || '未设置昵称'}}</text>
+      <text class="user-id">ID: {{user.id || '--'}}</text>
+    </view>
+  </view>
+
+  <!-- 账号信息 -->
+  <view class="glass-card menu-group">
+    <view class="menu-item" bindtap="editNickname">
+      <text class="menu-label">昵称</text>
+      <view class="menu-right">
+        <text class="menu-value">{{user.nickname || '未设置'}}</text>
+        <text class="menu-arrow">›</text>
+      </view>
+    </view>
+    <view class="menu-item" bindtap="chooseAvatar">
+      <text class="menu-label">头像</text>
+      <view class="menu-right">
+        <image class="menu-avatar" src="{{user.avatar || '/assets/default-avatar.png'}}" mode="aspectFill" />
+        <text class="menu-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 关于 -->
+  <view class="glass-card menu-group">
+    <view class="menu-item">
+      <text class="menu-label">版本信息</text>
+      <text class="menu-value">v1.0.0</text>
+    </view>
+    <view class="menu-item" bindtap="goToChangelog">
+      <text class="menu-label">更新日志</text>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 退出登录 -->
+  <button class="logout-btn" bindtap="handleLogout">退出登录</button>
+</view>

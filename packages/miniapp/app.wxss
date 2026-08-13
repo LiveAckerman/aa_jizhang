@@ -1,0 +1,71 @@
+/**
+ * 全局样式 - 出发AA记账
+ * 品牌色 + Apple 磨砂玻璃通用类
+ */
+
+page {
+  /* 品牌色变量 */
+  --color-primary: #4097a9;
+  --color-secondary: #f4dfcc;
+  --color-accent: #fa9583;
+  --color-dark: #2f4159;
+  --color-wechat: #07c160;
+
+  /* 文字层级 */
+  --text-primary: #2f4159;
+  --text-secondary: #8091a5;
+  --text-tertiary: #c4c4c4;
+
+  /* 背景 */
+  --bg-page: #f2f2f7;
+  --bg-card: rgba(255, 255, 255, 0.85);
+
+  background-color: var(--bg-page);
+  font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif;
+  color: var(--text-primary);
+  font-size: 28rpx;
+  line-height: 1.5;
+}
+
+/* 磨砂玻璃卡片通用类 */
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 2rpx solid rgba(255, 255, 255, 0.6);
+  border-radius: 32rpx;
+  box-shadow: 0 16rpx 64rpx rgba(47, 65, 89, 0.08);
+}
+
+/* 主按钮 */
+.btn-primary {
+  background: var(--color-accent);
+  color: #ffffff;
+  border-radius: 48rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+/* 通用容器 */
+.container {
+  padding: 32rpx;
+  box-sizing: border-box;
+}
+
+/* tab 页容器：底部留出悬浮 nav 的空间（nav 高度 120 + 间距 24 + 安全区） */
+.tab-page {
+  padding: 32rpx 32rpx calc(200rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+/* flex 工具类 */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}

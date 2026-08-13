@@ -1,0 +1,30 @@
+.doc-page {
+  min-height: 100vh;
+}
+
+.doc-content {
+  padding: 8rpx 32rpx 32rpx;
+  box-sizing: border-box;
+}
+
+.doc-header {
+  display: flex;
+  flex-direction: column;
+  padding: 24rpx 8rpx 32rpx;
+}
+
+.doc-title {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #2f4159;
+  margin-bottom: 12rpx;
+}
+
+.doc-meta {
+  font-size: 24rpx;
+  color: #8091a5;
+}
+
+.doc-body {
+  padding: 40rpx;
+}

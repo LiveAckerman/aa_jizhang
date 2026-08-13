@@ -1,0 +1,82 @@
+<view class="profile-page">
+  <!-- 用户信息卡片 -->
+  <view class="user-card">
+    <!-- 头像 -->
+    <view class="avatar-section" bindtap="chooseAvatar">
+      <image class="avatar" src="{{user.avatar}}" mode="aspectFill" />
+      <view class="avatar-mask" wx:if="{{uploading}}">
+        <text class="loading-text">上传中...</text>
+      </view>
+      <view class="edit-icon">
+        <text class="iconfont icon-camera"></text>
+      </view>
+    </view>
+
+    <!-- 用户信息 -->
+    <view class="user-info">
+      <text class="nickname">{{user.nickname}}</text>
+      <text class="user-id">ID: {{user.id}}</text>
+    </view>
+  </view>
+
+  <!-- 功能列表 -->
+  <view class="section">
+    <view class="section-title">账号信息</view>
+    <view class="list-container">
+      <view class="list-item" bindtap="editNickname">
+        <view class="list-item-content">
+          <text class="list-item-icon">👤</text>
+          <text class="list-item-label">昵称</text>
+        </view>
+        <view class="list-item-right">
+          <text class="list-item-value">{{user.nickname}}</text>
+          <text class="list-item-arrow">›</text>
+        </view>
+      </view>
+
+      <view class="list-item" bindtap="chooseAvatar">
+        <view class="list-item-content">
+          <text class="list-item-icon">📷</text>
+          <text class="list-item-label">头像</text>
+        </view>
+        <view class="list-item-right">
+          <image class="mini-avatar" src="{{user.avatar}}" mode="aspectFill" />
+          <text class="list-item-arrow">›</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">关于</view>
+    <view class="list-container">
+      <view class="list-item" bindtap="goToAbout">
+        <view class="list-item-content">
+          <text class="list-item-icon">ℹ️</text>
+          <text class="list-item-label">关于我们</text>
+        </view>
+        <view class="list-item-right">
+          <text class="list-item-arrow">›</text>
+        </view>
+      </view>
+
+      <view class="list-item" bindtap="goToVersion">
+        <view class="list-item-content">
+          <text class="list-item-icon">📱</text>
+          <text class="list-item-label">版本信息</text>
+        </view>
+        <view class="list-item-right">
+          <text class="list-item-value">v1.0.0</text>
+          <text class="list-item-arrow">›</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 退出登录 -->
+  <view class="logout-section">
+    <view class="logout-btn" bindtap="logout">
+      <text>退出登录</text>
+    </view>
+  </view>
+</view>

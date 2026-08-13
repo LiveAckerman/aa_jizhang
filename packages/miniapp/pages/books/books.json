@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "账本",
+  "navigationStyle": "default",
+  "backgroundColor": "#f2f2f7",
+  "enablePullDownRefresh": true
+}

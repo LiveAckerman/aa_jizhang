@@ -1,0 +1,116 @@
+/* 外层：固定底部，左右+底部留间距，悬浮式 */
+.tabbar-wrap {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* 底部留出安全区 + 间距 */
+  padding: 0 32rpx calc(env(safe-area-inset-bottom) + 24rpx);
+  z-index: 999;
+  pointer-events: none;
+}
+
+/* 磨砂玻璃导航条 */
+.tabbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 120rpx;
+  border-radius: 60rpx;
+  pointer-events: auto;
+  overflow: hidden;
+}
+
+/* 磨砂材质 */
+.glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border: 1rpx solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 16rpx 48rpx rgba(47, 65, 89, 0.16);
+}
+
+/* 滑动高亮 pill：绝对定位，transform 平滑滑动 */
+.pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  /* 关键：弹性缓动，切换时"弹"过去 */
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+/* pill 内部真正的高亮胶囊（留白，不占满整格） */
+.pill-inner {
+  width: calc(100% - 24rpx);
+  height: 88rpx;
+  border-radius: 44rpx;
+  background: rgba(64, 151, 169, 0.14);
+  border: 1rpx solid rgba(64, 151, 169, 0.2);
+}
+
+/* tab 项 */
+.tab-item {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+}
+
+/* 图标：用 mask 实现单色矢量图标，颜色由 background-color 控制 */
+.tab-icon {
+  width: 44rpx;
+  height: 44rpx;
+  background-color: #8091a5;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+/* 文字 */
+.tab-text {
+  font-size: 22rpx;
+  color: #8091a5;
+  transition: color 0.3s ease;
+  line-height: 1;
+}
+
+/* 激活态：图标和文字变品牌色 */
+.tab-item.active .tab-icon {
+  background-color: #4097a9;
+  transform: scale(1.05);
+}
+
+.tab-item.active .tab-text {
+  color: #4097a9;
+  font-weight: 600;
+}
+
+/* ===== 矢量图标（SVG mask，颜色由 background-color 控制）===== */
+
+/* 账本：翻开的书 */
+.icon-book {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 7v14'/%3E%3Cpath d='M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z'/%3E%3C/svg%3E") no-repeat center / contain;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 7v14'/%3E%3Cpath d='M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+
+/* 统计：柱状图 */
+.icon-chart {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='20' x2='18' y2='10'/%3E%3Cline x1='12' y1='20' x2='12' y2='4'/%3E%3Cline x1='6' y1='20' x2='6' y2='14'/%3E%3C/svg%3E") no-repeat center / contain;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='20' x2='18' y2='10'/%3E%3Cline x1='12' y1='20' x2='12' y2='4'/%3E%3Cline x1='6' y1='20' x2='6' y2='14'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+
+/* 我的：人形 */
+.icon-user {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E") no-repeat center / contain;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+
+

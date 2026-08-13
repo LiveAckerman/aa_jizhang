@@ -1,0 +1,8 @@
+<view class="tab-page">
+  <view class="page-header">
+    <text class="page-title">统计</text>
+  </view>
+  <view class="glass-card placeholder">
+    <text class="placeholder-text">统计功能开发中</text>
+  </view>
+</view>

@@ -1,0 +1,14 @@
+<view class="doc-page">
+  <nav-bar title="{{title}}" fallback-url="/pages/profile/profile"></nav-bar>
+
+  <view class="doc-content">
+    <view class="doc-header">
+      <text class="doc-title">{{title}}</text>
+      <text class="doc-meta">版本 {{version}} · 更新于 {{updatedAt}}</text>
+    </view>
+
+    <view class="glass-card doc-body">
+      <rich-text nodes="{{content}}"></rich-text>
+    </view>
+  </view>
+</view>

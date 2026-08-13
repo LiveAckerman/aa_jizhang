@@ -1,0 +1,34 @@
+<view
+  class="nav-bar {{fixed ? 'nav-bar--fixed' : ''}}"
+  style="background: {{background}};"
+>
+  <!-- 状态栏占位 -->
+  <view style="height: {{statusBarHeight}}px;"></view>
+
+  <!-- 导航栏内容 -->
+  <view class="nav-bar__content" style="height: {{navBarHeight}}px;">
+    <!-- 左侧：返回按钮 / 自定义左插槽 -->
+    <view class="nav-bar__left">
+      <view
+        wx:if="{{showBack}}"
+        class="nav-bar__back"
+        hover-class="nav-bar__back--hover"
+        bindtap="onBack"
+      >
+        <van-icon name="arrow-left" size="22px" color="{{color}}" />
+      </view>
+      <slot wx:else name="left"></slot>
+    </view>
+
+    <!-- 中间：标题 -->
+    <view class="nav-bar__title" style="color: {{color}};">{{title}}</view>
+
+    <!-- 右侧：自定义操作插槽 -->
+    <view class="nav-bar__right">
+      <slot name="right"></slot>
+    </view>
+  </view>
+</view>
+
+<!-- 占位块：fixed 时撑开页面顶部空间 -->
+<view wx:if="{{fixed}}" style="height: {{totalHeight}}px;"></view>
