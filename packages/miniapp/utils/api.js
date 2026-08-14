@@ -44,8 +44,11 @@ const api = {
   exchangeRates: () => request({ url: '/exchange-rates' }),
 
   // ===== 统计 =====
-  statsOverview: (range, scope) =>
-    request({ url: `/stats/overview?range=${range}&scope=${scope}` }),
+  statsOverview: (range, scope, bookId) => {
+    let q = `?range=${range}&scope=${scope}`
+    if (bookId && bookId !== 'all') q += `&bookId=${encodeURIComponent(bookId)}`
+    return request({ url: `/stats/overview${q}` })
+  },
 }
 
 module.exports = api

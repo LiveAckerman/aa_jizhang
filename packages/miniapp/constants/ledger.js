@@ -39,4 +39,26 @@ CATEGORIES.forEach((c) => (CATEGORY_MAP[c.key] = c))
 const SCENE_MAP = {}
 SCENES.forEach((s) => (SCENE_MAP[s.key] = s))
 
-module.exports = { SCENES, CATEGORIES, SPLIT_METHODS, CATEGORY_MAP, SCENE_MAP }
+/** 场景对应的分享卡片图（微信 onShareAppMessage.imageUrl，5:4 会自动裁） */
+const SCENE_SHARE_IMAGES = {
+  travel: 'https://cdn.ljw44.com/images/2026-08/share-travel.png',
+  dinner: 'https://cdn.ljw44.com/images/2026-08/share-dinner.png',
+  rent: 'https://cdn.ljw44.com/images/2026-08/share-rent.png',
+  activity: 'https://cdn.ljw44.com/images/2026-08/share-activity.png',
+  custom: 'https://cdn.ljw44.com/images/2026-08/share-custom.png',
+}
+
+/** 按场景取分享图；未匹配则 fallback 到 custom */
+function shareImageForScene(scene) {
+  return SCENE_SHARE_IMAGES[scene] || SCENE_SHARE_IMAGES.custom
+}
+
+module.exports = {
+  SCENES,
+  CATEGORIES,
+  SPLIT_METHODS,
+  CATEGORY_MAP,
+  SCENE_MAP,
+  SCENE_SHARE_IMAGES,
+  shareImageForScene,
+}

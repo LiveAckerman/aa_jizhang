@@ -1,6 +1,6 @@
 const app = getApp()
 const api = require('../../utils/api')
-const { CATEGORY_MAP } = require('../../constants/ledger')
+const { CATEGORY_MAP, shareImageForScene } = require('../../constants/ledger')
 const { handleBookAction } = require('../../utils/book-actions')
 
 Page({
@@ -123,10 +123,12 @@ Page({
   onShareAppMessage() {
     const book = this.data.book || {}
     const code = book.inviteCode || ''
+    // 优先自定义封面；否则按场景取分享专属图；再兜底 custom
+    const imageUrl = this.data.coverUrl || shareImageForScene(book.scene)
     return {
       title: `邀请你加入「${book.name || '账本'}」一起记账`,
       path: `/pages/join/join?code=${code}`,
-      imageUrl: this.data.coverUrl || '',
+      imageUrl,
     }
   },
 })

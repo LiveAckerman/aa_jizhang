@@ -34,10 +34,16 @@ export class StatsService {
    *   mine  → 我承担的金额（共享账取我在 splits 里的份额；私密账取我作为 creator 的全额）
    *   team  → 我参与的所有账本里，所有共享账单的总额（团队开销全景，不含私密）
    */
-  async overview(userId: string, range: StatsRange, scope: StatsScope) {
-    // 1. 拉出我参与的账本
+  async overview(userId: string, range: StatsRange, scope: StatsScope, bookId?: string) {
+    // 1. 拉出我参与的账本；如果传了 bookId，则先校验成员身份
     const members = await this.memberRepo.find({ where: { userId } })
-    const bookIds = members.map((m) => m.bookId)
+    let bookIds = members.map((m) => m.bookId)
+    if (bookId) {
+      if (!bookIds.includes(bookId)) {
+        return this.emptyResult(range) // 非成员：返回空
+      }
+      bookIds = [bookId]
+    }
     if (bookIds.length === 0) {
       return this.emptyResult(range)
     }

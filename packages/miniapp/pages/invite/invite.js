@@ -1,5 +1,6 @@
 const app = getApp()
 const api = require('../../utils/api')
+const { shareImageForScene } = require('../../constants/ledger')
 
 Page({
   data: {
@@ -65,10 +66,11 @@ Page({
 
   onShareAppMessage() {
     const book = this.data.book || {}
+    const imageUrl = this.data.coverUrl || shareImageForScene(book.scene)
     return {
       title: `邀请你加入「${book.name || '账本'}」一起记账`,
       path: `/pages/join/join?code=${this.data.inviteCode}`,
-      imageUrl: this.data.coverUrl || '',
+      imageUrl,
     }
   },
 })

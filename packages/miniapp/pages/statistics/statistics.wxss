@@ -244,3 +244,24 @@ page {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.55; }
 }
+
+/* 账本筛选 picker */
+.book-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10rpx;
+  padding: 14rpx 24rpx;
+  border-radius: 32rpx;
+  background: rgba(64, 151, 169, 0.10);
+  margin-bottom: 24rpx;
+}
+
+.book-picker-label {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--color-primary);
+  max-width: 320rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

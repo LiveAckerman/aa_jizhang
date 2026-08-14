@@ -33,16 +33,18 @@ Page({
     prevDeltaText: '',
     categories: [],
     hasMonthly: false,
-    loading: true, // 首次进入或切换筛选时展示骨架屏
-    // 图表初始化占位（ec-canvas 需要）
-    ec: {
-      lazyLoad: true, // 使用 lazy load 避免尺寸未就绪时初始化
-    },
+    loading: true,
+    ec: { lazyLoad: true },
     monthly: [],
+
+    // 账本筛选
+    bookOptions: [{ id: 'all', name: '全部账本' }], // picker 数据源
+    bookIndex: 0,   // 当前 picker 选中项
+    bookId: 'all',
+    bookLabel: '全部账本',
   },
 
   onLoad() {
-    // ec-canvas 组件引用
     this.chartInited = false
   },
 
@@ -53,6 +55,33 @@ Page({
     }
     wx.setNavigationBarTitle({ title: '统计' })
     setTabBarSelected(this, 1)
+    this.loadBooks()
+    this.load()
+  },
+
+  async loadBooks() {
+    try {
+      const books = await api.listBooks()
+      const opts = [{ id: 'all', name: '全部账本' }].concat(
+        (books || []).map((b) => ({ id: b.id, name: b.name })),
+      )
+      // 保留当前选中项
+      const idx = Math.max(0, opts.findIndex((o) => o.id === this.data.bookId))
+      this.setData({ bookOptions: opts, bookIndex: idx })
+    } catch (e) {}
+  },
+
+  onBookChange(e) {
+    const idx = Number(e.detail.value)
+    const opt = this.data.bookOptions[idx]
+    if (!opt) return
+    if (opt.id === this.data.bookId) return
+    this.setData({
+      bookIndex: idx,
+      bookId: opt.id,
+      bookLabel: opt.name,
+      loading: true,
+    })
     this.load()
   },
 
@@ -72,7 +101,7 @@ Page({
 
   async load() {
     try {
-      const data = await api.statsOverview(this.data.range, this.data.scope)
+      const data = await api.statsOverview(this.data.range, this.data.scope, this.data.bookId)
       const categories = (data.categories || []).map((c, i) => ({
         ...c,
         color: CAT_COLORS[i % CAT_COLORS.length],

@@ -121,6 +121,21 @@
   margin-right: 16rpx;
 }
 
+/* 登录中：CSS spinner，替换 wechat-icon */
+.btn-spinner {
+  width: 36rpx;
+  height: 36rpx;
+  margin-right: 16rpx;
+  border-radius: 50%;
+  border: 4rpx solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  animation: btn-spin 0.7s linear infinite;
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
+
 /* 协议 */
 .agreement {
   display: flex;

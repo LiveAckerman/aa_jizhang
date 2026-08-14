@@ -13,12 +13,14 @@ export class StatsController {
     @CurrentUser('sub') userId: string,
     @Query('range') range: StatsRange = 'month',
     @Query('scope') scope: StatsScope = 'mine',
+    @Query('bookId') bookId?: string,
   ) {
     const allowedRange: StatsRange[] = ['month', '3m', 'year', 'all']
     const allowedScope: StatsScope[] = ['mine', 'team']
     const r = allowedRange.includes(range) ? range : 'month'
     const s = allowedScope.includes(scope) ? scope : 'mine'
-    const data = await this.svc.overview(userId, r, s)
+    const bid = bookId && bookId !== 'all' ? bookId : undefined
+    const data = await this.svc.overview(userId, r, s, bid)
     return { code: 0, message: 'ok', data }
   }
 }

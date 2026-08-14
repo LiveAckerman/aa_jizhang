@@ -13,6 +13,21 @@
     </view>
   </view>
 
+  <!-- 账本筛选 -->
+  <picker
+    mode="selector"
+    range="{{bookOptions}}"
+    range-key="name"
+    value="{{bookIndex}}"
+    bindchange="onBookChange"
+  >
+    <view class="book-picker">
+      <van-icon name="records" size="16px" color="#4097a9" />
+      <text class="book-picker-label">{{bookOptions[bookIndex].name}}</text>
+      <van-icon name="arrow-down" size="14px" color="#8091a5" />
+    </view>
+  </picker>
+
   <!-- 时间范围 chips -->
   <view class="range-row">
     <view

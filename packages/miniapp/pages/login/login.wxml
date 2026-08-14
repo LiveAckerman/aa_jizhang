@@ -25,7 +25,8 @@
       bindtap="handleWechatLogin"
       disabled="{{logining}}"
     >
-      <image class="wechat-icon" src="/assets/wechat-logo.png" mode="aspectFit" />
+      <view wx:if="{{logining}}" class="btn-spinner"></view>
+      <image wx:else class="wechat-icon" src="/assets/wechat-logo.png" mode="aspectFit" />
       <text>{{logining ? '登录中...' : '微信一键登录'}}</text>
     </button>
 

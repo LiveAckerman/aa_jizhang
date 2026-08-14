@@ -13,6 +13,10 @@ async function handleBookAction(detail, onDone) {
       wx.navigateTo({ url: `/pages/book-form/book-form?id=${book.id}` })
       break
 
+    case 'invite':
+      wx.navigateTo({ url: `/pages/invite/invite?id=${book.id}` })
+      break
+
     case 'copy':
       openCopyDialog(book, onDone)
       break
