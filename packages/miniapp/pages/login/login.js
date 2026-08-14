@@ -1,5 +1,5 @@
 const app = getApp()
-const request = require('../../utils/request')
+const { request } = require('../../utils/request')
 
 Page({
   data: {
@@ -45,28 +45,25 @@ Page({
       })
 
       // 3. 保存登录信息
-      const { token, user, isNewUser } = res
+      const { token, user, needProfilePrompt } = res
 
-      wx.setStorageSync('token', token)
-      app.setUser(user)
+      app.setLoginState(token, user)
+      // 是否需要在首页弹授权抽屉（只弹一次，由后端标记决定）
+      app.globalData.needProfilePrompt = !!needProfilePrompt
 
       wx.showToast({
         title: '登录成功',
         icon: 'success'
       })
 
-      // 4. 判断是否需要完善信息
+      // 4. 若有待处理的邀请码（扫码/分享进入但未登录），登录后直达加入页
+      const pendingCode = wx.getStorageSync('pendingInviteCode')
       setTimeout(() => {
-        if (isNewUser) {
-          // 首次登录，跳转到完善信息页
-          wx.redirectTo({
-            url: '/pages/profile-setup/index'
-          })
+        if (pendingCode) {
+          wx.removeStorageSync('pendingInviteCode')
+          wx.reLaunch({ url: `/pages/join/join?code=${pendingCode}` })
         } else {
-          // 老用户，直接进入账本页
-          wx.reLaunch({
-            url: '/pages/books/books'
-          })
+          wx.reLaunch({ url: '/pages/books/books' })
         }
       }, 800)
 

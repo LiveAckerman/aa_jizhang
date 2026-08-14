@@ -43,9 +43,20 @@ export class UserService {
       user.avatar = dto.avatar
     }
 
-    // 标记信息已完善
+    // 标记信息已完善，同时视为已处理过授权提示
     user.isProfileComplete = true
+    user.hasPromptedProfile = true
 
+    await this.userRepo.save(user)
+    return user
+  }
+
+  /**
+   * 标记已弹过头像昵称授权提示（用户关闭/跳过时调用），之后不再弹
+   */
+  async dismissProfilePrompt(userId: string): Promise<User> {
+    const user = await this.findById(userId)
+    user.hasPromptedProfile = true
     await this.userRepo.save(user)
     return user
   }

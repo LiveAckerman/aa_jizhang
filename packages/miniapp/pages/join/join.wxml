@@ -1,0 +1,23 @@
+<view class="container join-page">
+  <view wx:if="{{loading}}" class="join-loading">
+    <van-icon name="replay" size="28px" color="#8091a5" />
+    <text>加载中...</text>
+  </view>
+
+  <view wx:elif="{{error}}" class="join-error">
+    <van-icon name="warning-o" size="48px" color="#fa9583" />
+    <text class="error-text">{{error}}</text>
+    <button class="btn-primary back-btn" bindtap="onCancel">返回账本</button>
+  </view>
+
+  <view wx:else class="glass-card join-card">
+    <image class="join-cover" src="{{coverUrl}}" mode="aspectFill" />
+    <text class="join-name">{{info.name}}</text>
+    <text class="join-meta">{{info.ownerName}} 邀请你加入 · {{info.memberCount}}人</text>
+
+    <button class="btn-primary join-btn" bindtap="onJoin" disabled="{{joining}}">
+      {{joining ? '加入中...' : '加入账本'}}
+    </button>
+    <text class="join-cancel" bindtap="onCancel">暂不加入</text>
+  </view>
+</view>

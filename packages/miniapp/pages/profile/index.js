@@ -1,112 +1,35 @@
 const app = getApp()
-const { request } = require('../../utils/request')
+const { setTabBarSelected } = require('../../utils/tabbar')
 
 Page({
   data: {
     user: null,
-    uploading: false
-  },
-
-  onLoad() {
-    this.loadUserInfo()
   },
 
   onShow() {
+    wx.setNavigationBarTitle({ title: '我的' })
+    // 同步自定义 tabBar 选中态（我的 = 2）
+    setTabBarSelected(this, 2)
     this.loadUserInfo()
   },
 
   loadUserInfo() {
-    const user = app.globalData.user
-    this.setData({ user })
+    this.setData({ user: app.globalData.user || {} })
   },
 
-  // 修改头像
-  chooseAvatar() {
-    if (this.data.uploading) return
-
-    wx.chooseMedia({
-      count: 1,
-      mediaType: ['image'],
-      sourceType: ['album', 'camera'],
-      success: (res) => {
-        const tempFilePath = res.tempFiles[0].tempFilePath
-        this.uploadAvatar(tempFilePath)
-      }
-    })
+  // 进入二级页：个人资料编辑
+  goEdit() {
+    wx.navigateTo({ url: '/pages/profile-edit/profile-edit' })
   },
 
-  // 上传头像
-  uploadAvatar(filePath) {
-    this.setData({ uploading: true })
-
-    wx.uploadFile({
-      url: app.globalData.apiBase + '/upload/avatar',
-      filePath: filePath,
-      name: 'file',
-      header: {
-        'Authorization': 'Bearer ' + app.globalData.token
-      },
-      success: (res) => {
-        const data = JSON.parse(res.data)
-        if (data.success) {
-          this.updateProfile({ avatar: data.data.url })
-        } else {
-          wx.showToast({
-            title: data.message || '上传失败',
-            icon: 'none'
-          })
-        }
-      },
-      fail: () => {
-        wx.showToast({
-          title: '上传失败',
-          icon: 'none'
-        })
-      },
-      complete: () => {
-        this.setData({ uploading: false })
-      }
-    })
+  goToAbout() {
+    wx.navigateTo({ url: '/pages/document/document?type=about' })
   },
 
-  // 修改昵称
-  editNickname() {
-    wx.navigateTo({
-      url: '/pages/edit-nickname/index?nickname=' + this.data.user.nickname
-    })
+  goToVersion() {
+    wx.showToast({ title: '当前版本 v1.0.0', icon: 'none' })
   },
 
-  // 更新个人信息
-  async updateProfile(data) {
-    try {
-      await request({
-        url: '/user/profile',
-        method: 'PUT',
-        data
-      })
-
-      // 更新本地信息
-      const user = this.data.user
-      Object.assign(user, data)
-
-      wx.setStorageSync('user', user)
-      app.globalData.user = user
-
-      this.setData({ user })
-
-      wx.showToast({
-        title: '更新成功',
-        icon: 'success'
-      })
-    } catch (err) {
-      wx.showToast({
-        title: '更新失败',
-        icon: 'none'
-      })
-    }
-  },
-
-  // 退出登录
   logout() {
     wx.showModal({
       title: '提示',
@@ -114,11 +37,9 @@ Page({
       success: (res) => {
         if (res.confirm) {
           app.clearLoginState()
-          wx.reLaunch({
-            url: '/pages/login/login'
-          })
+          wx.reLaunch({ url: '/pages/login/login' })
         }
-      }
+      },
     })
-  }
+  },
 })

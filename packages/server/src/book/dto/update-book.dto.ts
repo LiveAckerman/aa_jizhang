@@ -20,6 +20,16 @@ export class UpdateBookDto {
   icon?: string
 
   @IsOptional()
+  @IsString()
+  @MaxLength(512)
+  cover?: string
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  description?: string
+
+  @IsOptional()
   @IsBoolean()
   archived?: boolean
 }

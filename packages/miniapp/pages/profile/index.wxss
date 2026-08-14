@@ -1,7 +1,14 @@
+page {
+  background-color: #f2f2f7;
+  background-image:
+    radial-gradient(ellipse 60% 40% at 15% 8%, rgba(64, 151, 169, 0.14), transparent 70%),
+    radial-gradient(ellipse 55% 40% at 90% 92%, rgba(250, 149, 131, 0.10), transparent 70%);
+}
+
 /* Apple Design Style - 个人中心页 */
 .profile-page {
   min-height: 100vh;
-  background: #F2F2F7;
+  background: transparent;
   padding-bottom: 40rpx;
 }
 
@@ -29,42 +36,8 @@
   box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.12);
 }
 
-.avatar-mask {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 100rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.loading-text {
-  font-size: 24rpx;
-  color: #FFFFFF;
-}
-
-.edit-icon {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 56rpx;
-  height: 56rpx;
-  background: #007AFF;
-  border-radius: 28rpx;
-  border: 4rpx solid #F2F2F7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4rpx 16rpx rgba(0, 122, 255, 0.3);
-}
-
-.edit-icon .iconfont {
-  font-size: 28rpx;
-  color: #FFFFFF;
+.user-card {
+  cursor: pointer;
 }
 
 /* 用户信息 */
@@ -137,10 +110,20 @@
   flex: 1;
 }
 
-.list-item-icon {
-  font-size: 40rpx;
+/* 彩色图标底块（替代 emoji） */
+.list-icon-wrap {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 14rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-right: 24rpx;
 }
+
+.list-icon-wrap.primary { background: linear-gradient(135deg, #4097a9, #5fb5c4); }
+.list-icon-wrap.info    { background: linear-gradient(135deg, #5B8CFF, #6ea5ff); }
+.list-icon-wrap.gray    { background: linear-gradient(135deg, #8091a5, #a1b0c3); }
 
 .list-item-label {
   font-size: 34rpx;
@@ -165,11 +148,7 @@
   margin-right: 16rpx;
 }
 
-.list-item-arrow {
-  font-size: 40rpx;
-  color: rgba(60, 60, 67, 0.3);
-  font-weight: 300;
-}
+/* van-icon 版本箭头样式统一，无需 arrow class */
 
 /* 退出登录 */
 .logout-section {
@@ -178,18 +157,19 @@
 
 .logout-btn {
   height: 100rpx;
-  background: rgba(255, 59, 48, 0.15);
+  background: #ffffff;
   border-radius: 26rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 34rpx;
+  font-size: 32rpx;
   font-weight: 600;
   color: #FF3B30;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.06);
   transition: all 0.2s;
 }
 
 .logout-btn:active {
-  background: rgba(255, 59, 48, 0.25);
+  background: #fef2f2;
   transform: scale(0.98);
 }

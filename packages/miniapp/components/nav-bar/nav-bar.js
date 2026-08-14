@@ -82,9 +82,27 @@ Component({
       if (pages.length > 1) {
         wx.navigateBack({ delta: 1 })
       } else if (this.data.fallbackUrl) {
-        wx.reLaunch({ url: this.data.fallbackUrl })
+        // tab 页需用 switchTab，否则 reLaunch 会失败
+        const tabPages = this.getTabBarPages()
+        const path = this.data.fallbackUrl.split('?')[0]
+        if (tabPages.indexOf(path) !== -1) {
+          wx.switchTab({ url: this.data.fallbackUrl })
+        } else {
+          wx.reLaunch({ url: this.data.fallbackUrl })
+        }
       }
       this.triggerEvent('back')
+    },
+
+    // 读取 app.json tabBar 页面路径列表
+    getTabBarPages() {
+      try {
+        const cfg = (typeof __wxConfig !== 'undefined' && __wxConfig.tabBar) || null
+        if (cfg && cfg.list) {
+          return cfg.list.map((i) => '/' + i.pagePath)
+        }
+      } catch (e) {}
+      return []
     },
   },
 })

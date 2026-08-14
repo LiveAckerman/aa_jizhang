@@ -56,6 +56,27 @@ const privacy = {
 `.trim(),
 }
 
-const DOCUMENTS = { terms, privacy }
+const about = {
+  title: '关于我们',
+  version: '1.0.0',
+  updatedAt: '2026-08-14',
+  content: `
+<p style="${COMMON_STYLE.p}">「出发AA记账」是一款专注于多人场景分账的记账应用，主打旅行、聚餐、活动等多人协作记账场景，同时支持个人私密记账需求。</p>
+<p style="${COMMON_STYLE.h}">我们要解决的问题</p>
+<p style="${COMMON_STYLE.p}">多人出行时，既有需要分摊的共享支出（门票、餐饮、住宿），也有不便公开的私密消费。传统记账工具往往二选一，切换账本十分繁琐。我们用「共享账 + 私密账」双账本模式，让一个账本同时兼顾两种需求。</p>
+<p style="${COMMON_STYLE.h}">核心功能</p>
+<p style="${COMMON_STYLE.p}">1. 双账本模式：共享账所有成员可见，私密账仅自己可见。</p>
+<p style="${COMMON_STYLE.p}">2. 智能分账：支持平均、按比例、按份额、指定金额多种分账方式，并自动计算最优结算方案。</p>
+<p style="${COMMON_STYLE.p}">3. 账目统计：按分类、时间、成员多维度统计支出，账目一目了然。</p>
+<p style="${COMMON_STYLE.p}">4. 多人协作：邀请好友加入账本，一起记账、实时同步。</p>
+<p style="${COMMON_STYLE.h}">我们的理念</p>
+<p style="${COMMON_STYLE.p}">每一次出发都值得记录。我们希望把记账这件小事变得轻松、透明，让朋友之间明明白白，把心思留给旅途与相聚本身。</p>
+<p style="${COMMON_STYLE.h}">联系我们</p>
+<p style="${COMMON_STYLE.p}">如有任何建议或问题，欢迎通过应用内的意见反馈与我们联系，我们会认真对待每一条声音。</p>
+<p style="${COMMON_STYLE.p}">当前版本：v1.0.0</p>
+`.trim(),
+}
+
+const DOCUMENTS = { terms, privacy, about }
 
 module.exports = { DOCUMENTS }

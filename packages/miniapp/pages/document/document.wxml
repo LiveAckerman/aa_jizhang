@@ -1,5 +1,5 @@
 <view class="doc-page">
-  <nav-bar title="{{title}}" fallback-url="/pages/profile/profile"></nav-bar>
+  <nav-bar title="{{title}}"></nav-bar>
 
   <view class="doc-content">
     <view class="doc-header">

@@ -1,0 +1,36 @@
+<view wx:if="{{show}}" class="auth-mask" catchtap="onClose">
+  <view class="auth-drawer" catchtap="stopPropagation">
+    <view class="drawer-header">
+      <text class="drawer-title">完善个人资料</text>
+      <view class="drawer-close" bindtap="onClose">
+        <van-icon name="cross" size="18px" color="#8091a5" />
+      </view>
+    </view>
+
+    <view class="drawer-body">
+      <button
+        class="avatar-picker"
+        open-type="chooseAvatar"
+        bindchooseavatar="onChooseAvatar"
+      >
+        <image class="avatar-preview" src="{{avatar || defaultAvatar}}" mode="aspectFill" />
+        <text class="avatar-tip">点击选择头像</text>
+      </button>
+
+      <view class="nickname-row">
+        <text class="row-label">昵称</text>
+        <input
+          class="nickname-input"
+          type="nickname"
+          value="{{nickname}}"
+          placeholder="点击输入昵称"
+          bindinput="onNicknameInput"
+        />
+      </view>
+    </view>
+
+    <button class="btn-primary confirm-btn" bindtap="onConfirm" disabled="{{!avatar || !nickname}}">
+      保存
+    </button>
+  </view>
+</view>

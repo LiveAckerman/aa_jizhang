@@ -1,0 +1,13 @@
+.book-menu-btn {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(128, 145, 165, 0.14);
+}
+
+.book-menu-btn.light {
+  background: rgba(255, 255, 255, 0.24);
+}

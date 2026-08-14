@@ -2,6 +2,7 @@ import {
   IsArray,
   IsIn,
   IsInt,
+  IsNumber,
   IsOptional,
   IsString,
   Min,
@@ -76,8 +77,47 @@ export class CreateTransactionDto {
   @IsString({ each: true })
   images?: string[]
 
+  /** 地点名称 */
+  @IsOptional()
+  @IsString()
+  @MaxLength(128)
+  locationName?: string
+
+  /** 详细地址 */
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  locationAddress?: string
+
+  @IsOptional()
+  @IsNumber()
+  latitude?: number
+
+  @IsOptional()
+  @IsNumber()
+  longitude?: number
+
   /** 消费时间 ISO 字符串 */
   @IsOptional()
   @IsDateString()
   spentAt?: string
+
+  /**
+   * 原始货币代码（如 'USD'），默认 'CNY'。
+   * 与 amount 关系：amount 始终是已折算成 CNY 的金额（分）；currency 非 CNY 时
+   * 需前端同时传 originalAmount 原始金额（分）+ exchangeRate 快照汇率。
+   */
+  @IsOptional()
+  @IsString()
+  @MaxLength(8)
+  currency?: string
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  originalAmount?: number
+
+  @IsOptional()
+  @IsNumber()
+  exchangeRate?: number
 }

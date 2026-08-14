@@ -1,0 +1,138 @@
+.edit-page {
+  min-height: 100vh;
+  background: #F2F2F7;
+  padding-bottom: 60rpx;
+}
+
+/* 头像大图 */
+.avatar-section {
+  position: relative;
+  width: 200rpx;
+  height: 200rpx;
+  margin: 64rpx auto 20rpx;
+}
+
+.avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 100rpx;
+  border: 4rpx solid #fff;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.12);
+}
+
+.avatar-mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-text {
+  font-size: 24rpx;
+  color: #fff;
+}
+
+.camera-badge {
+  position: absolute;
+  right: 4rpx;
+  bottom: 4rpx;
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 28rpx;
+  background: var(--color-primary);
+  border: 4rpx solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 16rpx rgba(64, 151, 169, 0.4);
+}
+
+.avatar-tip {
+  display: block;
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  margin-bottom: 40rpx;
+}
+
+.section {
+  padding: 0 32rpx;
+}
+
+.section-title {
+  font-size: 26rpx;
+  color: rgba(60, 60, 67, 0.6);
+  padding: 0 16rpx 16rpx;
+}
+
+.list-container {
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 26rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.list-item {
+  min-height: 96rpx;
+  padding: 20rpx 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2rpx solid rgba(60, 60, 67, 0.08);
+}
+
+.list-item:last-child { border-bottom: none; }
+.list-item:active { background: rgba(0, 0, 0, 0.03); }
+
+.list-item-content {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.list-icon-wrap {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 14rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 24rpx;
+}
+
+.list-icon-wrap.primary { background: linear-gradient(135deg, #4097a9, #5fb5c4); }
+.list-icon-wrap.accent  { background: linear-gradient(135deg, #fa9583, #ffb59f); }
+.list-icon-wrap.gray    { background: linear-gradient(135deg, #8091a5, #a1b0c3); }
+
+.list-item-label {
+  font-size: 32rpx;
+  color: var(--text-primary);
+}
+
+.list-item-right {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.list-item-value {
+  font-size: 28rpx;
+  color: rgba(60, 60, 67, 0.6);
+  max-width: 320rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.id-text {
+  font-size: 22rpx;
+}
+
+.mini-avatar {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 28rpx;
+}

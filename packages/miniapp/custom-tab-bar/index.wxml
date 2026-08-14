@@ -1,9 +1,9 @@
-<view class="tabbar-wrap">
+<view class="tabbar-wrap" wx:if="{{!hide}}">
   <view class="tabbar glass">
-    <!-- 滑动高亮 pill：通过 translateX 定位到激活项 -->
+    <!-- 滑动高亮 pill：通过 translateX 定位到激活项。noAnim 时禁用过渡（用于瞬移到起点） -->
     <view
-      class="pill"
-      style="width: {{100 / list.length}}%; transform: translateX({{selected * 100}}%);"
+      class="pill {{noAnim ? 'no-anim' : ''}}"
+      style="width: {{100 / list.length}}%; transform: translateX({{pillIndex * 100}}%);"
     >
       <view class="pill-inner"></view>
     </view>

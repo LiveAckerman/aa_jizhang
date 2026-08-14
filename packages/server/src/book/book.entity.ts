@@ -23,9 +23,17 @@ export class Book {
   @Column({ length: 16, default: 'custom' })
   scene: BookScene
 
-  /** 封面图标/emoji 标识（存储图标 key，非 emoji） */
+  /** 封面图标标识（存储图标 key，非 emoji） */
   @Column({ length: 128, default: '' })
   icon: string
+
+  /** 封面图片 URL（自定义封面，为空时按 scene 取默认封面） */
+  @Column({ type: 'text', nullable: true })
+  cover: string
+
+  /** 账本描述 */
+  @Column({ length: 255, default: '' })
+  description: string
 
   /** 创建者用户 id */
   @Index()

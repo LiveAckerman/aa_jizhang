@@ -1,20 +1,168 @@
 <view class="tab-page">
-  <view class="page-header">
+  <view class="page-header header-row">
     <text class="page-title">账本</text>
+    <view class="header-add" bindtap="onTapCreate">
+      <van-icon name="plus" size="20px" color="#fff" />
+    </view>
+  </view>
+
+  <!-- 分组筛选 chips -->
+  <scroll-view scroll-x="{{true}}" class="group-scroll" enhanced="{{true}}" show-scrollbar="{{false}}">
+    <view class="group-chip {{activeGroupId === 'all' ? 'active' : ''}}" data-id="all" bindtap="onPickGroup">
+      <text>全部</text>
+    </view>
+    <view
+      wx:for="{{groups}}"
+      wx:key="id"
+      class="group-chip {{activeGroupId === (item.isDefault ? 'default' : item.id) ? 'active' : ''}}"
+      data-id="{{item.isDefault ? 'default' : item.id}}"
+      bindtap="onPickGroup"
+      bindlongpress="onLongPressGroup"
+    >
+      <text>{{item.isDefault ? '默认' : item.name}}</text>
+      <text wx:if="{{item.bookCount != null}}" class="group-count">{{item.bookCount}}</text>
+    </view>
+  </scroll-view>
+
+  <!-- 加载中：骨架屏（3 张卡片） -->
+  <view wx:if="{{loading}}" class="book-list">
+    <view wx:for="{{[1,2,3]}}" wx:key="*this" class="glass-card book-plain skeleton-card">
+      <view class="skeleton-row-1">
+        <van-skeleton title="{{true}}" row="{{0}}" title-width="55%" />
+        <view class="skeleton-tag"></view>
+      </view>
+      <view class="skeleton-row-2">
+        <view class="skeleton-avatars">
+          <view class="skeleton-avatar" wx:for="{{[1,2,3]}}" wx:key="*this" wx:for-item="_"></view>
+        </view>
+        <view class="skeleton-date"></view>
+      </view>
+      <view class="skeleton-divider"></view>
+      <view class="skeleton-row-3">
+        <van-skeleton row="{{1}}" row-width="140rpx" />
+        <view class="skeleton-more"></view>
+      </view>
+    </view>
   </view>
 
   <!-- 空状态 -->
-  <view wx:if="{{!loading && books.length === 0}}" class="empty-state">
-    <image class="empty-illustration" src="/assets/illustrations/empty-book.png" mode="aspectFit" />
+  <view wx:elif="{{books.length === 0}}" class="empty-state">
+    <image class="empty-illustration" src="https://cdn.ljw44.com/assets/illustrations/empty-book.png" mode="aspectFit" />
     <text class="empty-title">还没有账本</text>
     <text class="empty-desc">创建第一个账本，开始和朋友一起记账</text>
-    <button class="btn-primary create-btn">创建账本</button>
+    <button class="btn-primary create-btn" bindtap="onTapCreate">创建账本</button>
   </view>
 
   <!-- 账本列表 -->
-  <view wx:else class="book-list">
-    <view wx:for="{{books}}" wx:key="id" class="glass-card book-item">
-      <text class="book-name">{{item.name}}</text>
+  <view wx:elif="{{books.length > 0}}" class="book-list">
+    <!-- 进行中 -->
+    <block wx:for="{{active}}" wx:key="id" wx:for-item="book">
+      <!-- 布局1：有自定义封面 → 头图卡片 -->
+      <view wx:if="{{book.hasCover}}" class="glass-card book-item">
+        <view class="book-tap-area" data-id="{{book.id}}" bindtap="onTapBook">
+          <image class="book-cover" src="{{book.coverUrl}}" mode="aspectFill" />
+          <view class="book-body">
+            <view class="book-row">
+              <text class="book-name">{{book.name}}</text>
+              <text class="book-member-count">{{book.memberCount}}人</text>
+            </view>
+            <view class="book-avatars">
+              <image
+                wx:for="{{book.memberAvatars}}"
+                wx:for-item="av"
+                wx:key="*this"
+                class="book-avatar"
+                src="{{av}}"
+                mode="aspectFill"
+              />
+            </view>
+            <view class="book-cover-amount">
+              <view class="amount-inline">
+                <text class="amount-label">支出</text>
+                <text class="book-plain-amount">¥{{book.myTotalText}}</text>
+                <view wx:if="{{book.hasPrivate}}" class="amount-tags">
+                  <text class="amount-tag">共享 ¥{{book.mySharedText}}</text>
+                  <text class="amount-tag private">私密 ¥{{book.myPrivateText}}</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+        <view class="book-corner">
+          <book-menu book="{{book}}" is-owner="{{book.isOwner}}" bind:action="onBookAction" />
+        </view>
+      </view>
+
+      <!-- 布局2：无自定义封面 → 简洁白底卡片 -->
+      <view wx:else class="glass-card book-plain">
+        <view class="book-plain-tap" data-id="{{book.id}}" bindtap="onTapBook">
+          <view class="book-plain-top">
+            <text class="book-name">{{book.name}}</text>
+            <text class="book-plain-tag">{{book.memberCount}}人</text>
+          </view>
+          <view class="book-plain-mid">
+            <view class="book-avatars">
+              <image
+                wx:for="{{book.memberAvatars}}"
+                wx:for-item="av"
+                wx:key="*this"
+                class="book-avatar"
+                src="{{av}}"
+                mode="aspectFill"
+              />
+              <view class="book-avatar book-invite-btn">
+                <van-icon name="plus" size="16px" color="#4097a9" />
+              </view>
+            </view>
+            <text class="book-plain-date">{{book.dateText}}</text>
+          </view>
+          <view class="book-plain-bottom">
+            <view class="amount-inline">
+              <text class="amount-label">支出</text>
+              <text class="book-plain-amount">¥{{book.myTotalText}}</text>
+              <view wx:if="{{book.hasPrivate}}" class="amount-tags">
+                <text class="amount-tag">共享 ¥{{book.mySharedText}}</text>
+                <text class="amount-tag private">私密 ¥{{book.myPrivateText}}</text>
+              </view>
+            </view>
+            <text class="book-plain-more">统计 ›</text>
+          </view>
+        </view>
+        <view class="book-corner">
+          <book-menu book="{{book}}" is-owner="{{book.isOwner}}" bind:action="onBookAction" />
+        </view>
+      </view>
+    </block>
+
+    <!-- 已结算分组 -->
+    <view wx:if="{{archived.length > 0}}" class="group-title">已结算</view>
+    <view
+      wx:for="{{archived}}"
+      wx:key="id"
+      wx:for-item="book"
+      class="glass-card book-item archived"
+    >
+      <view class="book-tap-area" data-id="{{book.id}}" bindtap="onTapBook">
+        <image wx:if="{{book.hasCover}}" class="book-cover" src="{{book.coverUrl}}" mode="aspectFill" />
+        <view class="book-body">
+          <view class="book-row">
+            <text class="book-name">{{book.name}}</text>
+            <text class="book-member-count">{{book.memberCount}}人</text>
+          </view>
+        </view>
+      </view>
+      <view class="book-corner">
+        <book-menu book="{{book}}" is-owner="{{book.isOwner}}" bind:action="onBookAction" />
+      </view>
     </view>
   </view>
 </view>
+
+<!-- 首次登录：头像昵称授权抽屉 -->
+<auth-drawer
+  show="{{showAuthDrawer}}"
+  default-avatar="{{userAvatar}}"
+  default-nickname="{{userNickname}}"
+  bind:authorized="onAuthorized"
+  bind:close="onAuthClose"
+/>

@@ -37,9 +37,21 @@ export class Transaction {
   @Column({ length: 16, default: 'shared' })
   type: TransactionType
 
-  /** 金额（单位：分，避免浮点误差） */
+  /** 金额（**结算货币 CNY**，单位：分，避免浮点误差） */
   @Column({ type: 'int' })
   amount: number
+
+  /** 原始货币代码，默认 CNY */
+  @Column({ length: 8, default: 'CNY' })
+  currency: string
+
+  /** 原始货币的金额（分）。currency=CNY 时与 amount 相同；其他币种时为用户实际输入的金额（分） */
+  @Column({ type: 'int', nullable: true })
+  originalAmount: number | null
+
+  /** 记账时快照的 原始货币兑 CNY 汇率（1 单位原币 = ? CNY），CNY 时为 1 */
+  @Column({ type: 'decimal', precision: 12, scale: 6, nullable: true })
+  exchangeRate: string | null
 
   /** 分类（图标 key，如 food/transport/hotel） */
   @Column({ length: 32, default: 'other' })
@@ -64,15 +76,31 @@ export class Transaction {
   splitMethod: SplitMethod
 
   /** 分账明细（JSON，仅共享账有效） */
-  @Column({ type: 'json', nullable: true })
+  @Column({ type: 'jsonb', nullable: true })
   splits: SplitDetail[] | null
 
   /** 图片凭证 URL 列表（JSON） */
-  @Column({ type: 'json', nullable: true })
+  @Column({ type: 'jsonb', nullable: true })
   images: string[] | null
 
+  /** 地点名称（可空） */
+  @Column({ type: 'varchar', length: 128, default: '' })
+  locationName: string
+
+  /** 详细地址（可空） */
+  @Column({ type: 'varchar', length: 255, default: '' })
+  locationAddress: string
+
+  /** 纬度（可空） */
+  @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true })
+  latitude: number | null
+
+  /** 经度（可空） */
+  @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true })
+  longitude: number | null
+
   /** 消费发生时间 */
-  @Column({ type: 'datetime' })
+  @Column({ type: 'timestamptz' })
   spentAt: Date
 
   @CreateDateColumn()

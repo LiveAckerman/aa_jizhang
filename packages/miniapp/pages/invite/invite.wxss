@@ -1,0 +1,89 @@
+.invite-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.invite-card {
+  width: 100%;
+  padding: 48rpx 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 32rpx;
+}
+
+.invite-book-name {
+  font-size: 38rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.invite-tip {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  margin-top: 12rpx;
+}
+
+.qr-wrap {
+  width: 400rpx;
+  height: 400rpx;
+  margin: 48rpx 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 32rpx rgba(47, 65, 89, 0.1);
+}
+
+.qr-img {
+  width: 360rpx;
+  height: 360rpx;
+}
+
+.qr-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--text-secondary);
+  font-size: 26rpx;
+  gap: 12rpx;
+}
+
+.qr-sub {
+  font-size: 22rpx;
+  color: var(--text-tertiary);
+}
+
+.code-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 20rpx 32rpx;
+  background: rgba(64, 151, 169, 0.08);
+  border-radius: 24rpx;
+}
+
+.code-label {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+}
+
+.code-value {
+  font-size: 34rpx;
+  font-weight: 700;
+  letter-spacing: 4rpx;
+  color: var(--color-primary);
+}
+
+.share-wechat-btn {
+  width: 100%;
+  height: 96rpx;
+  line-height: 96rpx;
+  margin-top: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+}

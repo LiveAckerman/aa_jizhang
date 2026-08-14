@@ -21,12 +21,10 @@
   overflow: hidden;
 }
 
-/* 磨砂材质 */
+/* 实白底导航条 */
 .glass {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
-  border: 1rpx solid rgba(255, 255, 255, 0.6);
+  background: #ffffff;
+  border: 1rpx solid rgba(128, 145, 165, 0.12);
   box-shadow: 0 16rpx 48rpx rgba(47, 65, 89, 0.16);
 }
 
@@ -44,9 +42,14 @@
   z-index: 1;
 }
 
-/* pill 内部真正的高亮胶囊（留白，不占满整格） */
+/* 瞬移到起点时禁用动画 */
+.pill.no-anim {
+  transition: none;
+}
+
+/* pill 内部真正的高亮胶囊（约占单格 2/3 宽，居中） */
 .pill-inner {
-  width: calc(100% - 24rpx);
+  width: 67%;
   height: 88rpx;
   border-radius: 44rpx;
   background: rgba(64, 151, 169, 0.14);

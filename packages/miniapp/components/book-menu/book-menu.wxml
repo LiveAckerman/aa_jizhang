@@ -1,0 +1,3 @@
+<view class="book-menu-btn {{light ? 'light' : ''}}" catchtap="onTapMenu">
+  <van-icon name="ellipsis" size="{{light ? '22px' : '20px'}}" color="{{light ? '#fff' : '#2f4159'}}" />
+</view>

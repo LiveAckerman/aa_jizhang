@@ -26,6 +26,10 @@ export class User {
   @Column({ default: false })
   isProfileComplete: boolean
 
+  /** 是否已弹过头像昵称授权提示（只弹一次，与 isProfileComplete 解耦） */
+  @Column({ default: false })
+  hasPromptedProfile: boolean
+
   @CreateDateColumn()
   createdAt: Date
 

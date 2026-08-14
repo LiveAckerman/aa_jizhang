@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "加入账本",
+  "usingComponents": {
+    "van-icon": "@vant/weapp/icon/index"
+  }
+}

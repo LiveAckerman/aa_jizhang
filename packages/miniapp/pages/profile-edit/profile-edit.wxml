@@ -1,0 +1,41 @@
+<view class="edit-page">
+  <!-- 头像大图 + 相机浮标 -->
+  <view class="avatar-section" bindtap="onChooseAvatar">
+    <image class="avatar" src="{{user.avatar}}" mode="aspectFill" />
+    <view class="avatar-mask" wx:if="{{uploading}}">
+      <text class="loading-text">上传中...</text>
+    </view>
+    <view class="camera-badge">
+      <van-icon name="photograph" size="18px" color="#fff" />
+    </view>
+  </view>
+  <text class="avatar-tip">点击更换头像</text>
+
+  <!-- 表单区 -->
+  <view class="section">
+    <view class="section-title">账号信息</view>
+    <view class="list-container">
+      <view class="list-item" bindtap="onEditNickname">
+        <view class="list-item-content">
+          <view class="list-icon-wrap primary"><van-icon name="contact" size="20px" color="#fff" /></view>
+          <text class="list-item-label">昵称</text>
+        </view>
+        <view class="list-item-right">
+          <text class="list-item-value">{{user.nickname}}</text>
+          <van-icon name="arrow" size="14px" color="#c4c4c4" />
+        </view>
+      </view>
+
+      <view class="list-item" bindtap="onChooseAvatar">
+        <view class="list-item-content">
+          <view class="list-icon-wrap accent"><van-icon name="photo-o" size="20px" color="#fff" /></view>
+          <text class="list-item-label">头像</text>
+        </view>
+        <view class="list-item-right">
+          <image class="mini-avatar" src="{{user.avatar}}" mode="aspectFill" />
+          <van-icon name="arrow" size="14px" color="#c4c4c4" />
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

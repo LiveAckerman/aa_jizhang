@@ -11,6 +11,23 @@ async function bootstrap() {
     new ValidationPipe({
       whitelist: true,
       transform: true,
+      exceptionFactory: (errors) => {
+        const details = errors.map((e) => ({
+          property: e.property,
+          value: e.value,
+          constraints: e.constraints,
+        }))
+        // eslint-disable-next-line no-console
+        console.error('[ValidationError]', JSON.stringify(details, null, 2))
+        const first = errors[0]
+        const msg =
+          (first && first.constraints && Object.values(first.constraints)[0]) ||
+          '参数校验失败'
+        return new (require('@nestjs/common').BadRequestException)({
+          message: msg,
+          errors: details,
+        })
+      },
     }),
   )
 

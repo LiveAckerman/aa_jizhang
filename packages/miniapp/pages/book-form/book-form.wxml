@@ -1,0 +1,55 @@
+<view class="container form-page">
+  <!-- 封面 -->
+  <view class="cover-picker" bindtap="onChooseCover">
+    <image wx:if="{{cover}}" class="cover-img" src="{{cover}}" mode="aspectFill" />
+    <view wx:else class="cover-placeholder">
+      <van-icon name="photograph" size="40px" color="#8091a5" />
+      <text class="cover-tip">点击设置封面（可选）</text>
+    </view>
+  </view>
+
+  <!-- 名称 -->
+  <view class="glass-card form-card">
+    <view class="form-label">账本名称</view>
+    <input
+      class="form-input"
+      placeholder="如：北京三日游"
+      value="{{name}}"
+      maxlength="64"
+      bindinput="onNameInput"
+    />
+  </view>
+
+  <!-- 场景 -->
+  <view class="glass-card form-card">
+    <view class="form-label">选择场景</view>
+    <view class="scene-grid">
+      <view
+        wx:for="{{scenes}}"
+        wx:key="key"
+        class="scene-item {{scene === item.key ? 'active' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="onPickScene"
+      >
+        <van-icon name="{{item.icon}}" size="26px" color="{{scene === item.key ? '#fff' : '#4097a9'}}" />
+        <text class="scene-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 描述 -->
+  <view class="glass-card form-card">
+    <view class="form-label">描述（可选）</view>
+    <textarea
+      class="form-textarea"
+      placeholder="补充说明，如活动时间、地点等"
+      value="{{description}}"
+      maxlength="255"
+      bindinput="onDescInput"
+    />
+  </view>
+
+  <button class="btn-primary save-btn" bindtap="onSave" disabled="{{saving}}">
+    {{saving ? '保存中...' : (isEdit ? '保存' : '创建账本')}}
+  </button>
+</view>

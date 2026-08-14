@@ -1,3 +1,10 @@
+page {
+  background-color: #f2f2f7;
+  background-image:
+    radial-gradient(ellipse 60% 40% at 15% 8%, rgba(64, 151, 169, 0.14), transparent 70%),
+    radial-gradient(ellipse 55% 40% at 90% 92%, rgba(250, 149, 131, 0.10), transparent 70%);
+}
+
 .page-header {
   padding: 24rpx 0 32rpx;
 }
@@ -41,14 +48,323 @@
   line-height: 96rpx;
 }
 
+/* header 右侧加号 */
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-add {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 32rpx;
+  background: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(64, 151, 169, 0.35);
+}
+
 /* 账本列表 */
+.book-list {
+  display: flex;
+  flex-direction: column;
+}
+
 .book-item {
-  padding: 40rpx;
   margin-bottom: 24rpx;
+  overflow: hidden;
+  padding: 0;
+}
+
+.book-item.archived {
+  opacity: 0.7;
+}
+
+.book-cover {
+  width: 100%;
+  height: 220rpx;
+  display: block;
+}
+
+.book-body {
+  padding: 28rpx 32rpx 32rpx;
+}
+
+.book-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .book-name {
   font-size: 34rpx;
   font-weight: 600;
   color: var(--text-primary);
+}
+
+.book-member-count {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+.book-avatars {
+  display: flex;
+  margin-top: 16rpx;
+}
+
+.book-avatar {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 24rpx;
+  border: 2rpx solid #fff;
+  margin-right: -12rpx;
+  background: #eee;
+}
+
+.group-title {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  margin: 24rpx 8rpx 16rpx;
+}
+
+/* 分组筛选 chips */
+.group-scroll {
+  white-space: nowrap;
+  margin-bottom: 24rpx;
+  padding-bottom: 8rpx;
+}
+
+.group-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 14rpx 28rpx;
+  margin-right: 16rpx;
+  border-radius: 36rpx;
+  background: #fff;
+  font-size: 26rpx;
+  color: var(--text-primary);
+  box-shadow: 0 4rpx 16rpx rgba(47, 65, 89, 0.06);
+}
+
+.group-chip.active {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.group-count {
+  margin-left: 10rpx;
+  font-size: 22rpx;
+  opacity: 0.72;
+}
+
+/* 卡片右上角菜单 */
+.book-item,
+.book-plain {
+  position: relative;
+}
+
+.book-corner {
+  position: absolute;
+  top: 20rpx;
+  right: 20rpx;
+  z-index: 2;
+}
+
+.book-tap-area {
+  display: block;
+}
+
+/* 简洁白底卡片（无自定义封面） */
+.book-plain {
+  padding: 28rpx 32rpx;
+  margin-bottom: 24rpx;
+}
+
+.book-plain-tap {
+  display: block;
+}
+
+.book-plain-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 72rpx; /* 留右上角菜单位 */
+}
+
+.book-plain-tag {
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+  background: rgba(64, 151, 169, 0.12);
+  font-size: 22rpx;
+  color: var(--color-primary);
+}
+
+.book-plain-mid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24rpx;
+}
+
+.book-plain-date {
+  font-size: 22rpx;
+  color: var(--text-tertiary);
+}
+
+.book-invite-btn {
+  background: rgba(64, 151, 169, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.book-plain-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24rpx;
+  padding-top: 20rpx;
+  border-top: 2rpx solid rgba(128, 145, 165, 0.14);
+}
+
+.book-plain-label {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+}
+
+.book-plain-amount {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.book-plain-more {
+  font-size: 26rpx;
+  color: var(--color-primary);
+}
+
+/* 金额行（两种卡片共用，单行紧凑） */
+.amount-inline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.amount-label {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+.book-plain-amount {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.amount-tags {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-left: 4rpx;
+}
+
+.amount-tag {
+  padding: 4rpx 12rpx;
+  border-radius: 12rpx;
+  font-size: 20rpx;
+  background: rgba(64, 151, 169, 0.10);
+  color: var(--color-primary);
+}
+
+.amount-tag.private {
+  background: rgba(128, 145, 165, 0.14);
+  color: var(--text-secondary);
+}
+
+/* 带封面卡片：金额行在头像下面 */
+.book-cover-amount {
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 2rpx solid rgba(128, 145, 165, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+/* ============ 骨架屏 ============ */
+.skeleton-card {
+  padding: 28rpx 32rpx;
+  margin-bottom: 24rpx;
+}
+
+.skeleton-row-1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.skeleton-tag {
+  width: 80rpx;
+  height: 36rpx;
+  border-radius: 20rpx;
+  background: #f2f3f5;
+  animation: skeleton-blink 1.2s ease-in-out infinite;
+}
+
+.skeleton-row-2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24rpx;
+}
+
+.skeleton-avatars {
+  display: flex;
+}
+
+.skeleton-avatar {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 24rpx;
+  background: #f2f3f5;
+  border: 2rpx solid #fff;
+  margin-right: -12rpx;
+  animation: skeleton-blink 1.2s ease-in-out infinite;
+}
+
+.skeleton-date {
+  width: 140rpx;
+  height: 24rpx;
+  border-radius: 12rpx;
+  background: #f2f3f5;
+  animation: skeleton-blink 1.2s ease-in-out infinite;
+}
+
+.skeleton-divider {
+  height: 2rpx;
+  background: rgba(128, 145, 165, 0.14);
+  margin: 24rpx 0 20rpx;
+}
+
+.skeleton-row-3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.skeleton-more {
+  width: 80rpx;
+  height: 28rpx;
+  border-radius: 14rpx;
+  background: #f2f3f5;
+  animation: skeleton-blink 1.2s ease-in-out infinite;
+}
+
+@keyframes skeleton-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }

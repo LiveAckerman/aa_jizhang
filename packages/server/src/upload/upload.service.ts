@@ -11,11 +11,11 @@ export class UploadService {
 
   constructor(private readonly configService: ConfigService) {
     // Cloudflare R2 配置
-    const accountId = this.configService.get<string>('R2_ACCOUNT_ID')
-    const accessKeyId = this.configService.get<string>('R2_ACCESS_KEY_ID')
-    const secretAccessKey = this.configService.get<string>('R2_SECRET_ACCESS_KEY')
-    this.bucketName = this.configService.get<string>('R2_BUCKET_NAME')
-    this.publicUrl = this.configService.get<string>('R2_PUBLIC_URL')
+    const accountId = this.configService.get<string>('R2_ACCOUNT_ID')!
+    const accessKeyId = this.configService.get<string>('R2_ACCESS_KEY_ID')!
+    const secretAccessKey = this.configService.get<string>('R2_SECRET_ACCESS_KEY')!
+    this.bucketName = this.configService.get<string>('R2_BUCKET_NAME')!
+    this.publicUrl = this.configService.get<string>('R2_PUBLIC_URL')!
 
     // 初始化 S3 客户端（R2 兼容 S3 API）
     this.s3Client = new S3Client({

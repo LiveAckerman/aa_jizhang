@@ -1,11 +1,17 @@
 {
   "pages": [
     "pages/login/login",
-    "pages/profile-setup/index",
     "pages/edit-nickname/index",
     "pages/books/books",
+    "pages/book-form/book-form",
+    "pages/book-detail/book-detail",
+    "pages/add-transaction/add-transaction",
+    "pages/profile-edit/profile-edit",
+    "pages/transaction-logs/transaction-logs",
+    "pages/invite/invite",
+    "pages/join/join",
     "pages/statistics/statistics",
-    "pages/profile/profile",
+    "pages/profile/index",
     "pages/document/document"
   ],
   "window": {
@@ -31,7 +37,7 @@
         "text": "统计"
       },
       {
-        "pagePath": "pages/profile/profile",
+        "pagePath": "pages/profile/index",
         "text": "我的"
       }
     ]
@@ -39,5 +45,11 @@
   "style": "v2",
   "componentFramework": "glass-easel",
   "sitemapLocation": "sitemap.json",
-  "lazyCodeLoading": "requiredComponents"
+  "lazyCodeLoading": "requiredComponents",
+  "requiredPrivateInfos": ["getLocation", "chooseLocation"],
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于记录消费发生的地点，便于账单管理"
+    }
+  }
 }

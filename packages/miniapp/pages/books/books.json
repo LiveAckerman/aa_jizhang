@@ -2,5 +2,11 @@
   "navigationBarTitleText": "账本",
   "navigationStyle": "default",
   "backgroundColor": "#f2f2f7",
-  "enablePullDownRefresh": true
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "auth-drawer": "/components/auth-drawer/auth-drawer",
+    "book-menu": "/components/book-menu/book-menu",
+    "van-icon": "@vant/weapp/icon/index",
+    "van-skeleton": "@vant/weapp/skeleton/index"
+  }
 }

@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "邀请成员",
+  "usingComponents": {
+    "van-icon": "@vant/weapp/icon/index"
+  }
+}

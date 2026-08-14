@@ -1,0 +1,19 @@
+<view class="logs-page">
+  <view wx:if="{{!loading && logs.length === 0}}" class="logs-empty">
+    <text>暂无修改记录</text>
+  </view>
+
+  <view wx:for="{{logs}}" wx:key="id" class="glass-card log-item">
+    <image class="log-avatar" src="{{item.avatar}}" mode="aspectFill" />
+    <view class="log-body">
+      <text class="log-user">{{item.userNickname}}</text>
+      <view class="log-lines">
+        <text wx:for="{{item.lines}}" wx:for-item="line" wx:key="*this" class="log-line">{{line}}</text>
+      </view>
+    </view>
+    <view class="log-time">
+      <text>{{item.dateText}}</text>
+      <text>{{item.timeText}}</text>
+    </view>
+  </view>
+</view>

@@ -48,6 +48,8 @@ export class AuthService {
     return {
       token,
       isNewUser: isNewUser || !user.isProfileComplete,
+      // 是否需要弹出头像昵称授权提示（只弹一次，用户处理过即为 false）
+      needProfilePrompt: !user.hasPromptedProfile,
       user: {
         id: user.id,
         openid: user.openid,

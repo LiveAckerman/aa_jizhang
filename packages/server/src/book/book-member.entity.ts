@@ -34,6 +34,14 @@ export class BookMember {
   @Column({ length: 16, default: 'member' })
   role: MemberRole
 
+  /**
+   * 该成员把这个账本归入的分组 id（用户维度）。
+   * null 或 '' 表示归入用户的默认分组。
+   */
+  @Index()
+  @Column({ length: 36, default: '' })
+  groupId: string
+
   @CreateDateColumn()
   joinedAt: Date
 }

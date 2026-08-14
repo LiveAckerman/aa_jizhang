@@ -1,44 +1,57 @@
+const app = getApp()
+
 Component({
   data: {
-    selected: 0,
-    // tab 列表：图标用组件内 SVG 渲染，这里只存 key 和文字、路径
+    selected: 0, // 当前高亮项（图标/文字变色）
+    pillIndex: 0, // pill 当前位置（用于动画）
+    noAnim: false, // 是否禁用 pill 过渡
+    hide: false, // 是否隐藏整个 tabBar（用于抽屉等全屏遮罩场景）
     list: [
       { key: 'book', text: '账本', pagePath: '/pages/books/books' },
       { key: 'chart', text: '统计', pagePath: '/pages/statistics/statistics' },
-      { key: 'user', text: '我的', pagePath: '/pages/profile/profile' },
+      { key: 'user', text: '我的', pagePath: '/pages/profile/index' },
     ],
   },
 
-  lifetimes: {
-    attached() {
-      // 组件挂载时根据当前页面路径同步选中态
-      this.syncSelected()
-    },
-  },
-
   methods: {
-    /** 根据当前页面路径设置 selected */
-    syncSelected() {
-      const pages = getCurrentPages()
-      const current = pages[pages.length - 1]
-      if (!current) return
-      const route = `/${current.route}`
-      const idx = this.data.list.findIndex((item) => item.pagePath === route)
-      if (idx !== -1 && idx !== this.data.selected) {
-        this.setData({ selected: idx })
+    /**
+     * 由各 tab 页 onShow 调用：把 pill 定位到目标项。
+     * 关键：先无动画瞬移到「上一个位置」，再下一帧带动画滑到「当前位置」，
+     * 这样即使是新的组件实例，也能演出正确方向的滑动（解决多实例起点错乱）。
+     */
+    setActive(index) {
+      const prev = app.globalData.tabPrevSelected
+      const cur = index
+
+      // 高亮项立即生效
+      this.setData({ selected: cur })
+
+      if (prev === cur) {
+        // 没有位移，直接定位
+        this.setData({ noAnim: false, pillIndex: cur })
+        return
       }
+
+      // 第一步：禁用动画，把 pill 瞬移到起点（上一个 tab）
+      this.setData({ noAnim: true, pillIndex: prev }, () => {
+        // 第二步：下一帧启用动画，滑到当前 tab
+        setTimeout(() => {
+          this.setData({ noAnim: false, pillIndex: cur })
+        }, 20)
+      })
     },
 
     /** 点击某个 tab */
     onTap(e) {
       const index = e.currentTarget.dataset.index
-      const target = this.data.list[index]
       if (index === this.data.selected) return
 
-      // 先切换页面（switchTab 无动画，但 pill 动画在组件内做）
+      const target = this.data.list[index]
+      // 记录切换前后的位置到全局
+      app.globalData.tabPrevSelected = this.data.selected
+      app.globalData.tabSelected = index
+
       wx.switchTab({ url: target.pagePath })
-      // 立即更新选中态，触发 pill 滑动动画
-      this.setData({ selected: index })
     },
   },
 })

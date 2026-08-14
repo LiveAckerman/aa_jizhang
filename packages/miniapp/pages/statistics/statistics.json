@@ -1,4 +1,8 @@
 {
   "navigationBarTitleText": "统计",
-  "backgroundColor": "#f2f2f7"
+  "backgroundColor": "#f2f2f7",
+  "usingComponents": {
+    "van-icon": "@vant/weapp/icon/index",
+    "ec-canvas": "/components/ec-canvas/ec-canvas"
+  }
 }

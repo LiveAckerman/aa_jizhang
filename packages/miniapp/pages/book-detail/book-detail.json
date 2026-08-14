@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "账本详情",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "van-icon": "@vant/weapp/icon/index",
+    "book-menu": "/components/book-menu/book-menu"
+  }
+}

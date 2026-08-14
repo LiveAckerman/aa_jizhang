@@ -1,8 +1,92 @@
-<view class="tab-page">
+<view class="tab-page stats-page">
   <view class="page-header">
     <text class="page-title">统计</text>
   </view>
-  <view class="glass-card placeholder">
-    <text class="placeholder-text">统计功能开发中</text>
+
+  <!-- 视角切换：我的 / 团队 -->
+  <view class="scope-switch">
+    <view class="scope-tab {{scope === 'mine' ? 'active' : ''}}" data-scope="mine" bindtap="onScope">
+      我的支出
+    </view>
+    <view class="scope-tab {{scope === 'team' ? 'active' : ''}}" data-scope="team" bindtap="onScope">
+      团队共享
+    </view>
   </view>
+
+  <!-- 时间范围 chips -->
+  <view class="range-row">
+    <view
+      wx:for="{{ranges}}"
+      wx:key="key"
+      class="range-chip {{range === item.key ? 'active' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="onRange"
+    >{{item.name}}</view>
+  </view>
+
+  <!-- 骨架屏：加载中 -->
+  <block wx:if="{{loading}}">
+    <view class="glass-card total-card sk-total-card">
+      <view class="sk-total-label"></view>
+      <view class="sk-total-amount"></view>
+      <view class="sk-total-meta"></view>
+    </view>
+    <view class="glass-card section">
+      <view class="sk-title"></view>
+      <view wx:for="{{[1,2,3,4]}}" wx:key="*this" class="sk-cat-item">
+        <view class="sk-cat-head">
+          <view class="sk-cat-name"></view>
+          <view class="sk-cat-amount"></view>
+        </view>
+        <view class="sk-cat-bar"></view>
+      </view>
+    </view>
+    <view class="glass-card section">
+      <view class="sk-title"></view>
+      <view class="sk-chart"></view>
+    </view>
+  </block>
+
+  <block wx:else>
+    <!-- 顶部大数字卡片 -->
+    <view class="glass-card total-card">
+      <view class="total-label">{{scopeLabel}}·{{rangeLabel}}</view>
+      <view class="total-amount">¥{{totalText}}</view>
+      <view class="total-meta">
+        <text class="meta-item">{{count}} 笔</text>
+        <view wx:if="{{prevDelta !== null}}" class="meta-delta {{prevDelta >= 0 ? 'up' : 'down'}}">
+          <van-icon name="{{prevDelta >= 0 ? 'arrow-up' : 'arrow-down'}}" size="12px" />
+          <text>{{prevDeltaText}}%</text>
+        </view>
+        <text wx:elif="{{range !== 'all'}}" class="meta-item">同比无数据</text>
+      </view>
+    </view>
+
+    <!-- 分类占比 -->
+    <view class="glass-card section">
+      <view class="section-title">分类分布</view>
+      <view wx:if="{{categories.length === 0}}" class="empty-inline">暂无数据</view>
+      <view wx:else class="cat-list">
+        <view wx:for="{{categories}}" wx:key="key" class="cat-bar-item">
+          <view class="cat-bar-head">
+            <text class="cat-bar-name">{{item.name}}</text>
+            <text class="cat-bar-amount">¥{{item.amountText}}</text>
+          </view>
+          <view class="cat-bar-track">
+            <view class="cat-bar-fill" style="width:{{item.pct}}%;background:{{item.color}}"></view>
+          </view>
+          <view class="cat-bar-pct">{{item.pct}}%</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 近 6 个月趋势 -->
+    <view class="glass-card section">
+      <view class="section-title">近 6 个月趋势</view>
+      <view wx:if="{{!hasMonthly}}" class="empty-inline">暂无数据</view>
+      <view wx:else class="chart-box">
+        <ec-canvas id="monthlyChart" canvas-id="monthlyChart" ec="{{ ec }}"></ec-canvas>
+      </view>
+    </view>
+  </block>
 </view>

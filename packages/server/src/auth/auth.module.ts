@@ -27,6 +27,6 @@ import { UserModule } from '../user/user.module'
   ],
   controllers: [AuthController],
   providers: [AuthService, WechatService, JwtAuthGuard],
-  exports: [JwtAuthGuard, JwtModule],
+  exports: [JwtAuthGuard, JwtModule, WechatService],
 })
 export class AuthModule {}

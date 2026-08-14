@@ -27,6 +27,17 @@ page {
   line-height: 1.5;
 }
 
+/* 全局 button 重置：修复真机文字不居中 */
+button {
+  padding: 0;
+  line-height: inherit;
+  box-sizing: border-box;
+}
+
+button::after {
+  border: none;
+}
+
 /* 磨砂玻璃卡片通用类 */
 .glass-card {
   background: var(--bg-card);

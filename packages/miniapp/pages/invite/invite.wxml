@@ -1,0 +1,29 @@
+<view class="container invite-page">
+  <view class="glass-card invite-card">
+    <text class="invite-book-name">{{book.name}}</text>
+    <text class="invite-tip">邀请好友扫码，一起记账分账</text>
+
+    <view class="qr-wrap">
+      <image wx:if="{{qrUrl}}" class="qr-img" src="{{qrUrl}}" mode="aspectFit" />
+      <view wx:elif="{{qrLoading}}" class="qr-loading">
+        <van-icon name="replay" size="28px" color="#8091a5" />
+        <text>生成中...</text>
+      </view>
+      <view wx:else class="qr-loading">
+        <text>二维码生成失败</text>
+        <text class="qr-sub">可复制邀请码分享</text>
+      </view>
+    </view>
+
+    <view class="code-row" bindtap="onCopyCode">
+      <text class="code-label">邀请码</text>
+      <text class="code-value">{{inviteCode}}</text>
+      <van-icon name="records" size="18px" color="#4097a9" />
+    </view>
+  </view>
+
+  <button class="btn-primary share-wechat-btn" open-type="share">
+    <van-icon name="share-o" size="18px" color="#fff" />
+    <text>分享给微信好友</text>
+  </button>
+</view>

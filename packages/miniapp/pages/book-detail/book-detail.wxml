@@ -1,0 +1,127 @@
+<view class="detail-page">
+  <!-- 加载中：整页骨架屏 -->
+  <block wx:if="{{loading}}">
+    <view class="skeleton-header-card">
+      <view class="skeleton-header-top">
+        <view class="skeleton-avatars">
+          <view class="skeleton-avatar" wx:for="{{[1,2,3]}}" wx:key="*this"></view>
+        </view>
+        <view class="skeleton-menu-dot"></view>
+      </view>
+      <view class="skeleton-header-bottom">
+        <view class="skeleton-line-24 w120"></view>
+        <view class="skeleton-line-56 w280"></view>
+        <view class="skeleton-line-22 w360"></view>
+      </view>
+    </view>
+
+    <view class="skeleton-record-btn"></view>
+
+    <view class="skeleton-quick-actions">
+      <view class="skeleton-quick-item" wx:for="{{[1,2,3]}}" wx:key="*this">
+        <view class="skeleton-quick-icon"></view>
+        <view class="skeleton-line-22 w60"></view>
+      </view>
+    </view>
+
+    <view class="skeleton-tx-date"></view>
+    <view class="glass-card skeleton-tx-list">
+      <view class="skeleton-tx-item" wx:for="{{[1,2,3]}}" wx:key="*this">
+        <view class="skeleton-tx-icon"></view>
+        <view class="skeleton-tx-mid">
+          <view class="skeleton-line-28 w160"></view>
+          <view class="skeleton-line-22 w220"></view>
+        </view>
+        <view class="skeleton-line-30 w120"></view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 真实内容 -->
+  <block wx:else>
+    <!-- 头部卡片：封面 + 成员 + 金额 -->
+    <view class="header-card">
+      <image class="header-cover" src="{{coverUrl}}" mode="aspectFill" />
+      <view class="header-overlay"></view>
+      <view class="header-content">
+        <view class="header-top">
+          <view class="members-row">
+            <image
+              wx:for="{{members}}"
+              wx:key="userId"
+              class="member-avatar"
+              src="{{item.avatar}}"
+              mode="aspectFill"
+            />
+            <view class="member-invite" bindtap="onInvite">
+              <van-icon name="plus" size="18px" color="#4097a9" />
+            </view>
+          </view>
+          <book-menu book="{{book}}" is-owner="{{isOwner}}" light="{{true}}" bind:action="onBookAction" />
+        </view>
+        <view class="amount-block">
+          <text class="amount-label">共享支出</text>
+          <text class="amount-value">¥{{summaryText.sharedTotal}}</text>
+          <text class="amount-sub">我的支出 ¥{{summaryText.myTotal}}（共享 {{summaryText.myShared}} + 私密 {{summaryText.myPrivate}}）</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 主操作：记一笔 -->
+    <button class="btn-primary record-primary" bindtap="onAddTransaction">
+      <van-icon name="edit" size="20px" color="#fff" />
+      <text>记一笔</text>
+    </button>
+
+    <!-- 次要操作 -->
+    <view class="quick-actions">
+      <view class="quick-item" bindtap="onInvite">
+        <van-icon name="friends-o" size="24px" color="#4097a9" />
+        <text>邀请</text>
+      </view>
+      <view class="quick-item" bindtap="onStatistics">
+        <van-icon name="chart-trending-o" size="24px" color="#4097a9" />
+        <text>统计</text>
+      </view>
+      <button class="quick-item share-btn" open-type="share">
+        <van-icon name="share-o" size="24px" color="#4097a9" />
+        <text>分享</text>
+      </button>
+    </view>
+
+    <!-- 空流水 -->
+    <view wx:if="{{groups.length === 0}}" class="empty-tx">
+      <image class="empty-tx-img" src="https://cdn.ljw44.com/assets/illustrations/empty-transactions.png" mode="aspectFit" />
+      <text class="empty-tx-text">还没有账单，点上方「记一笔」记第一笔</text>
+    </view>
+
+    <!-- 流水 -->
+    <view class="tx-groups">
+      <view wx:for="{{groups}}" wx:key="date" class="tx-group">
+        <view class="tx-date">{{item.date}}</view>
+        <view class="glass-card tx-list">
+          <view
+            wx:for="{{item.items}}"
+            wx:for-item="tx"
+            wx:key="id"
+            class="tx-item {{tx.isPrivate ? 'private' : ''}}"
+            data-id="{{tx.id}}"
+            bindtap="onTapTransaction"
+          >
+            <view class="tx-icon">
+              <van-icon name="{{tx.categoryIcon}}" size="22px" color="#4097a9" />
+            </view>
+            <view class="tx-mid">
+              <view class="tx-title-row">
+                <text class="tx-cat">{{tx.categoryName}}</text>
+                <van-icon wx:if="{{tx.isPrivate}}" name="lock" size="13px" color="#8091a5" />
+              </view>
+              <text class="tx-note">{{tx.note || tx.payerName + ' 付款'}}</text>
+            </view>
+            <text class="tx-amount">¥{{tx.amountText}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>

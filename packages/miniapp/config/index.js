@@ -8,10 +8,11 @@
 // 后端全局前缀为 /api（见 server main.ts setGlobalPrefix），baseURL 需带上
 
 // 开发环境后端地址（本地调试时在开发者工具中关闭「校验合法域名」）
-const DEV_API = 'http://localhost:9080/api'
+const DEV_API = 'http://10.0.10.40:9080/api'
+// const DEV_API = 'https://aafz.lijiwang.top/api'
 
 // 生产环境后端地址（需为已备案 HTTPS 域名，并加入小程序 request 合法域名白名单）
-const PROD_API = 'https://api.ljw44.com/api'
+const PROD_API = 'https://aafz.lijiwang.top/api'
 
 // 读取运行环境：develop（开发者工具）/ trial（体验版）/ release（正式版）
 function readEnvVersion() {
