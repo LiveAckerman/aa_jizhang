@@ -271,7 +271,7 @@ export class BookService {
     return { ...book, coverUrl: this.resolveCover(book) }
   }
 
-  /** 移除成员（仅 owner，不能移除自己） */
+  /** 移除成员（仅 owner，不能移除自己，需检查未结清债务） */
   async removeMember(bookId: string, ownerId: string, targetUserId: string) {
     const book = await this.bookRepo.findOne({ where: { id: bookId } })
     if (!book) throw new NotFoundException('账本不存在')
@@ -281,6 +281,36 @@ export class BookService {
     if (targetUserId === ownerId) {
       throw new BadRequestException('不能移除创建者，请使用删除账本')
     }
+
+    // 检查该成员是否有未结清的债务
+    const txs = await this.txRepo.find({
+      where: { bookId, type: 'shared' },
+    })
+
+    // 计算净收支
+    const balanceMap = new Map<string, number>()
+    for (const tx of txs) {
+      // 付款人：应收
+      const payerBalance = balanceMap.get(tx.payerId) || 0
+      const totalAmount = (tx.splits || []).reduce((sum, s) => sum + s.amount, 0)
+      balanceMap.set(tx.payerId, payerBalance + totalAmount)
+
+      // 参与人：应付
+      for (const split of tx.splits || []) {
+        const participantBalance = balanceMap.get(split.userId) || 0
+        balanceMap.set(split.userId, participantBalance - split.amount)
+      }
+    }
+
+    const targetBalance = balanceMap.get(targetUserId) || 0
+    if (Math.abs(targetBalance) > 0) {
+      const amountYuan = (Math.abs(targetBalance) / 100).toFixed(2)
+      const statusText = targetBalance > 0 ? '应收' : '应付'
+      throw new BadRequestException(
+        `该成员有 ${statusText} ¥${amountYuan} 未结清，请先完成结算后再移除`,
+      )
+    }
+
     await this.memberRepo.delete({ bookId, userId: targetUserId })
     return { removed: true }
   }

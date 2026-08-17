@@ -13,6 +13,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { CurrentUser } from '../auth/current-user.decorator'
 import { SettlementService } from './settlement.service'
 import { CreateSettlementDto } from './dto/create-settlement.dto'
+import { BatchCreateSettlementDto } from './dto/batch-create-settlement.dto'
 
 @Controller('settlements')
 @UseGuards(JwtAuthGuard)
@@ -78,6 +79,19 @@ export class SettlementController {
   @Delete(':id')
   async remove(@CurrentUser('sub') userId: string, @Param('id') id: string) {
     const data = await this.settlementService.remove(id, userId)
+    return { code: 0, message: 'ok', data }
+  }
+
+  /**
+   * 批量创建并完成结算记录（使用事务）
+   * POST /api/settlements/batch
+   */
+  @Post('batch')
+  async batchCreate(
+    @CurrentUser('sub') userId: string,
+    @Body() dto: BatchCreateSettlementDto,
+  ) {
+    const data = await this.settlementService.batchCreateAndComplete(userId, dto)
     return { code: 0, message: 'ok', data }
   }
 }

@@ -102,14 +102,15 @@ Page({
         if (!res.confirm) return
         try {
           wx.showLoading({ title: '保存中...' })
-          await api.createSettlement({
+          // 创建结算记录
+          const settlement = await api.createSettlement({
             bookId: this.data.bookId,
             fromUserId: from,
             toUserId: to,
             amount: amount,
           })
-          // 创建成功后立即标记完成
-          // 注意：这里简化处理，实际应该先创建再标记，但为了演示简化为一步
+          // 立即标记为已完成
+          await api.completeSettlement(settlement.id)
           wx.hideLoading()
           wx.showToast({ title: '已标记', icon: 'success' })
           setTimeout(() => this.loadData(), 600)
@@ -136,15 +137,16 @@ Page({
         if (!res.confirm) return
         try {
           wx.showLoading({ title: '保存中...' })
-          // 批量创建结算记录
-          for (const plan of this.data.transferPlans) {
-            await api.createSettlement({
-              bookId: this.data.bookId,
-              fromUserId: plan.fromUserId,
-              toUserId: plan.toUserId,
-              amount: plan.amount,
-            })
-          }
+          // 使用批量API，原子性创建并完成所有结算
+          const settlements = this.data.transferPlans.map((plan) => ({
+            fromUserId: plan.fromUserId,
+            toUserId: plan.toUserId,
+            amount: plan.amount,
+          }))
+          await api.batchCreateSettlement({
+            bookId: this.data.bookId,
+            settlements,
+          })
           wx.hideLoading()
           wx.showToast({ title: '已全部标记', icon: 'success' })
           setTimeout(() => this.loadData(), 600)

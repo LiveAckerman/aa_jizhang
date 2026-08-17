@@ -1,15 +1,15 @@
-import { IsNotEmpty, IsNumber, IsString, Min } from 'class-validator'
+import { IsNotEmpty, IsNumber, IsString, IsUUID, Min } from 'class-validator'
 
 export class CreateSettlementDto {
-  @IsString()
+  @IsUUID()
   @IsNotEmpty()
   bookId: string
 
-  @IsString()
+  @IsUUID()
   @IsNotEmpty()
   fromUserId: string
 
-  @IsString()
+  @IsUUID()
   @IsNotEmpty()
   toUserId: string
 

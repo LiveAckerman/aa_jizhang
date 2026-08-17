@@ -5,11 +5,12 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { Repository, DataSource } from 'typeorm'
 import { Settlement } from './settlement.entity'
 import { Transaction } from '../transaction/transaction.entity'
 import { BookService } from '../book/book.service'
 import { CreateSettlementDto } from './dto/create-settlement.dto'
+import { BatchCreateSettlementDto } from './dto/batch-create-settlement.dto'
 import {
   calculateBalances,
   calculateOptimalSettlement,
@@ -25,6 +26,7 @@ export class SettlementService {
     @InjectRepository(Transaction)
     private readonly txRepo: Repository<Transaction>,
     private readonly bookService: BookService,
+    private readonly dataSource: DataSource,
   ) {}
 
   /**
@@ -100,10 +102,15 @@ export class SettlementService {
   }
 
   /**
-   * 创建结算记录
+   * 创建结算记录（仅允许创建自己参与的结算）
    */
   async create(userId: string, dto: CreateSettlementDto) {
     await this.bookService.assertMember(dto.bookId, userId)
+
+    // 权限控制：只能创建自己参与的结算（付款方或收款方）
+    if (dto.fromUserId !== userId && dto.toUserId !== userId) {
+      throw new ForbiddenException('只能创建自己参与的结算记录')
+    }
 
     // 校验：不能给自己转账
     if (dto.fromUserId === dto.toUserId) {
@@ -186,5 +193,68 @@ export class SettlementService {
 
     await this.settlementRepo.delete({ id: settlementId })
     return { deleted: true }
+  }
+
+  /**
+   * 批量创建并完成结算记录（使用事务确保原子性）
+   */
+  async batchCreateAndComplete(userId: string, dto: BatchCreateSettlementDto) {
+    await this.bookService.assertMember(dto.bookId, userId)
+
+    if (!dto.settlements || dto.settlements.length === 0) {
+      throw new BadRequestException('结算列表不能为空')
+    }
+
+    // 校验：所有结算必须包含当前用户（付款方或收款方）
+    const allInvolvingUser = dto.settlements.every(
+      (s) => s.fromUserId === userId || s.toUserId === userId,
+    )
+    if (!allInvolvingUser) {
+      throw new ForbiddenException('只能创建自己参与的结算记录')
+    }
+
+    // 校验：所有参与人都是账本成员
+    const allUserIds = new Set<string>()
+    dto.settlements.forEach((s) => {
+      if (s.fromUserId === s.toUserId) {
+        throw new BadRequestException('不能给自己转账')
+      }
+      allUserIds.add(s.fromUserId)
+      allUserIds.add(s.toUserId)
+    })
+
+    for (const uid of allUserIds) {
+      await this.bookService.assertMember(dto.bookId, uid)
+    }
+
+    // 使用事务批量创建并完成
+    const queryRunner = this.dataSource.createQueryRunner()
+    await queryRunner.connect()
+    await queryRunner.startTransaction()
+
+    try {
+      const createdSettlements: Settlement[] = []
+
+      for (const item of dto.settlements) {
+        const settlement = this.settlementRepo.create({
+          bookId: dto.bookId,
+          fromUserId: item.fromUserId,
+          toUserId: item.toUserId,
+          amount: item.amount,
+          status: 'completed', // 直接标记为已完成
+          completedAt: new Date(),
+        })
+        const saved = await queryRunner.manager.save(settlement)
+        createdSettlements.push(saved)
+      }
+
+      await queryRunner.commitTransaction()
+      return { count: createdSettlements.length, settlements: createdSettlements }
+    } catch (error) {
+      await queryRunner.rollbackTransaction()
+      throw error
+    } finally {
+      await queryRunner.release()
+    }
   }
 }
