@@ -60,6 +60,15 @@ Page({
     this.updateCheckedCount()
   },
 
+  // 点击原图放大预览
+  onPreviewImage() {
+    if (!this.data.imageUrl) return
+    wx.previewImage({
+      current: this.data.imageUrl,
+      urls: [this.data.imageUrl],
+    })
+  },
+
   // 重新上传图片并重新识别（覆盖当前结果）
   onReupload() {
     wx.chooseMedia({

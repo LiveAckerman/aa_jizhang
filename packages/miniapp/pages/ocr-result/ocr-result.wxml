@@ -1,8 +1,8 @@
 <view class="ocr-result-page">
   <!-- 原图预览 -->
   <view class="image-preview" wx:if="{{imageUrl}}">
-    <image src="{{imageUrl}}" mode="aspectFit" />
-    <view class="reupload-btn" bindtap="onReupload">
+    <image src="{{imageUrl}}" mode="aspectFit" bindtap="onPreviewImage" />
+    <view class="reupload-btn" catchtap="onReupload">
       <van-icon name="photograph" size="16px" color="#fff" />
       <text>重新上传</text>
     </view>
