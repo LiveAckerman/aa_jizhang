@@ -228,7 +228,7 @@
         </view>
       </view>
 
-      <view class="split-dialog-validation {{splitDialogValidation.indexOf('✓') === 0 ? 'valid' : 'invalid'}}">
+      <view class="split-dialog-validation {{splitDialogValid ? 'valid' : 'invalid'}}">
         {{splitDialogValidation || '请输入各成员的分账金额'}}
       </view>
 

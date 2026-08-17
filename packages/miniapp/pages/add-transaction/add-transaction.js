@@ -30,6 +30,7 @@ Page({
     splitDialogMode: '', // 'ratio' | 'shares' | 'fixed'
     splitDialogItems: [], // [{userId, nickname, avatar, value}]
     splitDialogValidation: '', // 校验提示文本
+    splitDialogValid: false, // 校验是否通过（供 WXML 样式判断）
 
     images: [],
     location: null,
@@ -258,7 +259,8 @@ Page({
       splitDialogMode: mode,
       splitDialogTitle: titles[mode] || '分账明细',
       splitDialogItems: items,
-      splitDialogValidation: ''
+      splitDialogValidation: '',
+      splitDialogValid: false
     })
   },
 
@@ -272,12 +274,17 @@ Page({
     this.validateSplitDialog()
   },
 
+  // 设置校验提示文本 + 有效标志（供 WXML 判断样式，避免在 WXML 里调用方法）
+  setSplitValidation(text, valid) {
+    this.setData({ splitDialogValidation: text, splitDialogValid: valid })
+  },
+
   // 校验分账明细
   validateSplitDialog() {
     const { splitDialogMode, splitDialogItems, amount } = this.data
     const yuan = parseFloat(amount)
     if (!yuan || yuan <= 0) {
-      this.setData({ splitDialogValidation: '请先输入总金额' })
+      this.setSplitValidation('请先输入总金额', false)
       return false
     }
 
@@ -289,30 +296,30 @@ Page({
       for (const item of splitDialogItems) {
         const val = parseFloat(item.value)
         if (isNaN(val) || val <= 0) {
-          this.setData({ splitDialogValidation: '请输入有效的百分比（大于0）' })
+          this.setSplitValidation('请输入有效的百分比（大于0）', false)
           return false
         }
         sum += val
       }
       if (Math.abs(sum - 100) > 0.01) {
-        this.setData({ splitDialogValidation: `当前总和：${sum.toFixed(2)}%，需等于100%` })
+        this.setSplitValidation(`当前总和：${sum.toFixed(2)}%，需等于100%`, false)
         return false
       }
-      this.setData({ splitDialogValidation: '✓ 校验通过' })
+      this.setSplitValidation('✓ 校验通过', true)
       return true
     } else if (splitDialogMode === 'shares') {
       // 按份额：每份>0即可
       for (const item of splitDialogItems) {
         const val = parseFloat(item.value)
         if (isNaN(val) || val <= 0) {
-          this.setData({ splitDialogValidation: '请输入有效的份数（大于0）' })
+          this.setSplitValidation('请输入有效的份数（大于0）', false)
           return false
         }
       }
       // 计算每份金额
       const totalShares = splitDialogItems.reduce((s, item) => s + parseFloat(item.value || 0), 0)
       const perShare = (totalCent / totalShares).toFixed(2)
-      this.setData({ splitDialogValidation: `✓ 每份约 ¥${perShare}` })
+      this.setSplitValidation(`✓ 每份约 ¥${perShare}`, true)
       return true
     } else if (splitDialogMode === 'fixed') {
       // 指定金额：总和应等于总金额
@@ -320,7 +327,7 @@ Page({
       for (const item of splitDialogItems) {
         const val = parseFloat(item.value)
         if (isNaN(val) || val < 0) {
-          this.setData({ splitDialogValidation: '请输入有效的金额（≥0）' })
+          this.setSplitValidation('请输入有效的金额（≥0）', false)
           return false
         }
         sum += val
@@ -328,10 +335,10 @@ Page({
       const diff = Math.abs(sum - yuan)
       if (diff > 0.01) {
         const status = sum > yuan ? '超出' : '不足'
-        this.setData({ splitDialogValidation: `当前总和：¥${sum.toFixed(2)}，${status} ¥${diff.toFixed(2)}` })
+        this.setSplitValidation(`当前总和：¥${sum.toFixed(2)}，${status} ¥${diff.toFixed(2)}`, false)
         return false
       }
-      this.setData({ splitDialogValidation: '✓ 校验通过' })
+      this.setSplitValidation('✓ 校验通过', true)
       return true
     }
 
