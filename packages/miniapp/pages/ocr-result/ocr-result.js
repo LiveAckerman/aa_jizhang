@@ -40,6 +40,8 @@ Page({
           spentAt: r.spentAt || new Date().toISOString(),
           note: r.note || r.merchant || '',
           confidence: r.confidence || 0.5,
+          confidencePercent: Math.round((r.confidence || 0.5) * 100), // 预计算百分比
+          confidenceWidth: ((r.confidence || 0.5) * 100).toFixed(0), // 预计算宽度
           checked: true,
         }
       })

@@ -63,9 +63,9 @@
         <view class="record-confidence">
           <text class="confidence-label">识别置信度</text>
           <view class="confidence-bar-bg">
-            <view class="confidence-bar" style="width: {{item.confidence * 100}}%"></view>
+            <view class="confidence-bar" style="width: {{item.confidenceWidth}}%"></view>
           </view>
-          <text class="confidence-value">{{(item.confidence * 100).toFixed(0)}}%</text>
+          <text class="confidence-value">{{item.confidencePercent}}%</text>
         </view>
       </view>
 
