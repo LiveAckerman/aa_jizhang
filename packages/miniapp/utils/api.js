@@ -57,6 +57,34 @@ const api = {
   listSettlements: (bookId) => request({ url: `/settlements?bookId=${bookId}` }),
   completeSettlement: (id) => request({ url: `/settlements/${id}/complete`, method: 'PATCH' }),
   deleteSettlement: (id) => request({ url: `/settlements/${id}`, method: 'DELETE' }),
+
+  // ===== OCR识别 =====
+  ocrRecognizeReceipt: (filePath, bookId) => {
+    return new Promise((resolve, reject) => {
+      wx.uploadFile({
+        url: `${baseURL}/ocr/recognize-receipt`,
+        filePath,
+        name: 'file',
+        header: {
+          Authorization: `Bearer ${wx.getStorageSync('token')}`,
+        },
+        success: (res) => {
+          try {
+            const data = JSON.parse(res.data)
+            if (data.code === 0) {
+              resolve(data.data)
+            } else {
+              reject(new Error(data.message || '识别失败'))
+            }
+          } catch (e) {
+            reject(new Error('解析响应失败'))
+          }
+        },
+        fail: reject,
+      })
+    })
+  },
+  batchCreateFromOcr: (data) => request({ url: '/ocr/batch-create-transactions', method: 'POST', data }),
 }
 
 module.exports = api

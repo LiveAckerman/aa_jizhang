@@ -526,3 +526,24 @@
 .split-dialog-btn::after {
   border: none;
 }
+
+/* OCR识别按钮 */
+.btn-ocr {
+  width: 100%;
+  height: 96rpx;
+  background: rgba(64, 151, 169, 0.1);
+  color: var(--color-primary);
+  border: 2rpx solid var(--color-primary);
+  border-radius: 48rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-top: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+}
+
+.btn-ocr::after {
+  border: none;
+}

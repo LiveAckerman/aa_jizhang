@@ -1,0 +1,104 @@
+<view class="ocr-result-page">
+  <!-- 原图预览 -->
+  <view class="image-preview" wx:if="{{imageUrl}}">
+    <image src="{{imageUrl}}" mode="aspectFit" />
+  </view>
+
+  <!-- 识别结果头部 -->
+  <view class="result-header">
+    <text class="result-title">识别到 {{records.length}} 条支付记录</text>
+    <view class="result-actions">
+      <text class="link" bindtap="onToggleAll">{{records.every(r => r.checked) ? '取消全选' : '全选'}}</text>
+      <text class="link" bindtap="onToggleRawText">{{showRawText ? '隐藏原文' : '查看原文'}}</text>
+    </view>
+  </view>
+
+  <!-- 识别记录列表 -->
+  <view wx:if="{{records.length > 0}}" class="records-list">
+    <view
+      wx:for="{{records}}"
+      wx:key="id"
+      class="record-item {{item.checked ? 'checked' : ''}}"
+    >
+      <!-- 勾选框 -->
+      <view class="record-checkbox" data-id="{{item.id}}" catchtap="onToggleCheck">
+        <van-icon
+          name="{{item.checked ? 'success' : 'circle'}}"
+          size="24px"
+          color="{{item.checked ? '#4097a9' : '#c4c4c4'}}"
+        />
+      </view>
+
+      <!-- 记录内容 -->
+      <view class="record-content">
+        <!-- 商户名 -->
+        <view class="record-row" data-id="{{item.id}}" catchtap="onEditMerchant">
+          <text class="record-label">商户</text>
+          <view class="record-value-group">
+            <text class="record-value editable">{{item.merchant}}</text>
+            <van-icon name="edit" size="14px" color="#8091a5" />
+          </view>
+        </view>
+
+        <!-- 金额 -->
+        <view class="record-row" data-id="{{item.id}}" catchtap="onEditAmount">
+          <text class="record-label">金额</text>
+          <view class="record-value-group">
+            <text class="record-value amount editable">¥{{item.amountText}}</text>
+            <van-icon name="edit" size="14px" color="#8091a5" />
+          </view>
+        </view>
+
+        <!-- 分类 -->
+        <view class="record-row" data-id="{{item.id}}" catchtap="onEditCategory">
+          <text class="record-label">分类</text>
+          <view class="record-value-group">
+            <van-icon name="{{item.categoryIcon}}" size="16px" color="#4097a9" />
+            <text class="record-value editable">{{item.categoryName}}</text>
+            <van-icon name="arrow" size="14px" color="#8091a5" />
+          </view>
+        </view>
+
+        <!-- 置信度 -->
+        <view class="record-confidence">
+          <text class="confidence-label">识别置信度</text>
+          <view class="confidence-bar-bg">
+            <view class="confidence-bar" style="width: {{item.confidence * 100}}%"></view>
+          </view>
+          <text class="confidence-value">{{(item.confidence * 100).toFixed(0)}}%</text>
+        </view>
+      </view>
+
+      <!-- 删除按钮 -->
+      <view class="record-delete" data-id="{{item.id}}" catchtap="onDelete">
+        <van-icon name="delete-o" size="20px" color="#fa9583" />
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view wx:if="{{records.length === 0}}" class="empty-state">
+    <van-icon name="info-o" size="64px" color="#c4c4c4" />
+    <text class="empty-text">未识别到支付记录</text>
+    <text class="empty-hint">请尝试拍摄更清晰的截图</text>
+  </view>
+
+  <!-- 原始文本面板 -->
+  <view wx:if="{{showRawText && rawText}}" class="raw-text-panel">
+    <view class="raw-text-header">
+      <text class="raw-text-title">原始识别文本</text>
+      <van-icon name="cross" size="20px" color="#8091a5" bindtap="onToggleRawText" />
+    </view>
+    <text class="raw-text">{{rawText}}</text>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="footer-bar" wx:if="{{records.length > 0}}">
+    <view class="footer-info">
+      <text class="selected-count">已选 {{records.filter(r => r.checked).length}} / {{records.length}} 条</text>
+    </view>
+    <button class="btn-submit" bindtap="onSubmit" disabled="{{submitting}}">
+      {{submitting ? '创建中...' : '确认创建'}}
+    </button>
+  </view>
+</view>

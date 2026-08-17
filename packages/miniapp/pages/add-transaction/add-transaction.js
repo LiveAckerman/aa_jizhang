@@ -584,4 +584,36 @@ Page({
       },
     })
   },
+
+  // OCR识别
+  onOcrRecognize() {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['camera', 'album'],
+      success: async (res) => {
+        wx.showLoading({ title: '识别中...' })
+
+        try {
+          const filePath = res.tempFiles[0].tempFilePath
+
+          // 上传并识别
+          const result = await api.ocrRecognizeReceipt(filePath, this.data.bookId)
+
+          wx.hideLoading()
+
+          // 跳转到结果页
+          wx.navigateTo({
+            url: `/pages/ocr-result/ocr-result?bookId=${this.data.bookId}`,
+            success: (navigateRes) => {
+              navigateRes.eventChannel.emit('ocrResult', result)
+            },
+          })
+        } catch (e) {
+          wx.hideLoading()
+          wx.showToast({ title: (e && e.message) || '识别失败', icon: 'none' })
+        }
+      },
+    })
+  },
 })

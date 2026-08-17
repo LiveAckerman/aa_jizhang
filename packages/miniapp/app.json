@@ -9,6 +9,7 @@
     "pages/profile-edit/profile-edit",
     "pages/transaction-logs/transaction-logs",
     "pages/settlement/settlement",
+    "pages/ocr-result/ocr-result",
     "pages/invite/invite",
     "pages/join/join",
     "pages/statistics/statistics",

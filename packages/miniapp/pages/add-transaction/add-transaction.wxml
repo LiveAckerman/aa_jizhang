@@ -194,6 +194,10 @@
   <button class="btn-primary save-btn" bindtap="onSave" disabled="{{saving}}">
     {{saving ? '保存中...' : '保存'}}
   </button>
+  <button class="btn-ocr" bindtap="onOcrRecognize">
+    <van-icon name="scan" size="18px" color="#4097a9" />
+    <text>OCR识别</text>
+  </button>
   <view wx:if="{{isEdit}}" class="logs-link" bindtap="onOpenLogs">查看修改记录</view>
   <view wx:if="{{isEdit}}" class="delete-link" bindtap="onDelete">删除账单</view>
   </block>

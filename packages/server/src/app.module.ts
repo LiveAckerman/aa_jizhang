@@ -10,6 +10,7 @@ import { TransactionModule } from './transaction/transaction.module'
 import { ExchangeRateModule } from './exchange-rate/exchange-rate.module'
 import { StatsModule } from './stats/stats.module'
 import { SettlementModule } from './settlement/settlement.module'
+import { OcrModule } from './ocr/ocr.module'
 import { User } from './user/user.entity'
 import { Book } from './book/book.entity'
 import { BookMember } from './book/book-member.entity'
@@ -47,6 +48,7 @@ import { Settlement } from './settlement/settlement.entity'
     ExchangeRateModule,
     StatsModule,
     SettlementModule,
+    OcrModule,
   ],
 })
 export class AppModule {}
