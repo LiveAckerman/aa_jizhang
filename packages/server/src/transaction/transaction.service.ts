@@ -309,6 +309,7 @@ export class TransactionService {
     if (tx.creatorId !== userId) {
       throw new ForbiddenException('只有记录人可以删除该账单')
     }
+    await this.logRepo.delete({ transactionId: id })
     await this.txRepo.delete({ id })
     return { deleted: true }
   }

@@ -13,8 +13,13 @@ export class UserService {
 
   /**
    * 根据ID查找用户
+   * 注意：id 必须非空。TypeORM 0.3 会把 where 里的 undefined 静默剥掉，
+   * findOne({ where: { id: undefined } }) 会退化成「返回表里第一条」，酿成串号事故。
    */
   async findById(id: string): Promise<User> {
+    if (!id) {
+      throw new NotFoundException('用户不存在')
+    }
     const user = await this.userRepo.findOne({ where: { id } })
     if (!user) {
       throw new NotFoundException('用户不存在')

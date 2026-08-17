@@ -12,6 +12,7 @@ import { BookMember } from './book-member.entity'
 import { BookGroup } from './book-group.entity'
 import { User } from '../user/user.entity'
 import { Transaction } from '../transaction/transaction.entity'
+import { TransactionLog } from '../transaction/transaction-log.entity'
 import { CreateBookDto } from './dto/create-book.dto'
 import { UpdateBookDto } from './dto/update-book.dto'
 
@@ -37,6 +38,8 @@ export class BookService {
     private readonly userRepo: Repository<User>,
     @InjectRepository(Transaction)
     private readonly txRepo: Repository<Transaction>,
+    @InjectRepository(TransactionLog)
+    private readonly logRepo: Repository<TransactionLog>,
   ) {}
 
   /** 生成 8 位邀请码 */
@@ -216,13 +219,16 @@ export class BookService {
     return { ...book, coverUrl: this.resolveCover(book) }
   }
 
-  /** 删除账本（仅 owner） */
+  /** 删除账本（仅 owner）：级联清理账单、修改日志、成员 */
   async remove(bookId: string, userId: string) {
     const book = await this.bookRepo.findOne({ where: { id: bookId } })
     if (!book) throw new NotFoundException('账本不存在')
     if (book.ownerId !== userId) {
       throw new ForbiddenException('只有创建者可以删除账本')
     }
+    // 顺序：先删依赖数据，最后删账本本身，避免留下孤儿记录
+    await this.logRepo.delete({ bookId })
+    await this.txRepo.delete({ bookId })
     await this.memberRepo.delete({ bookId })
     await this.bookRepo.delete({ id: bookId })
     return { deleted: true }

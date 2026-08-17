@@ -14,8 +14,8 @@ export class UserController {
    * GET /api/user/profile
    */
   @Get('profile')
-  async getProfile(@CurrentUser() user: any) {
-    const userInfo = await this.userService.findById(user.userId)
+  async getProfile(@CurrentUser('sub') userId: string) {
+    const userInfo = await this.userService.findById(userId)
     return {
       code: 0,
       message: 'ok',
@@ -35,8 +35,8 @@ export class UserController {
    * POST /api/user/profile-prompt/dismiss
    */
   @Post('profile-prompt/dismiss')
-  async dismissProfilePrompt(@CurrentUser() user: any) {
-    await this.userService.dismissProfilePrompt(user.userId)
+  async dismissProfilePrompt(@CurrentUser('sub') userId: string) {
+    await this.userService.dismissProfilePrompt(userId)
     return { code: 0, message: 'ok', data: null }
   }
 
@@ -46,10 +46,10 @@ export class UserController {
    */
   @Put('profile')
   async updateProfile(
-    @CurrentUser() user: any,
+    @CurrentUser('sub') userId: string,
     @Body() dto: UpdateProfileDto,
   ) {
-    const updatedUser = await this.userService.updateProfile(user.userId, dto)
+    const updatedUser = await this.userService.updateProfile(userId, dto)
     return {
       code: 0,
       message: '更新成功',
