@@ -17,11 +17,18 @@ Page({
   },
 
   onLoad(query) {
+    // 跳转时 bookName 经过 encodeURIComponent 编码，这里需解码还原中文
+    let bookName = '账本'
+    try {
+      bookName = decodeURIComponent(query.bookName || '') || '账本'
+    } catch (e) {
+      bookName = query.bookName || '账本'
+    }
     this.setData({
       bookId: query.bookId || '',
-      bookName: query.bookName || '账本',
+      bookName,
     })
-    wx.setNavigationBarTitle({ title: `${query.bookName || '账本'} - 结算` })
+    wx.setNavigationBarTitle({ title: `${bookName} - 结算` })
     this.loadData()
   },
 
