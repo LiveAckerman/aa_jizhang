@@ -1,6 +1,6 @@
 const app = getApp()
 const api = require('../../utils/api')
-const { CATEGORIES } = require('../../constants/ledger')
+const { CATEGORIES, CATEGORY_MAP } = require('../../constants/ledger')
 
 Page({
   data: {
@@ -35,26 +35,34 @@ Page({
     })
   },
 
+  // 把后端一条 record 补全展示字段（金额转元、分类映射、置信度百分比等）
+  // 后端只返回业务数据（分/key），展示层格式化统一收敛在这里
+  decorateRecord(r, id) {
+    const cat = CATEGORY_MAP[r.category] || CATEGORY_MAP.other
+    const amount = r.amount || 0
+    const confidence = r.confidence == null ? 0.5 : r.confidence
+    return {
+      id,
+      merchant: r.merchant || '未知商户',
+      amount,
+      amountText: (amount / 100).toFixed(2),
+      category: cat.key,
+      categoryName: cat.name,
+      categoryIcon: cat.icon,
+      spentAt: r.spentAt || new Date().toISOString(),
+      note: r.note || r.merchant || '',
+      confidence,
+      confidencePercent: Math.round(confidence * 100),
+      confidenceWidth: (confidence * 100).toFixed(0),
+      checked: true,
+    }
+  },
+
   // 把 OCR 结果套用到页面（新识别 / 重新识别共用）
   applyOcrResult(data) {
-    const records = (data.records || []).map((r, i) => {
-      const category = CATEGORIES.find((c) => c.key === r.category) || CATEGORIES[CATEGORIES.length - 1]
-      return {
-        id: String(i),
-        merchant: r.merchant || '未知商户',
-        amount: r.amount || 0,
-        amountText: ((r.amount || 0) / 100).toFixed(2),
-        category: r.category || 'other',
-        categoryName: category.name,
-        categoryIcon: category.icon,
-        spentAt: r.spentAt || new Date().toISOString(),
-        note: r.note || r.merchant || '',
-        confidence: r.confidence || 0.5,
-        confidencePercent: Math.round((r.confidence || 0.5) * 100), // 预计算百分比
-        confidenceWidth: ((r.confidence || 0.5) * 100).toFixed(0), // 预计算宽度
-        checked: true,
-      }
-    })
+    const records = (data.records || []).map((r, i) =>
+      this.decorateRecord(r, String(i)),
+    )
 
     this.setData({
       imageUrl: data.imageUrl || '',
@@ -129,6 +137,19 @@ Page({
     this.setData({ showRawText: !this.data.showRawText })
   },
 
+  // 统一更新某条记录：合并业务字段后经 decorateRecord 重算所有展示字段，
+  // 避免各处编辑手动同步 amountText/categoryName 等派生字段导致遗漏
+  patchRecord(id, patch) {
+    const records = this.data.records.map((r) => {
+      if (r.id !== id) return r
+      const merged = { ...r, ...patch }
+      const decorated = this.decorateRecord(merged, id)
+      decorated.checked = r.checked // 保留勾选状态
+      return decorated
+    })
+    this.setData({ records })
+  },
+
   // 快捷编辑金额
   onEditAmount(e) {
     const { id } = e.currentTarget.dataset
@@ -146,12 +167,7 @@ Page({
           wx.showToast({ title: '请输入有效金额', icon: 'none' })
           return
         }
-        const records = this.data.records.map((r) =>
-          r.id === id
-            ? { ...r, amount: Math.round(amount * 100), amountText: amount.toFixed(2) }
-            : r,
-        )
-        this.setData({ records })
+        this.patchRecord(id, { amount: Math.round(amount * 100) })
       },
     })
   },
@@ -170,10 +186,7 @@ Page({
         if (!res.confirm) return
         const merchant = (res.content || '').trim()
         if (!merchant) return
-        const records = this.data.records.map((r) =>
-          r.id === id ? { ...r, merchant, note: merchant } : r,
-        )
-        this.setData({ records })
+        this.patchRecord(id, { merchant, note: merchant })
       },
     })
   },
@@ -188,19 +201,8 @@ Page({
   onPickCategory(e) {
     const { key } = e.currentTarget.dataset
     const id = this.data.categoryDialogId
-    const category = this.data.categories.find((c) => c.key === key)
-    if (!category) return
-    const records = this.data.records.map((r) =>
-      r.id === id
-        ? {
-            ...r,
-            category: category.key,
-            categoryName: category.name,
-            categoryIcon: category.icon,
-          }
-        : r,
-    )
-    this.setData({ records, showCategoryDialog: false, categoryDialogId: '' })
+    this.patchRecord(id, { category: key })
+    this.setData({ showCategoryDialog: false, categoryDialogId: '' })
   },
 
   // 关闭分类弹窗

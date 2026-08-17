@@ -38,6 +38,20 @@ import { Settlement } from './settlement/settlement.entity'
         database: config.get('DB_DATABASE'),
         entities: [User, Book, BookMember, BookGroup, Transaction, TransactionLog, Settlement],
         synchronize: true, // 开发环境自动建表；生产环境应关闭并用迁移
+        // 断线重连：热重载 / 网络抖动后自动重建连接，避免复用已被服务端关闭的死连接
+        keepConnectionAlive: true,
+        // node-postgres 连接池参数（远程库长连接必配）
+        extra: {
+          max: 10, // 池最大连接数
+          // 本地空闲连接 30s 后主动回收，需 < 服务端的 idle 超时，防止拿到已被关闭的死连接
+          idleTimeoutMillis: 30000,
+          connectionTimeoutMillis: 10000, // 建连超时
+          keepAlive: true, // 开启 TCP keepalive
+          allowExitOnIdle: false,
+        },
+        // 连接被服务端异常关闭时自动重试，避免请求直接 500
+        retryAttempts: 5,
+        retryDelay: 2000,
       }),
     }),
     AuthModule,
