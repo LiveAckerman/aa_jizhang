@@ -13,6 +13,7 @@ import { CurrentUser } from '../auth/current-user.decorator'
 import { OcrService } from './ocr.service'
 import { BatchCreateFromOcrDto } from './dto/batch-create-from-ocr.dto'
 import { TransactionService } from '../transaction/transaction.service'
+import { BookService } from '../book/book.service'
 
 @Controller('ocr')
 @UseGuards(JwtAuthGuard)
@@ -20,6 +21,7 @@ export class OcrController {
   constructor(
     private readonly ocrService: OcrService,
     private readonly transactionService: TransactionService,
+    private readonly bookService: BookService,
   ) {}
 
   /**
@@ -71,25 +73,48 @@ export class OcrController {
     }
 
     const createdTransactions: any[] = []
+    const errors: string[] = []
+    // 缓存每个账本的成员参与人，避免重复查询
+    const participantCache: Record<string, string[]> = {}
 
     for (const txDto of dto.transactions) {
       try {
+        const type = txDto.type || 'shared'
+        let participantIds: string[] = []
+
+        // 共享账平均分摊：默认全体成员参与
+        if (type === 'shared') {
+          if (!participantCache[txDto.bookId]) {
+            const members = await this.bookService.listMemberIds(txDto.bookId)
+            participantCache[txDto.bookId] = members
+          }
+          participantIds = participantCache[txDto.bookId]
+        }
+
         const transaction = await this.transactionService.create(userId, {
           bookId: txDto.bookId,
-          type: txDto.type || 'shared',
+          type,
           amount: txDto.amount,
           category: txDto.category,
           note: txDto.note,
           spentAt: txDto.spentAt,
           payerId: userId, // OCR识别默认付款人为当前用户
           splitMethod: 'average', // 默认平均分摊
-          participantIds: [], // 需要前端传递或后续选择
+          participantIds,
         })
         createdTransactions.push(transaction)
       } catch (error: any) {
-        // 记录错误但继续处理其他记录
-        console.error(`创建交易失败: ${error?.message || '未知错误'}`)
+        const msg = error?.message || '未知错误'
+        errors.push(msg)
+        console.error(`创建交易失败: ${msg}`)
       }
+    }
+
+    // 全部失败时抛错，让前端感知（避免"提示成功但实际0条"）
+    if (createdTransactions.length === 0) {
+      throw new BadRequestException(
+        `创建失败：${errors[0] || '请检查账本和金额'}`,
+      )
     }
 
     return {
@@ -97,6 +122,7 @@ export class OcrController {
       message: `成功创建 ${createdTransactions.length} 条记录`,
       data: {
         count: createdTransactions.length,
+        failed: errors.length,
         transactions: createdTransactions,
       },
     }

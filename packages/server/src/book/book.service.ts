@@ -170,6 +170,12 @@ export class BookService {
     return book
   }
 
+  /** 取账本全部成员的 userId 列表 */
+  async listMemberIds(bookId: string): Promise<string[]> {
+    const members = await this.memberRepo.find({ where: { bookId } })
+    return members.map((m) => m.userId)
+  }
+
   /** 校验用户是否为账本成员，返回成员记录 */
   async assertMember(bookId: string, userId: string): Promise<BookMember> {
     const member = await this.memberRepo.findOne({ where: { bookId, userId } })

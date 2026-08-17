@@ -111,4 +111,28 @@
       {{submitting ? '创建中...' : '确认创建'}}
     </button>
   </view>
+
+  <!-- 分类选择弹窗 -->
+  <view wx:if="{{showCategoryDialog}}" class="cat-dialog-mask" bindtap="onCloseCategoryDialog">
+    <view class="cat-dialog" catchtap>
+      <view class="cat-dialog-header">
+        <text class="cat-dialog-title">选择分类</text>
+        <van-icon name="cross" size="20px" color="#8091a5" bindtap="onCloseCategoryDialog" />
+      </view>
+      <view class="cat-dialog-grid">
+        <view
+          wx:for="{{categories}}"
+          wx:key="key"
+          class="cat-dialog-item"
+          data-key="{{item.key}}"
+          catchtap="onPickCategory"
+        >
+          <view class="cat-dialog-icon">
+            <van-icon name="{{item.icon}}" size="24px" color="#4097a9" />
+          </view>
+          <text class="cat-dialog-name">{{item.name}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
 </view>

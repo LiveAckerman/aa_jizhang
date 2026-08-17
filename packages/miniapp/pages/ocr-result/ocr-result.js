@@ -14,6 +14,10 @@ Page({
     checkedCount: 0,
     allChecked: false,
 
+    // 分类选择弹窗
+    showCategoryDialog: false,
+    categoryDialogId: '',
+
     loading: false,
     submitting: false,
     showRawText: false,
@@ -174,28 +178,34 @@ Page({
     })
   },
 
-  // 选择分类
+  // 打开分类选择弹窗（ActionSheet 最多6项，分类有9个，改用自定义网格弹窗）
   onEditCategory(e) {
     const { id } = e.currentTarget.dataset
-    const items = this.data.categories.map((c) => c.name)
+    this.setData({ categoryDialogId: id, showCategoryDialog: true })
+  },
 
-    wx.showActionSheet({
-      itemList: items,
-      success: (res) => {
-        const category = this.data.categories[res.tapIndex]
-        const records = this.data.records.map((r) =>
-          r.id === id
-            ? {
-                ...r,
-                category: category.key,
-                categoryName: category.name,
-                categoryIcon: category.icon,
-              }
-            : r,
-        )
-        this.setData({ records })
-      },
-    })
+  // 选中某个分类
+  onPickCategory(e) {
+    const { key } = e.currentTarget.dataset
+    const id = this.data.categoryDialogId
+    const category = this.data.categories.find((c) => c.key === key)
+    if (!category) return
+    const records = this.data.records.map((r) =>
+      r.id === id
+        ? {
+            ...r,
+            category: category.key,
+            categoryName: category.name,
+            categoryIcon: category.icon,
+          }
+        : r,
+    )
+    this.setData({ records, showCategoryDialog: false, categoryDialogId: '' })
+  },
+
+  // 关闭分类弹窗
+  onCloseCategoryDialog() {
+    this.setData({ showCategoryDialog: false, categoryDialogId: '' })
   },
 
   // 删除记录
