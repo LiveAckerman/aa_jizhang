@@ -1,7 +1,7 @@
 /**
  * 业务接口封装：账本 / 分组 / 记账 / 汇率 / 日志 / 上传
  */
-const { request } = require('./request')
+const { request, getBaseURL } = require('./request')
 
 const api = {
   // ===== 账本 =====
@@ -62,7 +62,7 @@ const api = {
   ocrRecognizeReceipt: (filePath, bookId) => {
     return new Promise((resolve, reject) => {
       wx.uploadFile({
-        url: `${baseURL}/ocr/recognize-receipt`,
+        url: `${getBaseURL()}/ocr/recognize-receipt`,
         filePath,
         name: 'file',
         header: {

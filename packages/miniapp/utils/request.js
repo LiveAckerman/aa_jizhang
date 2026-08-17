@@ -9,12 +9,12 @@ const app = getApp()
  * @returns {Promise}
  */
 function request({ url, method = 'GET', data = {}, header = {} }) {
-  const baseUrl = getApp().globalData.apiBaseUrl
+  const baseURL = getApp().globalData.apiBaseUrl
   const token = getApp().globalData.token
 
   return new Promise((resolve, reject) => {
     wx.request({
-      url: `${baseUrl}${url}`,
+      url: `${baseURL}${url}`,
       method,
       data,
       header: {
@@ -50,4 +50,11 @@ function request({ url, method = 'GET', data = {}, header = {} }) {
   })
 }
 
-module.exports = { request }
+/**
+ * 获取baseURL（用于wx.uploadFile等场景）
+ */
+function getBaseURL() {
+  return getApp().globalData.apiBaseUrl
+}
+
+module.exports = { request, getBaseURL }
