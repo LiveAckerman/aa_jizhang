@@ -1,0 +1,65 @@
+/**
+ * WXS格式化工具模块
+ * 用于WXML中的数据格式化（WXML不支持JS方法调用）
+ */
+
+/**
+ * 格式化金额（分 → 元，保留2位小数）
+ * @param {number} cents 金额（分）
+ * @returns {string} 格式化后的金额
+ */
+function formatAmount(cents) {
+  if (typeof cents !== 'number' || isNaN(cents)) {
+    return '0.00'
+  }
+  var yuan = cents / 100
+  return yuan.toFixed(2)
+}
+
+/**
+ * 格式化百分比
+ * @param {number} value 0-1之间的小数
+ * @returns {string} 百分比字符串
+ */
+function formatPercent(value) {
+  if (typeof value !== 'number' || isNaN(value)) {
+    return '0%'
+  }
+  return Math.round(value * 100) + '%'
+}
+
+/**
+ * 格式化日期
+ * @param {string} isoString ISO日期字符串
+ * @returns {string} YYYY-MM-DD
+ */
+function formatDate(isoString) {
+  if (!isoString) return ''
+  var date = getDate(isoString)
+  var year = date.getFullYear()
+  var month = date.getMonth() + 1
+  var day = date.getDate()
+
+  return year + '-' +
+    (month < 10 ? '0' + month : month) + '-' +
+    (day < 10 ? '0' + day : day)
+}
+
+/**
+ * 截断文本
+ * @param {string} text 原文本
+ * @param {number} maxLen 最大长度
+ * @returns {string} 截断后的文本
+ */
+function truncate(text, maxLen) {
+  if (!text) return ''
+  if (text.length <= maxLen) return text
+  return text.substring(0, maxLen) + '...'
+}
+
+module.exports = {
+  formatAmount: formatAmount,
+  formatPercent: formatPercent,
+  formatDate: formatDate,
+  truncate: truncate,
+}

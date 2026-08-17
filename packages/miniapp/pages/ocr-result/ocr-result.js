@@ -27,31 +27,62 @@ Page({
     // 接收从上一页传来的识别结果
     const eventChannel = this.getOpenerEventChannel()
     eventChannel.on('ocrResult', (data) => {
-      const records = (data.records || []).map((r, i) => {
-        const category = CATEGORIES.find((c) => c.key === r.category) || CATEGORIES[CATEGORIES.length - 1]
-        return {
-          id: String(i),
-          merchant: r.merchant || '未知商户',
-          amount: r.amount || 0,
-          amountText: ((r.amount || 0) / 100).toFixed(2),
-          category: r.category || 'other',
-          categoryName: category.name,
-          categoryIcon: category.icon,
-          spentAt: r.spentAt || new Date().toISOString(),
-          note: r.note || r.merchant || '',
-          confidence: r.confidence || 0.5,
-          confidencePercent: Math.round((r.confidence || 0.5) * 100), // 预计算百分比
-          confidenceWidth: ((r.confidence || 0.5) * 100).toFixed(0), // 预计算宽度
-          checked: true,
-        }
-      })
+      this.applyOcrResult(data)
+    })
+  },
 
-      this.setData({
-        imageUrl: data.imageUrl || '',
-        rawText: data.rawOcrResult || '',
-        records,
-      })
-      this.updateCheckedCount()
+  // 把 OCR 结果套用到页面（新识别 / 重新识别共用）
+  applyOcrResult(data) {
+    const records = (data.records || []).map((r, i) => {
+      const category = CATEGORIES.find((c) => c.key === r.category) || CATEGORIES[CATEGORIES.length - 1]
+      return {
+        id: String(i),
+        merchant: r.merchant || '未知商户',
+        amount: r.amount || 0,
+        amountText: ((r.amount || 0) / 100).toFixed(2),
+        category: r.category || 'other',
+        categoryName: category.name,
+        categoryIcon: category.icon,
+        spentAt: r.spentAt || new Date().toISOString(),
+        note: r.note || r.merchant || '',
+        confidence: r.confidence || 0.5,
+        confidencePercent: Math.round((r.confidence || 0.5) * 100), // 预计算百分比
+        confidenceWidth: ((r.confidence || 0.5) * 100).toFixed(0), // 预计算宽度
+        checked: true,
+      }
+    })
+
+    this.setData({
+      imageUrl: data.imageUrl || '',
+      rawText: data.rawOcrResult || '',
+      records,
+    })
+    this.updateCheckedCount()
+  },
+
+  // 重新上传图片并重新识别（覆盖当前结果）
+  onReupload() {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['camera', 'album'],
+      success: async (res) => {
+        const filePath = res.tempFiles[0].tempFilePath
+        wx.showLoading({ title: '重新识别中...' })
+        try {
+          const result = await api.ocrRecognizeReceipt(filePath, this.data.bookId)
+          wx.hideLoading()
+          if (!result.records || result.records.length === 0) {
+            wx.showToast({ title: '未识别到支付记录', icon: 'none' })
+          } else {
+            wx.showToast({ title: `识别到 ${result.records.length} 条`, icon: 'success' })
+          }
+          this.applyOcrResult(result)
+        } catch (e) {
+          wx.hideLoading()
+          wx.showToast({ title: (e && e.message) || '识别失败', icon: 'none' })
+        }
+      },
     })
   },
 

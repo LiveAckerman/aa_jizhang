@@ -120,67 +120,93 @@ export class OcrService {
       })
     }
 
-    // 规则3: 通用格式（微信/支付宝转账成功页）
-    // "转账金额" + "¥123.45" 或 "123.45元"
+    // 规则3: 通用行扫描（微信/支付宝账单列表、付款成功页等）
+    // 逐行查找 "¥金额"，并向上关联最近的商户名
     if (records.length === 0) {
-      const amountPattern1 = /转账金额[\s\S]*?[¥￥](\d+\.?\d*)/g
-      const amountPattern2 = /(\d+\.?\d*)元/g
+      const lines = fullText
+        .split('\n')
+        .map((l) => l.trim())
+        .filter(Boolean)
 
-      while ((match = amountPattern1.exec(fullText)) !== null) {
-        const amount = Math.round(parseFloat(match[1]) * 100)
-        if (amount > 0) {
-          records.push({
-            merchant: '未知商户',
-            amount,
-            confidence: 0.7,
-            source: 'generic',
-          })
-        }
-      }
+      // 汇总类关键词：这类金额是统计值，需排除（如"本月支出¥836.87"）
+      const summaryKeywords = [
+        '统计',
+        '本月',
+        '本周',
+        '本年',
+        '合计',
+        '总计',
+        '总支出',
+        '总收入',
+        '收入',
+        '结余',
+        '余额',
+        '较上',
+      ]
 
-      if (records.length === 0) {
-        while ((match = amountPattern2.exec(fullText)) !== null) {
-          const amount = Math.round(parseFloat(match[1]) * 100)
-          if (amount > 0 && amount < 1000000) {
-            // 限制金额合理范围
-            records.push({
-              merchant: '未知商户',
-              amount,
-              confidence: 0.5,
-              source: 'generic',
-            })
+      // 金额：¥/￥ 后跟数字（最多两位小数）
+      const amountRe = /[¥￥]\s*(\d+(?:\.\d{1,2})?)/
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i]
+        const m = line.match(amountRe)
+        if (!m) continue
+
+        // 排除汇总金额
+        if (summaryKeywords.some((k) => line.includes(k))) continue
+
+        const amount = Math.round(parseFloat(m[1]) * 100)
+        if (amount <= 0 || amount > 100000000) continue
+
+        // 向上最多回溯 4 行，找最近的商户名（含中文、且非噪声行）
+        let merchant = '未知商户'
+        for (let j = i - 1; j >= 0 && j >= i - 4; j--) {
+          const prev = lines[j]
+          if (this.isNoiseLine(prev)) continue
+          if (/[一-龥]{2,}/.test(prev)) {
+            merchant = prev.replace(/[·.。\s]+$/, '').slice(0, 20)
+            break
           }
         }
-      }
-    }
 
-    // 规则4: 提取可能的商户名（中文2-10字）
-    if (records.length > 0 && records.some((r) => r.merchant === '未知商户')) {
-      const merchantPattern = /([一-龥]{2,10})/g
-      const merchants: string[] = []
-      while ((match = merchantPattern.exec(fullText)) !== null) {
-        const text = match[1]
-        // 过滤无意义的词
-        if (
-          !['支付', '转账', '收款', '付款', '成功', '完成', '金额', '备注'].includes(
-            text,
-          )
-        ) {
-          merchants.push(text)
-        }
+        records.push({
+          merchant,
+          amount,
+          confidence: 0.75,
+          source: 'generic',
+        })
       }
-
-      // 尝试为"未知商户"分配商户名
-      let merchantIndex = 0
-      records.forEach((record) => {
-        if (record.merchant === '未知商户' && merchants[merchantIndex]) {
-          record.merchant = merchants[merchantIndex]
-          merchantIndex++
-        }
-      })
     }
 
     return records
+  }
+
+  /**
+   * 判断是否为噪声行（时间、状态、操作提示等，不应作为商户名）
+   */
+  private isNoiseLine(line: string): boolean {
+    if (!line) return true
+    // 纯时间：11:07 / 10:55 或日期
+    if (/^\d{1,2}[:：]\d{2}/.test(line)) return true
+    if (/^\d{4}[-/年]/.test(line)) return true
+    // 纯数字/金额行
+    if (/^[¥￥\d.\s]+$/.test(line)) return true
+    // 常见状态/操作词
+    const noiseWords = [
+      '付款成功',
+      '交易成功',
+      '支付成功',
+      '收款成功',
+      '查看详情',
+      '账单详情',
+      '付款方式',
+      '服务消息',
+      '支付消息',
+      '大额消费',
+      '自动扣款',
+      '备注',
+    ]
+    return noiseWords.some((w) => line.includes(w))
   }
 
   /**

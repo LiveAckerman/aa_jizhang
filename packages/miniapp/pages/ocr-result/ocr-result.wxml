@@ -2,6 +2,16 @@
   <!-- 原图预览 -->
   <view class="image-preview" wx:if="{{imageUrl}}">
     <image src="{{imageUrl}}" mode="aspectFit" />
+    <view class="reupload-btn" bindtap="onReupload">
+      <van-icon name="photograph" size="16px" color="#fff" />
+      <text>重新上传</text>
+    </view>
+  </view>
+
+  <!-- 无图时也可上传 -->
+  <view wx:else class="reupload-empty" bindtap="onReupload">
+    <van-icon name="photograph" size="24px" color="#4097a9" />
+    <text>上传支付截图重新识别</text>
   </view>
 
   <!-- 识别结果头部 -->

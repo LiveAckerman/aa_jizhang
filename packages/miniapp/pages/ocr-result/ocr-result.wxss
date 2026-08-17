@@ -6,6 +6,7 @@
 
 /* 图片预览 */
 .image-preview {
+  position: relative;
   width: 100%;
   height: 400rpx;
   background: #fff;
@@ -15,6 +16,37 @@
 .image-preview image {
   width: 100%;
   height: 100%;
+}
+
+/* 重新上传按钮（图片右下角悬浮） */
+.reupload-btn {
+  position: absolute;
+  right: 24rpx;
+  bottom: 24rpx;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 12rpx 24rpx;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 24rpx;
+  border-radius: 32rpx;
+  backdrop-filter: blur(10rpx);
+}
+
+/* 无图时的上传入口 */
+.reupload-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  margin: 24rpx 32rpx;
+  padding: 32rpx;
+  background: rgba(64, 151, 169, 0.08);
+  border: 2rpx dashed var(--color-primary);
+  border-radius: 24rpx;
+  color: var(--color-primary);
+  font-size: 28rpx;
 }
 
 /* 结果头部 */
