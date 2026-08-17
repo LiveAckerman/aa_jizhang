@@ -10,6 +10,10 @@ Page({
     records: [],
     categories: CATEGORIES,
 
+    // 计算属性
+    checkedCount: 0,
+    allChecked: false,
+
     loading: false,
     submitting: false,
     showRawText: false,
@@ -45,7 +49,15 @@ Page({
         rawText: data.rawOcrResult || '',
         records,
       })
+      this.updateCheckedCount()
     })
+  },
+
+  // 更新选中数量
+  updateCheckedCount() {
+    const checkedCount = this.data.records.filter((r) => r.checked).length
+    const allChecked = this.data.records.length > 0 && checkedCount === this.data.records.length
+    this.setData({ checkedCount, allChecked })
   },
 
   // 切换勾选状态
@@ -55,13 +67,15 @@ Page({
       r.id === id ? { ...r, checked: !r.checked } : r,
     )
     this.setData({ records })
+    this.updateCheckedCount()
   },
 
   // 全选/取消全选
   onToggleAll() {
-    const allChecked = this.data.records.every((r) => r.checked)
+    const allChecked = this.data.allChecked
     const records = this.data.records.map((r) => ({ ...r, checked: !allChecked }))
     this.setData({ records })
+    this.updateCheckedCount()
   },
 
   // 切换原始文本显示
@@ -155,6 +169,7 @@ Page({
         if (!res.confirm) return
         const records = this.data.records.filter((r) => r.id !== id)
         this.setData({ records })
+        this.updateCheckedCount()
         if (records.length === 0) {
           wx.showToast({ title: '已清空，请返回', icon: 'none' })
         }

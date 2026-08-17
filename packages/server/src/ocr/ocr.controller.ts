@@ -70,7 +70,7 @@ export class OcrController {
       throw new BadRequestException('交易列表不能为空')
     }
 
-    const createdTransactions = []
+    const createdTransactions: any[] = []
 
     for (const txDto of dto.transactions) {
       try {
@@ -86,9 +86,9 @@ export class OcrController {
           participantIds: [], // 需要前端传递或后续选择
         })
         createdTransactions.push(transaction)
-      } catch (error) {
+      } catch (error: any) {
         // 记录错误但继续处理其他记录
-        console.error(`创建交易失败: ${error.message}`)
+        console.error(`创建交易失败: ${error?.message || '未知错误'}`)
       }
     }
 

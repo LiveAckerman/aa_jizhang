@@ -81,9 +81,9 @@ export class OcrService {
       }
 
       return await response.json()
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(
-        `OCR识别失败: ${error.message || '未知错误'}`,
+        `OCR识别失败: ${error?.message || '未知错误'}`,
       )
     }
   }
