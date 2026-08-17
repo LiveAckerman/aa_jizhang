@@ -9,12 +9,14 @@ import { UploadModule } from './upload/upload.module'
 import { TransactionModule } from './transaction/transaction.module'
 import { ExchangeRateModule } from './exchange-rate/exchange-rate.module'
 import { StatsModule } from './stats/stats.module'
+import { SettlementModule } from './settlement/settlement.module'
 import { User } from './user/user.entity'
 import { Book } from './book/book.entity'
 import { BookMember } from './book/book-member.entity'
 import { BookGroup } from './book/book-group.entity'
 import { Transaction } from './transaction/transaction.entity'
 import { TransactionLog } from './transaction/transaction-log.entity'
+import { Settlement } from './settlement/settlement.entity'
 
 @Module({
   imports: [
@@ -33,7 +35,7 @@ import { TransactionLog } from './transaction/transaction-log.entity'
         username: config.get('DB_USERNAME'),
         password: config.get('DB_PASSWORD'),
         database: config.get('DB_DATABASE'),
-        entities: [User, Book, BookMember, BookGroup, Transaction, TransactionLog],
+        entities: [User, Book, BookMember, BookGroup, Transaction, TransactionLog, Settlement],
         synchronize: true, // 开发环境自动建表；生产环境应关闭并用迁移
       }),
     }),
@@ -44,6 +46,7 @@ import { TransactionLog } from './transaction/transaction-log.entity'
     TransactionModule,
     ExchangeRateModule,
     StatsModule,
+    SettlementModule,
   ],
 })
 export class AppModule {}

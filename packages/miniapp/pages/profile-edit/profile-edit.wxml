@@ -1,6 +1,22 @@
 <view class="edit-page">
   <!-- 头像大图 + 相机浮标 -->
-  <view class="avatar-section" bindtap="onChooseAvatar">
+  <!-- 未授权过微信头像：用微信原生 chooseAvatar 按钮弹授权 -->
+  <button
+    wx:if="{{!user.hasUsedWechatAvatar}}"
+    class="avatar-section avatar-btn"
+    open-type="chooseAvatar"
+    bindchooseavatar="onChooseWechatAvatar"
+  >
+    <image class="avatar" src="{{user.avatar}}" mode="aspectFill" />
+    <view class="avatar-mask" wx:if="{{uploading}}">
+      <text class="loading-text">上传中...</text>
+    </view>
+    <view class="camera-badge">
+      <van-icon name="photograph" size="18px" color="#fff" />
+    </view>
+  </button>
+  <!-- 已授权过：普通相册上传 -->
+  <view wx:else class="avatar-section" bindtap="onChooseAvatar">
     <image class="avatar" src="{{user.avatar}}" mode="aspectFill" />
     <view class="avatar-mask" wx:if="{{uploading}}">
       <text class="loading-text">上传中...</text>
@@ -26,7 +42,22 @@
         </view>
       </view>
 
-      <view class="list-item" bindtap="onChooseAvatar">
+      <button
+        wx:if="{{!user.hasUsedWechatAvatar}}"
+        class="list-item list-item-btn"
+        open-type="chooseAvatar"
+        bindchooseavatar="onChooseWechatAvatar"
+      >
+        <view class="list-item-content">
+          <view class="list-icon-wrap accent"><van-icon name="photo-o" size="20px" color="#fff" /></view>
+          <text class="list-item-label">头像</text>
+        </view>
+        <view class="list-item-right">
+          <image class="mini-avatar" src="{{user.avatar}}" mode="aspectFill" />
+          <van-icon name="arrow" size="14px" color="#c4c4c4" />
+        </view>
+      </button>
+      <view wx:else class="list-item" bindtap="onChooseAvatar">
         <view class="list-item-content">
           <view class="list-icon-wrap accent"><van-icon name="photo-o" size="20px" color="#fff" /></view>
           <text class="list-item-label">头像</text>

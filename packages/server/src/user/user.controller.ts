@@ -3,6 +3,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { CurrentUser } from '../auth/current-user.decorator'
 import { UserService } from './user.service'
 import { UpdateProfileDto } from './dto/update-profile.dto'
+import { UpdateWechatProfileDto } from './dto/update-wechat-profile.dto'
 
 @Controller('user')
 @UseGuards(JwtAuthGuard)
@@ -24,6 +25,8 @@ export class UserController {
         openid: userInfo.openid,
         nickname: userInfo.nickname,
         avatar: userInfo.avatar,
+        hasUsedWechatAvatar: userInfo.hasUsedWechatAvatar,
+        hasUsedWechatNickname: userInfo.hasUsedWechatNickname,
         createdAt: userInfo.createdAt,
         updatedAt: userInfo.updatedAt,
       },
@@ -58,6 +61,34 @@ export class UserController {
         openid: updatedUser.openid,
         nickname: updatedUser.nickname,
         avatar: updatedUser.avatar,
+        hasUsedWechatAvatar: updatedUser.hasUsedWechatAvatar,
+        hasUsedWechatNickname: updatedUser.hasUsedWechatNickname,
+        createdAt: updatedUser.createdAt,
+        updatedAt: updatedUser.updatedAt,
+      },
+    }
+  }
+
+  /**
+   * 通过微信授权更新用户信息
+   * PUT /api/user/wechat-profile
+   */
+  @Put('wechat-profile')
+  async updateWechatProfile(
+    @CurrentUser('sub') userId: string,
+    @Body() dto: UpdateWechatProfileDto,
+  ) {
+    const updatedUser = await this.userService.updateWechatProfile(userId, dto)
+    return {
+      code: 0,
+      message: '授权成功',
+      data: {
+        id: updatedUser.id,
+        openid: updatedUser.openid,
+        nickname: updatedUser.nickname,
+        avatar: updatedUser.avatar,
+        hasUsedWechatAvatar: updatedUser.hasUsedWechatAvatar,
+        hasUsedWechatNickname: updatedUser.hasUsedWechatNickname,
         createdAt: updatedUser.createdAt,
         updatedAt: updatedUser.updatedAt,
       },

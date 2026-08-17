@@ -52,6 +52,8 @@
               class="member-avatar"
               src="{{item.avatar}}"
               mode="aspectFill"
+              data-userid="{{item.userId}}"
+              bindlongpress="onLongPressMember"
             />
             <view class="member-invite" bindtap="onInvite">
               <van-icon name="plus" size="18px" color="#4097a9" />
@@ -78,6 +80,10 @@
       <view class="quick-item" bindtap="onInvite">
         <van-icon name="friends-o" size="24px" color="#4097a9" />
         <text>邀请</text>
+      </view>
+      <view class="quick-item" bindtap="onSettlement">
+        <van-icon name="balance-o" size="24px" color="#4097a9" />
+        <text>结算</text>
       </view>
       <view class="quick-item" bindtap="onStatistics">
         <van-icon name="chart-trending-o" size="24px" color="#4097a9" />

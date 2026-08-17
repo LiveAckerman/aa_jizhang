@@ -1,0 +1,251 @@
+.settlement-page {
+  min-height: 100vh;
+  padding: 24rpx 32rpx calc(60rpx + env(safe-area-inset-bottom));
+  background: linear-gradient(135deg, #e8f4f8 0%, #fef5ed 100%);
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.skeleton-card {
+  height: 400rpx;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 32rpx;
+  animation: skeleton-loading 1.2s ease-in-out infinite;
+}
+
+@keyframes skeleton-loading {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* 通用卡片 */
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20rpx);
+  border-radius: 32rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.06);
+  margin-bottom: 24rpx;
+}
+
+.section {
+  padding: 32rpx;
+}
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 32rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.section-subtitle {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+/* 净收支列表 */
+.balance-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.balance-item {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 24rpx;
+  background: rgba(244, 223, 204, 0.3);
+  border-radius: 24rpx;
+}
+
+.balance-item.positive {
+  background: rgba(82, 196, 26, 0.1);
+}
+
+.balance-item.negative {
+  background: rgba(250, 149, 131, 0.1);
+}
+
+.balance-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.balance-name {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--text-primary);
+}
+
+.balance-amount-block {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.balance-label {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+.balance-amount {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.balance-item.positive .balance-amount {
+  color: #52c41a;
+}
+
+.balance-item.negative .balance-amount {
+  color: var(--color-danger);
+}
+
+/* 转账方案列表 */
+.transfer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.transfer-item {
+  padding: 24rpx;
+  background: rgba(64, 151, 169, 0.06);
+  border-radius: 24rpx;
+}
+
+.transfer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.transfer-member {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  flex: 1;
+}
+
+.transfer-avatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.transfer-name {
+  font-size: 28rpx;
+  color: var(--text-primary);
+}
+
+.transfer-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  padding: 0 24rpx;
+}
+
+.transfer-amount {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.transfer-btn {
+  width: 100%;
+  height: 72rpx;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 36rpx;
+  font-size: 26rpx;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.transfer-btn::after {
+  border: none;
+}
+
+/* 操作按钮 */
+.action-buttons {
+  margin-top: 24rpx;
+}
+
+.btn-primary {
+  width: 100%;
+  height: 96rpx;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 48rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(64, 151, 169, 0.3);
+}
+
+.btn-primary::after {
+  border: none;
+}
+
+/* 已结清状态 */
+.settled-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 64rpx;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20rpx);
+  border-radius: 32rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.06);
+}
+
+.settled-text {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 24rpx;
+}
+
+.settled-subtext {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  margin-top: 12rpx;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80rpx 32rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  margin-top: 24rpx;
+}

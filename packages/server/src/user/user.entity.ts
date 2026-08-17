@@ -30,6 +30,14 @@ export class User {
   @Column({ default: false })
   hasPromptedProfile: boolean
 
+  /** 是否使用过微信授权头像 */
+  @Column({ default: false })
+  hasUsedWechatAvatar: boolean
+
+  /** 是否使用过微信授权昵称 */
+  @Column({ default: false })
+  hasUsedWechatNickname: boolean
+
   @CreateDateColumn()
   createdAt: Date
 

@@ -8,6 +8,7 @@
     "pages/add-transaction/add-transaction",
     "pages/profile-edit/profile-edit",
     "pages/transaction-logs/transaction-logs",
+    "pages/settlement/settlement",
     "pages/invite/invite",
     "pages/join/join",
     "pages/statistics/statistics",

@@ -197,4 +197,41 @@
   <view wx:if="{{isEdit}}" class="logs-link" bindtap="onOpenLogs">查看修改记录</view>
   <view wx:if="{{isEdit}}" class="delete-link" bindtap="onDelete">删除账单</view>
   </block>
+
+  <!-- 分账明细弹窗 -->
+  <view wx:if="{{showSplitDialog}}" class="split-dialog-mask" bindtap="onSplitDialogCancel">
+    <view class="split-dialog" catchtap>
+      <view class="split-dialog-header">
+        <text class="split-dialog-title">{{splitDialogTitle}}</text>
+        <view class="split-dialog-close" bindtap="onSplitDialogCancel">
+          <van-icon name="cross" size="20px" color="#8091a5" />
+        </view>
+      </view>
+
+      <view class="split-dialog-body">
+        <view wx:for="{{splitDialogItems}}" wx:key="userId" class="split-dialog-item">
+          <image class="split-dialog-avatar" src="{{item.avatar}}" mode="aspectFill" />
+          <text class="split-dialog-name">{{item.nickname}}</text>
+          <input
+            class="split-dialog-input"
+            type="digit"
+            placeholder="{{splitDialogMode === 'ratio' ? '百分比' : splitDialogMode === 'shares' ? '份数' : '金额'}}"
+            value="{{item.value}}"
+            data-index="{{index}}"
+            bindinput="onSplitDialogInput"
+          />
+          <text class="split-dialog-unit">{{splitDialogMode === 'ratio' ? '%' : splitDialogMode === 'shares' ? '份' : '元'}}</text>
+        </view>
+      </view>
+
+      <view class="split-dialog-validation {{splitDialogValidation.indexOf('✓') === 0 ? 'valid' : 'invalid'}}">
+        {{splitDialogValidation || '请输入各成员的分账金额'}}
+      </view>
+
+      <view class="split-dialog-footer">
+        <button class="split-dialog-btn cancel" bindtap="onSplitDialogCancel">取消</button>
+        <button class="split-dialog-btn confirm" bindtap="onSplitDialogConfirm">确定</button>
+      </view>
+    </view>
+  </view>
 </view>

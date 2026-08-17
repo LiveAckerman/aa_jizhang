@@ -17,11 +17,19 @@ Page({
     categories: CATEGORIES,
     splitMethods: SPLIT_METHODS,
     splitMethod: 'average',
+    splitDetails: [], // 分账明细：ratio/shares/fixed 时存储每人的 weight 或 amount
 
     members: [],
     participantIds: [],
     participantMap: {},
     payerId: '',
+
+    // 分账明细弹窗
+    showSplitDialog: false,
+    splitDialogTitle: '',
+    splitDialogMode: '', // 'ratio' | 'shares' | 'fixed'
+    splitDialogItems: [], // [{userId, nickname, avatar, value}]
+    splitDialogValidation: '', // 校验提示文本
 
     images: [],
     location: null,
@@ -198,7 +206,174 @@ Page({
     this.setData({ note: e.detail.value })
   },
   onPickSplitMethod(e) {
-    this.setData({ splitMethod: e.currentTarget.dataset.key })
+    const method = e.currentTarget.dataset.key
+    this.setData({ splitMethod: method })
+
+    // 非平均分摊：打开分账明细弹窗
+    if (method !== 'average') {
+      this.openSplitDialog(method)
+    } else {
+      // 平均分摊：清空明细
+      this.setData({ splitDetails: [] })
+    }
+  },
+
+  // 打开分账明细弹窗
+  openSplitDialog(mode) {
+    const { participantIds, members, splitDetails, amount } = this.data
+    if (participantIds.length === 0) {
+      wx.showToast({ title: '请先选择参与人', icon: 'none' })
+      return
+    }
+
+    const titles = {
+      ratio: '按比例分账',
+      shares: '按份额分账',
+      fixed: '指定金额分账'
+    }
+
+    // 构建输入项：按参与人顺序
+    const items = participantIds.map(userId => {
+      const member = members.find(m => m.userId === userId) || {}
+      const existing = splitDetails.find(s => s.userId === userId)
+      let defaultValue = ''
+      if (mode === 'ratio') {
+        defaultValue = existing?.weight ? String(existing.weight) : ''
+      } else if (mode === 'shares') {
+        defaultValue = existing?.weight ? String(existing.weight) : '1'
+      } else if (mode === 'fixed') {
+        defaultValue = existing?.amount ? String(existing.amount / 100) : ''
+      }
+
+      return {
+        userId,
+        nickname: member.nickname || '成员',
+        avatar: member.avatar || '',
+        value: defaultValue
+      }
+    })
+
+    this.setData({
+      showSplitDialog: true,
+      splitDialogMode: mode,
+      splitDialogTitle: titles[mode] || '分账明细',
+      splitDialogItems: items,
+      splitDialogValidation: ''
+    })
+  },
+
+  // 分账明细输入
+  onSplitDialogInput(e) {
+    const { index } = e.currentTarget.dataset
+    const { value } = e.detail
+    const items = this.data.splitDialogItems.slice()
+    items[index].value = value
+    this.setData({ splitDialogItems: items })
+    this.validateSplitDialog()
+  },
+
+  // 校验分账明细
+  validateSplitDialog() {
+    const { splitDialogMode, splitDialogItems, amount } = this.data
+    const yuan = parseFloat(amount)
+    if (!yuan || yuan <= 0) {
+      this.setData({ splitDialogValidation: '请先输入总金额' })
+      return false
+    }
+
+    const totalCent = Math.round(yuan * 100)
+
+    if (splitDialogMode === 'ratio') {
+      // 按比例：总和应为100
+      let sum = 0
+      for (const item of splitDialogItems) {
+        const val = parseFloat(item.value)
+        if (isNaN(val) || val <= 0) {
+          this.setData({ splitDialogValidation: '请输入有效的百分比（大于0）' })
+          return false
+        }
+        sum += val
+      }
+      if (Math.abs(sum - 100) > 0.01) {
+        this.setData({ splitDialogValidation: `当前总和：${sum.toFixed(2)}%，需等于100%` })
+        return false
+      }
+      this.setData({ splitDialogValidation: '✓ 校验通过' })
+      return true
+    } else if (splitDialogMode === 'shares') {
+      // 按份额：每份>0即可
+      for (const item of splitDialogItems) {
+        const val = parseFloat(item.value)
+        if (isNaN(val) || val <= 0) {
+          this.setData({ splitDialogValidation: '请输入有效的份数（大于0）' })
+          return false
+        }
+      }
+      // 计算每份金额
+      const totalShares = splitDialogItems.reduce((s, item) => s + parseFloat(item.value || 0), 0)
+      const perShare = (totalCent / totalShares).toFixed(2)
+      this.setData({ splitDialogValidation: `✓ 每份约 ¥${perShare}` })
+      return true
+    } else if (splitDialogMode === 'fixed') {
+      // 指定金额：总和应等于总金额
+      let sum = 0
+      for (const item of splitDialogItems) {
+        const val = parseFloat(item.value)
+        if (isNaN(val) || val < 0) {
+          this.setData({ splitDialogValidation: '请输入有效的金额（≥0）' })
+          return false
+        }
+        sum += val
+      }
+      const diff = Math.abs(sum - yuan)
+      if (diff > 0.01) {
+        const status = sum > yuan ? '超出' : '不足'
+        this.setData({ splitDialogValidation: `当前总和：¥${sum.toFixed(2)}，${status} ¥${diff.toFixed(2)}` })
+        return false
+      }
+      this.setData({ splitDialogValidation: '✓ 校验通过' })
+      return true
+    }
+
+    return false
+  },
+
+  // 确认分账明细
+  onSplitDialogConfirm() {
+    if (!this.validateSplitDialog()) {
+      wx.showToast({ title: '请检查输入', icon: 'none' })
+      return
+    }
+
+    const { splitDialogMode, splitDialogItems } = this.data
+    const details = splitDialogItems.map(item => {
+      if (splitDialogMode === 'ratio' || splitDialogMode === 'shares') {
+        return {
+          userId: item.userId,
+          weight: parseFloat(item.value)
+        }
+      } else {
+        return {
+          userId: item.userId,
+          amount: Math.round(parseFloat(item.value) * 100)
+        }
+      }
+    })
+
+    this.setData({
+      splitDetails: details,
+      showSplitDialog: false
+    })
+    wx.showToast({ title: '已设置', icon: 'success' })
+  },
+
+  // 取消分账明细
+  onSplitDialogCancel() {
+    this.setData({
+      showSplitDialog: false,
+      splitMethod: 'average', // 回退到平均分摊
+      splitDetails: []
+    })
   },
   onPickPayer(e) {
     this.setData({ payerId: e.currentTarget.dataset.id })
@@ -356,17 +531,27 @@ Page({
       payload.payerId = this.data.payerId
       payload.splitMethod = this.data.splitMethod
       payload.participantIds = ids
-      if (this.data.splitMethod === 'ratio' || this.data.splitMethod === 'shares') {
-        payload.splits = ids.map((userId) => ({ userId, amount: 0, weight: 1 }))
-      } else if (this.data.splitMethod === 'fixed') {
-        const n = ids.length || 1
-        const base = Math.floor(amount / n)
-        let rem = amount - base * n
-        payload.splits = ids.map((userId) => {
-          const extra = rem > 0 ? 1 : 0
-          rem -= extra
-          return { userId, amount: base + extra }
-        })
+
+      // 根据分账方式传递 splits
+      if (this.data.splitMethod === 'average') {
+        // 平均分摊：后端自动计算，不传 splits
+      } else if (this.data.splitDetails.length > 0) {
+        // 有明细：直接使用
+        payload.splits = this.data.splitDetails
+      } else {
+        // 缺少明细：回退到默认值
+        if (this.data.splitMethod === 'ratio' || this.data.splitMethod === 'shares') {
+          payload.splits = ids.map((userId) => ({ userId, amount: 0, weight: 1 }))
+        } else if (this.data.splitMethod === 'fixed') {
+          const n = ids.length || 1
+          const base = Math.floor(amount / n)
+          let rem = amount - base * n
+          payload.splits = ids.map((userId) => {
+            const extra = rem > 0 ? 1 : 0
+            rem -= extra
+            return { userId, amount: base + extra }
+          })
+        }
       }
     }
 

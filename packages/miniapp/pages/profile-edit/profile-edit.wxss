@@ -4,6 +4,24 @@
   padding-bottom: 60rpx;
 }
 
+/* 微信 chooseAvatar button 需重置默认样式 */
+.avatar-btn {
+  padding: 0;
+  background: transparent;
+  line-height: normal;
+}
+.avatar-btn::after { border: none; }
+
+.list-item-btn {
+  width: 100%;
+  padding: 20rpx 32rpx;
+  background: transparent;
+  line-height: normal;
+  border-radius: 0;
+  text-align: left;
+}
+.list-item-btn::after { border: none; }
+
 /* 头像大图 */
 .avatar-section {
   position: relative;

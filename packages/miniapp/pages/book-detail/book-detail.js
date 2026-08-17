@@ -106,6 +106,12 @@ Page({
     wx.switchTab({ url: '/pages/statistics/statistics' })
   },
 
+  onSettlement() {
+    wx.navigateTo({
+      url: `/pages/settlement/settlement?bookId=${this.data.id}&bookName=${encodeURIComponent(this.data.book.name || '账本')}`
+    })
+  },
+
   // book-menu 组件抛出的操作事件
   onBookAction(e) {
     const detail = e.detail
@@ -130,5 +136,56 @@ Page({
       path: `/pages/join/join?code=${code}`,
       imageUrl,
     }
+  },
+
+  // 长按成员头像：移除成员（仅owner可操作）
+  onLongPressMember(e) {
+    const { userid } = e.currentTarget.dataset
+    if (!userid) return
+    if (!this.data.isOwner) {
+      wx.showToast({ title: '仅创建者可移除成员', icon: 'none' })
+      return
+    }
+    if (userid === this.data.myUserId) {
+      wx.showToast({ title: '不能移除自己', icon: 'none' })
+      return
+    }
+
+    const member = this.data.members.find((m) => m.userId === userid)
+    if (!member) return
+
+    wx.showActionSheet({
+      itemList: ['查看信息', '移除成员'],
+      itemColor: '#2f4159',
+      success: (res) => {
+        if (res.tapIndex === 1) {
+          this.confirmRemoveMember(member)
+        } else if (res.tapIndex === 0) {
+          wx.showToast({ title: '功能开发中', icon: 'none' })
+        }
+      },
+    })
+  },
+
+  // 确认移除成员
+  confirmRemoveMember(member) {
+    wx.showModal({
+      title: '移除成员',
+      content: `确定将「${member.nickname}」移出账本吗？该成员的账单记录将保留。`,
+      confirmColor: '#fa9583',
+      success: async (res) => {
+        if (!res.confirm) return
+        try {
+          await api.removeMember(this.data.id, member.userId)
+          wx.showToast({ title: '已移除', icon: 'success' })
+          setTimeout(() => this.loadAll(), 600)
+        } catch (e) {
+          wx.showToast({
+            title: (e && e.message) || '操作失败',
+            icon: 'none',
+          })
+        }
+      },
+    })
   },
 })

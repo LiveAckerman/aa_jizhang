@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { User } from './user.entity'
 import { UpdateProfileDto } from './dto/update-profile.dto'
+import { UpdateWechatProfileDto } from './dto/update-wechat-profile.dto'
 
 @Injectable()
 export class UserService {
@@ -35,7 +36,7 @@ export class UserService {
   }
 
   /**
-   * 更新用户信息
+   * 更新用户信息（手动更新，不标记微信授权）
    */
   async updateProfile(userId: string, dto: UpdateProfileDto): Promise<User> {
     const user = await this.findById(userId)
@@ -46,6 +47,30 @@ export class UserService {
 
     if (dto.avatar !== undefined) {
       user.avatar = dto.avatar
+    }
+
+    // 标记信息已完善，同时视为已处理过授权提示
+    user.isProfileComplete = true
+    user.hasPromptedProfile = true
+
+    await this.userRepo.save(user)
+    return user
+  }
+
+  /**
+   * 通过微信授权更新用户信息
+   */
+  async updateWechatProfile(userId: string, dto: UpdateWechatProfileDto): Promise<User> {
+    const user = await this.findById(userId)
+
+    if (dto.nickname !== undefined) {
+      user.nickname = dto.nickname
+      user.hasUsedWechatNickname = true
+    }
+
+    if (dto.avatar !== undefined) {
+      user.avatar = dto.avatar
+      user.hasUsedWechatAvatar = true
     }
 
     // 标记信息已完善，同时视为已处理过授权提示

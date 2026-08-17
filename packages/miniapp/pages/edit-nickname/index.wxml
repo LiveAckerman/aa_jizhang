@@ -6,7 +6,22 @@
 
   <view class="content">
     <view class="input-container">
+      <!-- 未授权过微信昵称：type="nickname" 可点选微信昵称 -->
       <input
+        wx:if="{{!hasUsedWechatNickname}}"
+        class="nickname-input"
+        type="nickname"
+        value="{{nickname}}"
+        placeholder="点击可使用微信昵称"
+        placeholder-class="placeholder"
+        maxlength="20"
+        focus="{{true}}"
+        bindinput="onInput"
+        bindnicknamereview="onNicknameReview"
+      />
+      <!-- 已授权过：普通输入 -->
+      <input
+        wx:else
         class="nickname-input"
         value="{{nickname}}"
         placeholder="请输入昵称"

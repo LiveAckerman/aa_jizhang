@@ -57,6 +57,8 @@ export class AuthService {
         nickname: user.nickname,
         avatar: user.avatar,
         isProfileComplete: user.isProfileComplete,
+        hasUsedWechatAvatar: user.hasUsedWechatAvatar,
+        hasUsedWechatNickname: user.hasUsedWechatNickname,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },

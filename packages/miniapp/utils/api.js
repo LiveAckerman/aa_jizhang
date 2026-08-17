@@ -49,6 +49,13 @@ const api = {
     if (bookId && bookId !== 'all') q += `&bookId=${encodeURIComponent(bookId)}`
     return request({ url: `/stats/overview${q}` })
   },
+
+  // ===== 结算 =====
+  calculateSettlement: (bookId) => request({ url: `/settlements/calculate?bookId=${bookId}` }),
+  createSettlement: (data) => request({ url: '/settlements', method: 'POST', data }),
+  listSettlements: (bookId) => request({ url: `/settlements?bookId=${bookId}` }),
+  completeSettlement: (id) => request({ url: `/settlements/${id}/complete`, method: 'PATCH' }),
+  deleteSettlement: (id) => request({ url: `/settlements/${id}`, method: 'DELETE' }),
 }
 
 module.exports = api
