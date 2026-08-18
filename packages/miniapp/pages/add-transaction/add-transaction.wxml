@@ -33,20 +33,32 @@
   </block>
 
   <block wx:else>
-    <transaction-form
-      wx:if="{{formReady}}"
-      id="txForm"
-      members="{{members}}"
-      rates="{{rates}}"
-      my-user-id="{{myUserId}}"
-      initial="{{initial}}"
-      autofocus="{{!isEdit}}"
-    />
+    <!-- 只读提示：非记录人查看他人账单 -->
+    <view wx:if="{{readonly}}" class="readonly-tip">
+      <van-icon name="eye-o" size="16px" color="#8091a5" />
+      <text>该账单由他人记录，仅记录人可修改</text>
+    </view>
 
-    <button class="btn-primary save-btn" bindtap="onSave" disabled="{{saving}}">
-      {{saving ? '保存中...' : '保存'}}
-    </button>
+    <!-- 只读时用遮罩层拦截表单交互 -->
+    <view class="form-wrap {{readonly ? 'readonly' : ''}}">
+      <transaction-form
+        wx:if="{{formReady}}"
+        id="txForm"
+        members="{{members}}"
+        rates="{{rates}}"
+        my-user-id="{{myUserId}}"
+        initial="{{initial}}"
+        autofocus="{{!isEdit}}"
+      />
+      <view wx:if="{{readonly}}" class="form-mask" catchtap="noop"></view>
+    </view>
+
+    <block wx:if="{{!readonly}}">
+      <button class="btn-primary save-btn" bindtap="onSave" disabled="{{saving}}">
+        {{saving ? '保存中...' : '保存'}}
+      </button>
+      <view wx:if="{{isEdit}}" class="delete-link" bindtap="onDelete">删除账单</view>
+    </block>
     <view wx:if="{{isEdit}}" class="logs-link" bindtap="onOpenLogs">查看修改记录</view>
-    <view wx:if="{{isEdit}}" class="delete-link" bindtap="onDelete">删除账单</view>
   </block>
 </view>

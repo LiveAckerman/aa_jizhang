@@ -15,6 +15,7 @@ Page({
 
     saving: false,
     initLoading: true,
+    readonly: false,    // 非创建者进入编辑页：只读，仅可查看
   },
 
   onLoad(query) {
@@ -56,6 +57,12 @@ Page({
       const currency = tx.currency || 'CNY'
       const displayAmount =
         currency === 'CNY' || !tx.originalAmount ? tx.amount / 100 : tx.originalAmount / 100
+      // 非记录人：只读模式（仅可查看，不能修改/删除）
+      const readonly = !!tx.creatorId && tx.creatorId !== this.data.myUserId
+      if (readonly) {
+        this.setData({ readonly: true })
+        wx.setNavigationBarTitle({ title: '账单详情' })
+      }
       this.setData({
         initial: {
           type: tx.type,
@@ -79,6 +86,9 @@ Page({
   getForm() {
     return this.selectComponent('#txForm')
   },
+
+  // 只读遮罩层：吞掉点击，阻止穿透到表单
+  noop() {},
 
   async onSave() {
     const form = this.getForm()
