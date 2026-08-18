@@ -13,7 +13,10 @@ Page({
     myUserId: '',
     summary: { sharedTotal: 0, myShared: 0, myPrivate: 0, myTotal: 0 },
     summaryText: { sharedTotal: '0.00', myShared: '0.00', myPrivate: '0.00', myTotal: '0.00' },
-    groups: [], // 按日期分组的流水
+    allTxs: [],       // 原始账单列表（未过滤）
+    groups: [],       // 按日期分组的流水（已按 filter 过滤）
+    txFilter: 'all',  // 账单筛选：all / shared(公账) / private(私账)
+    filterStat: { count: 0, amountText: '0.00' }, // 当前筛选下的统计
     loading: true,
   },
 
@@ -58,12 +61,40 @@ Page({
           myPrivate: (summary.myPrivate / 100).toFixed(2),
           myTotal: (summary.myTotal / 100).toFixed(2),
         },
-        groups: this.groupByDate(txs || []),
+        allTxs: txs || [],
         loading: false,
       })
+      this.applyTxFilter()
     } catch (e) {
       this.setData({ loading: false })
     }
+  },
+
+  // 切换账单筛选 tab：全部 / 公账 / 私账
+  onPickTxFilter(e) {
+    const val = e.currentTarget.dataset.val
+    if (val === this.data.txFilter) return
+    this.setData({ txFilter: val })
+    this.applyTxFilter()
+  },
+
+  // 按当前 txFilter 过滤账单，重算分组与统计
+  applyTxFilter() {
+    const filter = this.data.txFilter
+    const list = (this.data.allTxs || []).filter((t) => {
+      if (filter === 'shared') return t.type !== 'private'
+      if (filter === 'private') return t.type === 'private'
+      return true
+    })
+    // 统计：当前筛选下的笔数与总额
+    const totalCent = list.reduce((sum, t) => sum + (t.amount || 0), 0)
+    this.setData({
+      groups: this.groupByDate(list),
+      filterStat: {
+        count: list.length,
+        amountText: (totalCent / 100).toFixed(2),
+      },
+    })
   },
 
   // 把流水按日期分组，附带展示字段

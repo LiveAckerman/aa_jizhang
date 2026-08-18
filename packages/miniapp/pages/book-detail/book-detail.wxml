@@ -101,10 +101,23 @@
       </button>
     </view>
 
+    <!-- 账单筛选 tab：全部 / 公账 / 私账 -->
+    <view class="tx-filter">
+      <view class="tx-filter-tab {{txFilter === 'all' ? 'active' : ''}}" data-val="all" bindtap="onPickTxFilter">全部</view>
+      <view class="tx-filter-tab {{txFilter === 'shared' ? 'active' : ''}}" data-val="shared" bindtap="onPickTxFilter">公账</view>
+      <view class="tx-filter-tab {{txFilter === 'private' ? 'active' : ''}}" data-val="private" bindtap="onPickTxFilter">私账</view>
+    </view>
+
+    <!-- 筛选统计条 -->
+    <view class="tx-filter-stat">
+      <text class="stat-label">{{txFilter === 'shared' ? '公账' : txFilter === 'private' ? '私账' : '全部'}}共 {{filterStat.count}} 笔</text>
+      <text class="stat-amount">合计 ¥{{filterStat.amountText}}</text>
+    </view>
+
     <!-- 空流水 -->
     <view wx:if="{{groups.length === 0}}" class="empty-tx">
       <image class="empty-tx-img" src="https://cdn.ljw44.com/assets/illustrations/empty-transactions.png" mode="aspectFit" />
-      <text class="empty-tx-text">还没有账单，点上方「记一笔」记第一笔</text>
+      <text class="empty-tx-text">{{txFilter === 'all' ? '还没有账单，点上方「记一笔」记第一笔' : '该分类下暂无账单'}}</text>
     </view>
 
     <!-- 流水 -->
