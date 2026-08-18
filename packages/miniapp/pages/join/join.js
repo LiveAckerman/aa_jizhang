@@ -1,5 +1,6 @@
 const app = getApp()
 const api = require('../../utils/api')
+const { request } = require('../../utils/request')
 
 Page({
   data: {
@@ -9,6 +10,10 @@ Page({
     loading: true,
     joining: false,
     error: '',
+    // 头像/昵称授权抽屉（新用户登录回跳后弹出）
+    showAuthDrawer: false,
+    userAvatar: '',
+    userNickname: '',
   },
 
   onLoad(query) {
@@ -40,10 +45,53 @@ Page({
   async loadInfo() {
     try {
       const info = await api.inviteInfo(this.data.code)
+      // 已经是该账本成员：无需再走加入流程，直接进账本
+      if (info.isMember) {
+        wx.redirectTo({ url: `/pages/book-detail/book-detail?id=${info.id}` })
+        return
+      }
       this.setData({ info, coverUrl: info.coverUrl, loading: false })
+      // 新用户从登录页回跳：先弹头像/昵称授权，完善后再加入
+      this.maybeShowAuthDrawer()
     } catch (e) {
       this.setData({ loading: false, error: (e && e.message) || '邀请码无效' })
     }
+  },
+
+  // 新注册用户回跳后弹一次授权抽屉（只弹一次，与首页逻辑一致）
+  maybeShowAuthDrawer() {
+    const user = app.globalData.user || {}
+    if (app.globalData.needProfilePrompt && !user.isProfileComplete) {
+      this.setData({
+        showAuthDrawer: true,
+        userAvatar: user.avatar || '',
+        userNickname: user.nickname || '',
+      })
+      app.globalData.needProfilePrompt = false
+      request({ url: '/user/profile-prompt/dismiss', method: 'POST' }).catch(() => {})
+    }
+  },
+
+  // 授权成功：保存头像昵称后关闭抽屉，用户可继续点「加入账本」
+  async onAuthorized(e) {
+    const { avatar, nickname } = e.detail
+    wx.showLoading({ title: '保存中...', mask: true })
+    try {
+      await request({ url: '/user/profile', method: 'PUT', data: { avatar, nickname } })
+      const user = Object.assign({}, app.globalData.user, { avatar, nickname, isProfileComplete: true })
+      app.setLoginState(app.globalData.token, user)
+      wx.hideLoading()
+      wx.showToast({ title: '已保存', icon: 'success' })
+    } catch (err) {
+      wx.hideLoading()
+      wx.showToast({ title: (err && err.message) || '保存失败', icon: 'none' })
+      return // 保存失败不关抽屉，让用户重试
+    }
+    this.setData({ showAuthDrawer: false })
+  },
+
+  onAuthClose() {
+    this.setData({ showAuthDrawer: false })
   },
 
   async onJoin() {
@@ -62,6 +110,7 @@ Page({
   },
 
   onCancel() {
-    wx.reLaunch({ url: '/pages/books/books' })
+    // switchTab 回到 tabBar 首页，避免 reLaunch 后左上角出现 home 图标
+    wx.switchTab({ url: '/pages/books/books' })
   },
 })

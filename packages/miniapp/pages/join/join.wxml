@@ -21,3 +21,12 @@
     <text class="join-cancel" bindtap="onCancel">暂不加入</text>
   </view>
 </view>
+
+<!-- 新用户授权头像/昵称抽屉 -->
+<auth-drawer
+  show="{{showAuthDrawer}}"
+  default-avatar="{{userAvatar}}"
+  default-nickname="{{userNickname}}"
+  bind:authorized="onAuthorized"
+  bind:close="onAuthClose"
+/>

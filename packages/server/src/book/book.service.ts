@@ -241,11 +241,17 @@ export class BookService {
   }
 
   /** 通过邀请码查看账本信息（加入前预览，不加入） */
-  async infoByCode(inviteCode: string) {
+  async infoByCode(inviteCode: string, userId?: string) {
     const book = await this.bookRepo.findOne({ where: { inviteCode } })
     if (!book) throw new NotFoundException('邀请码无效')
     const memberCount = await this.memberRepo.count({ where: { bookId: book.id } })
     const owner = await this.userRepo.findOne({ where: { id: book.ownerId } })
+    // 当前用户是否已是成员：前端据此直接进账本，无需再点「加入」
+    let isMember = false
+    if (userId) {
+      const m = await this.memberRepo.findOne({ where: { bookId: book.id, userId } })
+      isMember = !!m
+    }
     return {
       id: book.id,
       name: book.name,
@@ -253,6 +259,7 @@ export class BookService {
       coverUrl: this.resolveCover(book),
       memberCount,
       ownerName: owner?.nickname || '好友',
+      isMember,
     }
   }
 

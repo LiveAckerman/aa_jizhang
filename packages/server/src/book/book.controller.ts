@@ -69,8 +69,11 @@ export class BookController {
 
   /** 邀请码预览账本信息（加入前展示，需登录） */
   @Get('invite/:code')
-  async inviteInfo(@Param('code') code: string) {
-    const data = await this.bookService.infoByCode(code)
+  async inviteInfo(
+    @CurrentUser('sub') userId: string,
+    @Param('code') code: string,
+  ) {
+    const data = await this.bookService.infoByCode(code, userId)
     return { code: 0, message: 'ok', data }
   }
 
