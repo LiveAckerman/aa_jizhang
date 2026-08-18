@@ -142,8 +142,8 @@ Page({
       newRecords.splice(current, 1)
 
       if (newRecords.length === 0) {
-        wx.showToast({ title: '全部提交完成', icon: 'success' })
-        setTimeout(() => wx.navigateBack(), 800)
+        // 全部处理完成：直接返回账本，不停留
+        wx.navigateBack()
         return
       }
 
