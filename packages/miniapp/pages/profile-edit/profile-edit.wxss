@@ -1,6 +1,6 @@
 .edit-page {
   min-height: 100vh;
-  background: #F2F2F7;
+  /* 背景继承全局圆点网格 */
   padding-bottom: 60rpx;
 }
 

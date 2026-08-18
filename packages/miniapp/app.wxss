@@ -17,10 +17,18 @@ page {
   --text-tertiary: #c4c4c4;
 
   /* 背景 */
-  --bg-page: #f2f2f7;
+  --bg-page: #ffffff;
   --bg-card: rgba(255, 255, 255, 0.85);
 
+  /* 圆点网格背景（亮色系）：改这几个变量即可全局调整 */
+  --dot-color: #e5e7eb;   /* 圆点颜色，想更明显可调深如 #d1d5db */
+  --dot-size: 1px;        /* 圆点大小 */
+  --dot-gap: 16px;        /* 网格间距，越大越疏 */
+
+  /* 全局圆点背景：radial-gradient 当可平铺图案，按网格平铺 */
   background-color: var(--bg-page);
+  background-image: radial-gradient(var(--dot-color) var(--dot-size), transparent var(--dot-size));
+  background-size: var(--dot-gap) var(--dot-gap);
   font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif;
   color: var(--text-primary);
   font-size: 28rpx;

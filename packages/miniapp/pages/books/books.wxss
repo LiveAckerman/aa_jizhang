@@ -1,8 +1,8 @@
+/* 一级页面专属：青色圆点背景 */
 page {
-  background-color: #f2f2f7;
-  background-image:
-    radial-gradient(ellipse 60% 40% at 15% 8%, rgba(64, 151, 169, 0.14), transparent 70%),
-    radial-gradient(ellipse 55% 40% at 90% 92%, rgba(250, 149, 131, 0.10), transparent 70%);
+  background-color: #ffffff;
+  background-image: radial-gradient(#7ec8d3 1px, transparent 1px);
+  background-size: 16px 16px;
 }
 
 .page-header {

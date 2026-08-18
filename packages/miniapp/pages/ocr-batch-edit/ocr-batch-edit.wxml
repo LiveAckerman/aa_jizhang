@@ -1,5 +1,5 @@
 <view class="ocr-batch-page">
-  <block wx:if="{{ready && records.length > 0}}">
+  <block wx:if="{{records.length > 0}}">
     <!-- 步骤指示器 -->
     <view class="step-bar">
       <view class="step-scroll">
@@ -44,19 +44,19 @@
     </view>
   </block>
 
-  <!-- 空态 -->
-  <view wx:elif="{{ready && records.length === 0}}" class="empty">
+  <!-- 空态：ready 且无记录 -->
+  <view wx:elif="{{ready}}" class="empty">
     <text class="empty-text">没有可入库的记录</text>
     <button class="btn-primary empty-back" bindtap="onBack">返回</button>
   </view>
 
-  <!-- 加载中 -->
+  <!-- 加载中：成员/汇率还在加载 -->
   <view wx:else class="loading">
     <text>加载中...</text>
   </view>
 
   <!-- 底部确认入库 -->
-  <view wx:if="{{ready && records.length > 0}}" class="bottom-bar">
+  <view wx:if="{{records.length > 0}}" class="bottom-bar">
     <button class="btn-primary submit-btn" bindtap="onSubmit" disabled="{{submitting}}">
       {{submitting ? '入库中...' : '确认入库（' + checkedCount + '）'}}
     </button>
