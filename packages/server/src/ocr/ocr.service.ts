@@ -120,20 +120,22 @@ export class OcrService {
         }
       }
 
-      // 2. 提取商户名：优先「商品」字段，其次「商户全称」，再次「商户名称」
+      // 2. 提取商户名：优先「商户全称」（更准确），其次「商户名称」/「收款方」，最后「商品」
       let merchant = ''
       const fieldPatterns = [
-        /商品\n(.+?)(?:\n|$)/,
         /商户全称\n(.+?)(?:\n|$)/,
         /商户名称\n(.+?)(?:\n|$)/,
         /收款方\n(.+?)(?:\n|$)/,
+        /商品\n(.+?)(?:\n|$)/,
       ]
       for (const pat of fieldPatterns) {
         const m = fullText.match(pat)
-        if (m && m[1].trim()) {
-          merchant = m[1].trim().slice(0, 20)
-          break
-        }
+        const val = (m?.[1] ?? '').trim()
+        if (!val) continue
+        // 跳过看起来是订单号/编号的值（纯数字、含"号：" 等）
+        if (/号[：:]/.test(val) || /^[\d\s-]+$/.test(val)) continue
+        merchant = val.slice(0, 20)
+        break
       }
 
       // 3. 提取支付时间（「支付时间」/「交易时间」字段）
@@ -141,14 +143,14 @@ export class OcrService {
       const timeFieldMatch = fullText.match(/(?:支付|交易|完成)时间\n(.+?)(?:\n|$)/)
       if (timeFieldMatch) {
         try {
-          // "2026年8月18日11:20:40" → "2026-8-18T11:20:40"
+          // "2026年8月18日11:20:40" 或 "2026年08月15日11:33:55"
           const raw = timeFieldMatch[1]
-            .replace(/年/g, '-')
-            .replace(/月/g, '-')
-            .replace(/日\s*/g, 'T')
+            .replace(/(\d+)年(\d+)月(\d+)日\s*/, (_, y, mo, d) =>
+              `${y}-${mo.padStart(2, '0')}-${d.padStart(2, '0')}T`,
+            )
             .trim()
-          const d = new Date(raw)
-          if (!isNaN(d.getTime())) spentAt = d.toISOString()
+          const dateObj = new Date(raw)
+          if (!isNaN(dateObj.getTime())) spentAt = dateObj.toISOString()
         } catch (_) {}
       }
 
