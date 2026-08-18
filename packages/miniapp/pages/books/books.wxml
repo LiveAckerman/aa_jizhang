@@ -171,19 +171,24 @@
     <!-- 已归档：卡片堆叠 -->
     <block wx:if="{{archivedStack.length > 0}}">
       <view class="archived-stack-wrap" bindtap="onOpenArchivedDrawer">
-        <!-- 底部堆叠层（最多5张，从底层到顶层依次渲染） -->
+        <!--
+          参考效果：每张卡片向下错开，标题行全部可见，像钱包叠放。
+          index=0 是最顶层（z-index最高），依次向下压叠。
+          top = index * 88rpx（每张卡片露出的标题行高度）
+          整体容器高度 = 88 * n + 剩余最后一张卡片可见高度(56rpx)
+        -->
         <view
           wx:for="{{archivedStack}}"
           wx:key="id"
           wx:for-item="book"
           class="archived-stack-card"
-          style="bottom: {{(archivedStack.length - 1 - index) * 28}}rpx; z-index: {{index + 1}}; transform: scale({{1 - (archivedStack.length - 1 - index) * 0.03}})"
+          style="top: {{index * 88}}rpx; z-index: {{archivedStack.length - index}};"
         >
           <text class="archived-stack-name">{{book.name}}</text>
           <text class="archived-stack-badge">已结算</text>
         </view>
-        <!-- 堆叠区域总高度占位 -->
-        <view class="archived-stack-spacer" style="height: {{80 + (archivedStack.length - 1) * 28}}rpx"></view>
+        <!-- 撑起整个堆叠区域的高度 -->
+        <view style="height: {{archivedStack.length * 88 + 56}}rpx; display: block;"></view>
       </view>
       <!-- 点击提示 -->
       <view class="archived-hint" bindtap="onOpenArchivedDrawer">

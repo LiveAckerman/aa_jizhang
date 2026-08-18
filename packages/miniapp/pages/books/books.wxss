@@ -474,11 +474,6 @@ page {
   border-radius: 20rpx;
 }
 
-/* 撑高堆叠容器，让后面内容自然流在下方 */
-.archived-stack-spacer {
-  display: block;
-}
-
 /* 点击提示文字 */
 .archived-hint {
   display: flex;
@@ -496,14 +491,14 @@ page {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
-  z-index: 999;
+  z-index: 1001; /* 高于 tabbar(1000)，配合 tabbar hide 双保险 */
   display: flex;
   align-items: flex-end;
 }
 
 .drawer-panel {
   width: 100%;
-  max-height: 80vh;
+  height: 90vh;
   background: #f5f6fa;
   border-radius: 32rpx 32rpx 0 0;
   display: flex;

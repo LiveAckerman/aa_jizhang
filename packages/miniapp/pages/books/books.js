@@ -29,7 +29,14 @@ Page({
     }
     // 从 book-detail 返回时，导航栏标题仍是账本名，需重置为「账本」
     wx.setNavigationBarTitle({ title: '账本' })
+    // 从抽屉内点进账本详情再返回：抽屉已关，需恢复被隐藏的 tabbar
+    if (this.data.showArchivedDrawer) {
+      this.setData({ showArchivedDrawer: false })
+    }
     setTabBarSelected(this, 0)
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({ hide: false })
+    }
     this.loadGroups()
     this.loadBooks()
     this.maybeShowAuthDrawer()
@@ -283,14 +290,20 @@ Page({
     this.applyFilter()
   },
 
-  // 打开已归档抽屉
+  // 打开已归档抽屉（同时隐藏 tabbar，避免层级遮挡）
   onOpenArchivedDrawer() {
     this.setData({ showArchivedDrawer: true })
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({ hide: true })
+    }
   },
 
-  // 关闭已归档抽屉
+  // 关闭已归档抽屉（恢复 tabbar）
   onCloseArchivedDrawer() {
     this.setData({ showArchivedDrawer: false })
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({ hide: false })
+    }
   },
 
   // 搜索输入
