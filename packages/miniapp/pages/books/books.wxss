@@ -368,3 +368,43 @@ page {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
+
+/* 搜索框 */
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin: 0 32rpx 20rpx;
+  padding: 0 24rpx;
+  height: 72rpx;
+  background: #fff;
+  border-radius: 40rpx;
+  box-shadow: 0 4rpx 16rpx rgba(47, 65, 89, 0.06);
+}
+
+.search-input {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--text-primary);
+}
+
+.search-input-ph {
+  color: #8091a5;
+}
+
+/* 清除搜索按钮 */
+.clear-search-btn {
+  margin-top: 32rpx;
+  padding: 0 48rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  background: transparent;
+  color: var(--color-primary);
+  border: 2rpx solid var(--color-primary);
+  border-radius: 40rpx;
+  font-size: 28rpx;
+}
+
+.clear-search-btn::after {
+  border: none;
+}

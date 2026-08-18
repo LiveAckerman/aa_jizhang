@@ -11,6 +11,8 @@ Page({
     archived: [],
     groups: [],           // 分组列表（首项固定为「全部」）
     activeGroupId: 'all', // 当前选中的分组 id：'all' / '' (默认) / <groupId>
+    keyword: '',          // 搜索关键词
+    filteredEmpty: false, // 有数据但搜索结果为空（区别于"账本为零"的空状态）
     loading: true,
     showAuthDrawer: false,
     userAvatar: '',
@@ -178,30 +180,55 @@ Page({
     try {
       const groupId = this.data.activeGroupId === 'all' ? '' : this.data.activeGroupId
       const books = await api.listBooks(groupId)
-      const active = []
-      const archived = []
-      const myId = (app.globalData.user || {}).id || ''
-      ;(books || []).forEach((b) => {
-        const myPrivate = b.myPrivateAmount || 0
-        const myShared = b.mySharedAmount || 0
-        const item = {
-          ...b,
-          isOwner: b.ownerId === myId,
-          hasCover: !!b.cover,
-          dateText: this.formatDate(b.createdAt),
-          hasPrivate: myPrivate > 0,
-          myTotalText: ((myShared + myPrivate) / 100).toFixed(2),
-          mySharedText: (myShared / 100).toFixed(2),
-          myPrivateText: (myPrivate / 100).toFixed(2),
-          bookTotalText: ((b.bookTotal || 0) / 100).toFixed(2),
-        }
-        if (b.archived) archived.push(item)
-        else active.push(item)
-      })
-      this.setData({ loading: false, books: books || [], active, archived })
+      this.setData({ loading: false, books: books || [] })
+      this.applyFilter()
     } catch (e) {
       this.setData({ loading: false })
     }
+  },
+
+  // 根据当前 keyword 过滤 books，拆分 active/archived 并计算金额文案
+  applyFilter() {
+    const kw = (this.data.keyword || '').trim().toLowerCase()
+    const myId = (app.globalData.user || {}).id || ''
+    const list = kw
+      ? this.data.books.filter((b) => (b.name || '').toLowerCase().includes(kw))
+      : this.data.books
+
+    const active = []
+    const archived = []
+    list.forEach((b) => {
+      const myPrivate = b.myPrivateAmount || 0
+      const myShared = b.mySharedAmount || 0
+      const item = {
+        ...b,
+        isOwner: b.ownerId === myId,
+        hasCover: !!b.cover,
+        dateText: this.formatDate(b.createdAt),
+        hasPrivate: myPrivate > 0,
+        myTotalText: ((myShared + myPrivate) / 100).toFixed(2),
+        mySharedText: (myShared / 100).toFixed(2),
+        myPrivateText: (myPrivate / 100).toFixed(2),
+        bookTotalText: ((b.bookTotal || 0) / 100).toFixed(2),
+      }
+      if (b.archived) archived.push(item)
+      else active.push(item)
+    })
+
+    const filteredEmpty = kw.length > 0 && active.length === 0 && archived.length === 0
+    this.setData({ active, archived, filteredEmpty })
+  },
+
+  // 搜索输入
+  onSearch(e) {
+    this.setData({ keyword: e.detail.value })
+    this.applyFilter()
+  },
+
+  // 清空搜索
+  onClearSearch() {
+    this.setData({ keyword: '' })
+    this.applyFilter()
   },
 
   formatDate(iso) {

@@ -129,6 +129,8 @@
                 <van-icon wx:if="{{tx.isPrivate}}" name="lock" size="13px" color="#8091a5" />
               </view>
               <text class="tx-note">{{tx.note || tx.payerName + ' 付款'}}</text>
+              <text wx:if="{{tx.myShareText}}" class="tx-myshare">我应付 ¥{{tx.myShareText}}</text>
+              <text wx:elif="{{tx.notInvolved}}" class="tx-notinvolved">未参与</text>
             </view>
             <text class="tx-amount">¥{{tx.amountText}}</text>
           </view>

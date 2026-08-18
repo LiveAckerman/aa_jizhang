@@ -195,6 +195,19 @@
   margin-top: 4rpx;
 }
 
+.tx-myshare {
+  font-size: 22rpx;
+  color: var(--color-primary);
+  margin-top: 6rpx;
+}
+
+.tx-notinvolved {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+  margin-top: 6rpx;
+  opacity: 0.7;
+}
+
 .tx-amount {
   font-size: 32rpx;
   font-weight: 600;

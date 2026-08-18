@@ -71,10 +71,19 @@ Page({
     const memberMap = {}
     ;(this.data.members || []).forEach((m) => (memberMap[m.userId] = m.nickname))
     const map = {}
+    const myUserId = this.data.myUserId
     txs.forEach((t) => {
       const d = t.spentAt ? t.spentAt.slice(0, 10) : ''
       if (!map[d]) map[d] = []
       const cat = CATEGORY_MAP[t.category] || CATEGORY_MAP.other
+      // 计算"我应付"：共享账取 splits 中当前用户的份额；私密账不显示
+      let myShareText = ''
+      let notInvolved = false
+      if (t.type !== 'private') {
+        const mine = (t.splits || []).find((s) => s.userId === myUserId)
+        if (mine) myShareText = (mine.amount / 100).toFixed(2)
+        else notInvolved = true
+      }
       map[d].push({
         ...t,
         amountText: (t.amount / 100).toFixed(2),
@@ -82,6 +91,8 @@ Page({
         categoryIcon: cat.icon,
         payerName: memberMap[t.payerId] || '成员',
         isPrivate: t.type === 'private',
+        myShareText,
+        notInvolved,
       })
     })
     return Object.keys(map)
