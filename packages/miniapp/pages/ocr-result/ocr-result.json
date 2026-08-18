@@ -1,8 +1,0 @@
-{
-  "navigationBarTitleText": "识别结果",
-  "navigationBarBackgroundColor": "#4097a9",
-  "navigationBarTextStyle": "white",
-  "usingComponents": {
-    "van-icon": "/miniprogram_npm/@vant/weapp/icon/index"
-  }
-}

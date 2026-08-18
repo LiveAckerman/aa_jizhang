@@ -56,7 +56,7 @@ Page({
       return
     }
 
-    wx.showLoading({ title: '保存中...' })
+    wx.showLoading({ title: '保存中...', mask: true })
 
     try {
       const url = this.data.fromWechat ? '/user/wechat-profile' : '/user/profile'

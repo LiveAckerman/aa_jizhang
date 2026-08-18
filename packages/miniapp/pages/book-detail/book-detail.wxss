@@ -353,16 +353,32 @@
 }
 
 /* 主 CTA：记一笔（页内独立按钮） */
-.record-primary {
-  width: 100%;
-  height: 108rpx;
-  line-height: 108rpx;
+/* 手动录入 + 自动票据识别 双按钮 */
+.record-actions {
+  display: flex;
+  gap: 20rpx;
   margin: 28rpx 0 16rpx;
-  font-size: 34rpx;
+}
+.record-btn {
+  flex: 1;
+  height: 100rpx;
+  line-height: 100rpx;
+  border-radius: 50rpx;
+  font-size: 30rpx;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12rpx;
-  box-shadow: 0 16rpx 40rpx rgba(250, 149, 131, 0.35);
+  gap: 10rpx;
+}
+.record-btn::after { border: none; }
+.record-btn.manual {
+  background: var(--color-accent);
+  color: #fff;
+  box-shadow: 0 12rpx 32rpx rgba(250, 149, 131, 0.35);
+}
+.record-btn.ocr {
+  background: rgba(64, 151, 169, 0.1);
+  color: var(--color-primary);
+  border: 2rpx solid var(--color-primary);
 }

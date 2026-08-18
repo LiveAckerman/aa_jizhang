@@ -108,7 +108,7 @@ Page({
       success: async (res) => {
         if (!res.confirm) return
         try {
-          wx.showLoading({ title: '保存中...' })
+          wx.showLoading({ title: '保存中...', mask: true })
           // 创建结算记录
           const settlement = await api.createSettlement({
             bookId: this.data.bookId,
@@ -143,7 +143,7 @@ Page({
       success: async (res) => {
         if (!res.confirm) return
         try {
-          wx.showLoading({ title: '保存中...' })
+          wx.showLoading({ title: '保存中...', mask: true })
           // 使用批量API，原子性创建并完成所有结算
           const settlements = this.data.transferPlans.map((plan) => ({
             fromUserId: plan.fromUserId,

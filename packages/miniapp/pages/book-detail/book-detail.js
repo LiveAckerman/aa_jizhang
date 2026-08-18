@@ -93,6 +93,36 @@ Page({
     wx.navigateTo({ url: `/pages/add-transaction/add-transaction?bookId=${this.data.id}` })
   },
 
+  // 自动票据识别：拍照/相册 → 上传识别 → 跳批量编辑页
+  onOcrRecognize() {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['camera', 'album'],
+      success: async (res) => {
+        wx.showLoading({ title: '识别中...', mask: true })
+        try {
+          const filePath = res.tempFiles[0].tempFilePath
+          const result = await api.ocrRecognizeReceipt(filePath, this.data.id)
+          wx.hideLoading()
+          if (!result.records || result.records.length === 0) {
+            wx.showToast({ title: '未识别到账单记录', icon: 'none' })
+            return
+          }
+          wx.navigateTo({
+            url: `/pages/ocr-batch-edit/ocr-batch-edit?bookId=${this.data.id}`,
+            success: (navRes) => {
+              navRes.eventChannel.emit('ocrResult', result)
+            },
+          })
+        } catch (e) {
+          wx.hideLoading()
+          wx.showToast({ title: (e && e.message) || '识别失败', icon: 'none' })
+        }
+      },
+    })
+  },
+
   onTapTransaction(e) {
     const { id } = e.currentTarget.dataset
     wx.navigateTo({ url: `/pages/add-transaction/add-transaction?bookId=${this.data.id}&id=${id}` })

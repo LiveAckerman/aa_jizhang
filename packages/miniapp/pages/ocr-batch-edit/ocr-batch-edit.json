@@ -1,5 +1,6 @@
 {
-  "navigationBarTitleText": "记一笔",
+  "navigationBarTitleText": "票据识别结果",
+  "backgroundColor": "#f2f2f7",
   "usingComponents": {
     "van-icon": "@vant/weapp/icon/index",
     "transaction-form": "/components/transaction-form/transaction-form"

@@ -1,0 +1,181 @@
+<view class="tx-form">
+  <!-- 类型切换 -->
+  <view class="type-switch">
+    <view class="type-tab {{type === 'shared' ? 'active' : ''}}" data-type="shared" bindtap="onSwitchType">
+      <van-icon name="friends-o" size="16px" />
+      <text>共享账</text>
+    </view>
+    <view class="type-tab {{type === 'private' ? 'active' : ''}}" data-type="private" bindtap="onSwitchType">
+      <van-icon name="lock" size="16px" />
+      <text>私密账</text>
+    </view>
+  </view>
+
+  <!-- 金额 + 货币 -->
+  <view class="amount-input-block">
+    <picker mode="selector" range="{{rates}}" range-key="label" value="{{currencyIndex}}" bindchange="onCurrencyChange">
+      <view class="currency-picker">
+        <text class="currency-code">{{currency}}</text>
+        <van-icon name="arrow-down" size="14px" color="#8091a5" />
+      </view>
+    </picker>
+    <text class="amount-symbol">{{currencySymbol}}</text>
+    <input
+      class="amount-input"
+      type="digit"
+      placeholder="0.00"
+      placeholder-class="amount-input-ph"
+      value="{{amount}}"
+      bindinput="onAmountInput"
+      focus="{{amountFocus}}"
+      bindblur="onAmountBlur"
+    />
+  </view>
+  <view wx:if="{{convertedText}}" class="amount-converted">{{convertedText}}</view>
+
+  <!-- 分类 -->
+  <view class="glass-card section">
+    <view class="section-label">分类</view>
+    <view class="cat-grid">
+      <view
+        wx:for="{{categories}}"
+        wx:key="key"
+        class="cat-item {{category === item.key ? 'active' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="onPickCategory"
+      >
+        <view class="cat-icon">
+          <van-icon name="{{item.icon}}" size="22px" color="{{category === item.key ? '#fff' : '#4097a9'}}" />
+        </view>
+        <text class="cat-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 共享账专属 -->
+  <block wx:if="{{type === 'shared'}}">
+    <view class="glass-card section">
+      <view class="section-label">分账方式</view>
+      <view class="chip-row">
+        <view
+          wx:for="{{splitMethods}}"
+          wx:key="key"
+          class="chip {{splitMethod === item.key ? 'active' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="onPickSplitMethod"
+        >{{item.name}}</view>
+      </view>
+    </view>
+
+    <view class="glass-card section">
+      <view class="section-label">参与人（{{participantIds.length}}人）</view>
+      <view class="member-row">
+        <view
+          wx:for="{{members}}"
+          wx:key="userId"
+          class="member-chip {{participantMap[item.userId] ? 'active' : ''}}"
+          data-id="{{item.userId}}"
+          bindtap="onToggleParticipant"
+        >
+          <image class="member-chip-avatar" src="{{item.avatar}}" mode="aspectFill" />
+          <text>{{item.nickname}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="glass-card section">
+      <view class="section-label">付款人</view>
+      <view class="member-row">
+        <view
+          wx:for="{{members}}"
+          wx:key="userId"
+          class="member-chip {{payerId === item.userId ? 'active' : ''}}"
+          data-id="{{item.userId}}"
+          bindtap="onPickPayer"
+        >
+          <image class="member-chip-avatar" src="{{item.avatar}}" mode="aspectFill" />
+          <text>{{item.nickname}}</text>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 备注 -->
+  <view class="glass-card section">
+    <view class="section-label">备注</view>
+    <input class="note-input" placeholder="添加备注" value="{{note}}" bindinput="onNoteInput" maxlength="255" />
+  </view>
+
+  <!-- 位置 -->
+  <view class="glass-card section row-section" bindtap="onChooseLocation">
+    <view class="row-left">
+      <van-icon name="location-o" size="20px" color="#4097a9" />
+      <text class="row-text">{{location ? location.name : '添加位置'}}</text>
+    </view>
+    <view wx:if="{{location}}" class="row-clear" catchtap="onClearLocation">
+      <van-icon name="clear" size="18px" color="#c4c4c4" />
+    </view>
+    <van-icon wx:else name="arrow" size="16px" color="#c4c4c4" />
+  </view>
+
+  <!-- 日期 -->
+  <picker mode="date" value="{{dateText}}" bindchange="onDateChange">
+    <view class="glass-card section row-section">
+      <view class="row-left">
+        <van-icon name="calendar-o" size="20px" color="#4097a9" />
+        <text class="row-text">{{dateText}}</text>
+      </view>
+      <van-icon name="arrow" size="16px" color="#c4c4c4" />
+    </view>
+  </picker>
+
+  <!-- 图片 -->
+  <view class="glass-card section">
+    <view class="section-label">凭证图片</view>
+    <view class="image-grid">
+      <view wx:for="{{images}}" wx:key="*this" class="image-item">
+        <image class="image-thumb" src="{{item}}" mode="aspectFill" data-url="{{item}}" bindtap="onPreviewImage" />
+        <view class="image-del" data-index="{{index}}" catchtap="onDeleteImage">
+          <van-icon name="cross" size="14px" color="#fff" />
+        </view>
+      </view>
+      <view wx:if="{{images.length < 9}}" class="image-add" bindtap="onChooseImage">
+        <van-icon name="photograph" size="28px" color="#8091a5" />
+      </view>
+    </view>
+  </view>
+
+  <!-- 分账明细弹窗 -->
+  <view wx:if="{{showSplitDialog}}" class="split-dialog-mask" bindtap="onSplitDialogCancel">
+    <view class="split-dialog" catchtap>
+      <view class="split-dialog-header">
+        <text class="split-dialog-title">{{splitDialogTitle}}</text>
+        <view class="split-dialog-close" bindtap="onSplitDialogCancel">
+          <van-icon name="cross" size="20px" color="#8091a5" />
+        </view>
+      </view>
+      <view class="split-dialog-body">
+        <view wx:for="{{splitDialogItems}}" wx:key="userId" class="split-dialog-item">
+          <image class="split-dialog-avatar" src="{{item.avatar}}" mode="aspectFill" />
+          <text class="split-dialog-name">{{item.nickname}}</text>
+          <input
+            class="split-dialog-input"
+            type="digit"
+            placeholder="{{splitDialogMode === 'ratio' ? '百分比' : splitDialogMode === 'shares' ? '份数' : '金额'}}"
+            value="{{item.value}}"
+            data-index="{{index}}"
+            bindinput="onSplitDialogInput"
+          />
+          <text class="split-dialog-unit">{{splitDialogMode === 'ratio' ? '%' : splitDialogMode === 'shares' ? '份' : '元'}}</text>
+        </view>
+      </view>
+      <view class="split-dialog-validation {{splitDialogValid ? 'valid' : 'invalid'}}">
+        {{splitDialogValidation || '请输入各成员的分账金额'}}
+      </view>
+      <view class="split-dialog-footer">
+        <button class="split-dialog-btn cancel" bindtap="onSplitDialogCancel">取消</button>
+        <button class="split-dialog-btn confirm" bindtap="onSplitDialogConfirm">确定</button>
+      </view>
+    </view>
+  </view>
+</view>

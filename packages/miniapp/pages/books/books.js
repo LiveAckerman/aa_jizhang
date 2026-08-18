@@ -139,7 +139,7 @@ Page({
 
   async onAuthorized(e) {
     const { avatar, nickname } = e.detail
-    wx.showLoading({ title: '保存中...' })
+    wx.showLoading({ title: '保存中...', mask: true })
     try {
       await request({ url: '/user/profile', method: 'PUT', data: { avatar, nickname } })
       const user = Object.assign({}, app.globalData.user, { avatar, nickname, isProfileComplete: true })

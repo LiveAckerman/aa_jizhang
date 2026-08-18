@@ -69,11 +69,17 @@
       </view>
     </view>
 
-    <!-- 主操作：记一笔 -->
-    <button class="btn-primary record-primary" bindtap="onAddTransaction">
-      <van-icon name="edit" size="20px" color="#fff" />
-      <text>记一笔</text>
-    </button>
+    <!-- 主操作：手动录入 + 自动票据识别 -->
+    <view class="record-actions">
+      <button class="record-btn manual" bindtap="onAddTransaction">
+        <van-icon name="edit" size="18px" color="#fff" />
+        <text>手动录入</text>
+      </button>
+      <button class="record-btn ocr" bindtap="onOcrRecognize">
+        <van-icon name="scan" size="18px" color="#4097a9" />
+        <text>自动票据识别</text>
+      </button>
+    </view>
 
     <!-- 次要操作 -->
     <view class="quick-actions">

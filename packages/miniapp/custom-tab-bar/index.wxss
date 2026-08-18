@@ -10,6 +10,55 @@
   pointer-events: none;
 }
 
+/* 快速记账悬浮按钮：悬在导航条右上角外侧，避免压住 tab */
+.fab {
+  position: absolute;
+  /* wrap 左右 padding 32rpx；再往内 8rpx，让按钮贴住导航条右端外沿 */
+  right: 24rpx;
+  /* 导航条高度120 + 底部安全区 + 间距，使按钮整体上移到导航条上方 */
+  bottom: calc(120rpx + env(safe-area-inset-bottom) + 40rpx);
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 28rpx;
+  background: linear-gradient(135deg, #4097a9, #5fb5c4);
+  box-shadow: 0 12rpx 32rpx rgba(64, 151, 169, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  z-index: 1000;
+}
+.fab:active {
+  transform: scale(0.94);
+}
+/* "+" 号：用两条白色线拼，避免依赖图标库 */
+.fab-icon {
+  position: relative;
+  width: 44rpx;
+  height: 44rpx;
+}
+.fab-icon::before,
+.fab-icon::after {
+  content: '';
+  position: absolute;
+  background: #fff;
+  border-radius: 4rpx;
+}
+.fab-icon::before {
+  left: 50%;
+  top: 0;
+  width: 6rpx;
+  height: 100%;
+  transform: translateX(-50%);
+}
+.fab-icon::after {
+  top: 50%;
+  left: 0;
+  height: 6rpx;
+  width: 100%;
+  transform: translateY(-50%);
+}
+
 /* 磨砂玻璃导航条 */
 .tabbar {
   position: relative;

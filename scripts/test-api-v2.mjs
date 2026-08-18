@@ -1,13 +1,8 @@
-// 覆盖新增功能：账本分组、复制账本、账单修改日志、货币字段
-import mysql from '/Users/lijiwang/Documents/test/aa_jizhang/node_modules/.pnpm/mysql2@3.23.3_@types+node@20.19.43/node_modules/mysql2/promise.js'
+// 覆盖新增功能：账本分组、复制账本、账单修改日志、货币字段（Postgres）
 import { randomUUID, createHmac } from 'crypto'
-import { readFileSync } from 'fs'
+import { loadEnv, connect } from './db.mjs'
 
-const env = Object.fromEntries(
-  readFileSync(new URL('../.env', import.meta.url), 'utf8')
-    .split('\n').filter((l) => l && !l.startsWith('#') && l.includes('='))
-    .map((l) => { const i = l.indexOf('='); return [l.slice(0, i).trim(), l.slice(i + 1).trim()] }),
-)
+const env = loadEnv()
 const BASE = `http://localhost:${env.PORT || 9080}/api`
 function b(s){return Buffer.from(s).toString('base64').replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_')}
 function jwt(p){const now=Math.floor(Date.now()/1000);const d=`${b(JSON.stringify({alg:'HS256',typ:'JWT'}))}.${b(JSON.stringify({...p,iat:now,exp:now+3600}))}`;return `${d}.${b(createHmac('sha256',env.JWT_SECRET).update(d).digest())}`}
@@ -17,9 +12,9 @@ const ok=(n,c,e='')=>{c?(pass++,console.log(`  ✅ ${n}`)):(fail++,console.log(`
 async function api(m,p,t,body){const r=await fetch(`${BASE}${p}`,{method:m,headers:{'Content-Type':'application/json',...(t?{Authorization:`Bearer ${t}`}:{})},body:body?JSON.stringify(body):undefined});let d=null;try{d=await r.json()}catch{};return{status:r.status,body:d}}
 
 async function main(){
-  const conn=await mysql.createConnection({host:env.DB_HOST,port:+env.DB_PORT,user:env.DB_USERNAME,password:env.DB_PASSWORD,database:env.DB_DATABASE})
+  const conn=await connect(env)
   const u1=randomUUID(),u2=randomUUID()
-  for(const[id,n]of[[u1,'甲'],[u2,'乙']]){await conn.execute(`INSERT INTO users(id,openid,nickname,avatar,isProfileComplete,hasPromptedProfile,createdAt,updatedAt)VALUES(?,?,?,?,1,1,NOW(),NOW())`,[id,`v2_${id.slice(0,8)}`,n,''])}
+  for(const[id,n]of[[u1,'甲'],[u2,'乙']]){await conn.execute(`INSERT INTO users(id,openid,nickname,avatar,"isProfileComplete","hasPromptedProfile","createdAt","updatedAt")VALUES(?,?,?,?,true,true,NOW(),NOW())`,[id,`v2_${id.slice(0,8)}`,n,''])}
   const tA=jwt({sub:u1,openid:`v2_${u1.slice(0,8)}`})
   const tB=jwt({sub:u2,openid:`v2_${u2.slice(0,8)}`})
   const bookIds = []
@@ -135,17 +130,17 @@ async function main(){
   } finally {
     // 清理
     for (const bid of bookIds) {
-      await conn.execute('DELETE FROM transaction_logs WHERE bookId=?',[bid]).catch(()=>{})
-      await conn.execute('DELETE FROM transactions WHERE bookId=?',[bid]).catch(()=>{})
-      await conn.execute('DELETE FROM book_members WHERE bookId=?',[bid]).catch(()=>{})
+      await conn.execute('DELETE FROM transaction_logs WHERE "bookId"=?',[bid]).catch(()=>{})
+      await conn.execute('DELETE FROM transactions WHERE "bookId"=?',[bid]).catch(()=>{})
+      await conn.execute('DELETE FROM book_members WHERE "bookId"=?',[bid]).catch(()=>{})
       await conn.execute('DELETE FROM books WHERE id=?',[bid]).catch(()=>{})
     }
     for (const gid of groupIds) {
       await conn.execute('DELETE FROM book_groups WHERE id=?',[gid]).catch(()=>{})
     }
     for (const id of [u1,u2]) {
-      await conn.execute('DELETE FROM book_groups WHERE userId=?',[id]).catch(()=>{})
-      await conn.execute('DELETE FROM book_members WHERE userId=?',[id]).catch(()=>{})
+      await conn.execute('DELETE FROM book_groups WHERE "userId"=?',[id]).catch(()=>{})
+      await conn.execute('DELETE FROM book_members WHERE "userId"=?',[id]).catch(()=>{})
       await conn.execute('DELETE FROM users WHERE id=?',[id]).catch(()=>{})
     }
     await conn.end()

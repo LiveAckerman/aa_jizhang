@@ -1,7 +1,6 @@
-// 端到端接口测试：直接建测试用户 + 签发 JWT，跑账本/记账全流程
-import mysql from '/Users/lijiwang/Documents/test/aa_jizhang/node_modules/.pnpm/mysql2@3.23.3_@types+node@20.19.43/node_modules/mysql2/promise.js'
+// 端到端接口测试：直接建测试用户 + 签发 JWT，跑账本/记账全流程（Postgres）
 import { randomUUID, createHmac } from 'crypto'
-import { readFileSync } from 'fs'
+import { connect } from './db.mjs'
 
 // 手写 HS256 JWT 签发，避免额外依赖
 function b64url(buf) {
@@ -18,15 +17,8 @@ function signJwt(payload, secret, expSeconds = 3600) {
 const jwt = { sign: (payload, secret, opts) => signJwt(payload, secret) }
 
 // 读取 .env
-const env = Object.fromEntries(
-  readFileSync(new URL('../.env', import.meta.url), 'utf8')
-    .split('\n')
-    .filter((l) => l && !l.startsWith('#') && l.includes('='))
-    .map((l) => {
-      const i = l.indexOf('=')
-      return [l.slice(0, i).trim(), l.slice(i + 1).trim()]
-    }),
-)
+import { loadEnv } from './db.mjs'
+const env = loadEnv()
 
 const BASE = `http://localhost:${env.PORT || 9080}/api`
 const SECRET = env.JWT_SECRET
@@ -61,20 +53,14 @@ async function api(method, path, token, body) {
 
 async function main() {
   // 1. 建两个测试用户
-  const conn = await mysql.createConnection({
-    host: env.DB_HOST,
-    port: Number(env.DB_PORT),
-    user: env.DB_USERNAME,
-    password: env.DB_PASSWORD,
-    database: env.DB_DATABASE,
-  })
+  const conn = await connect(env)
 
   const u1 = randomUUID()
   const u2 = randomUUID()
   for (const [id, nick] of [[u1, '测试用户A'], [u2, '测试用户B']]) {
     await conn.execute(
-      `INSERT INTO users (id, openid, nickname, avatar, isProfileComplete, hasPromptedProfile, createdAt, updatedAt)
-       VALUES (?, ?, ?, ?, 1, 1, NOW(), NOW())`,
+      `INSERT INTO users (id, openid, nickname, avatar, "isProfileComplete", "hasPromptedProfile", "createdAt", "updatedAt")
+       VALUES (?, ?, ?, ?, true, true, NOW(), NOW())`,
       [id, `test_openid_${id.slice(0, 8)}`, nick, 'https://cdn.ljw44.com/avatar.png'],
     )
   }
@@ -197,12 +183,14 @@ async function main() {
   } finally {
     // 清理
     if (bookId) {
-      await conn.execute('DELETE FROM transactions WHERE bookId = ?', [bookId]).catch(() => {})
-      await conn.execute('DELETE FROM book_members WHERE bookId = ?', [bookId]).catch(() => {})
+      await conn.execute('DELETE FROM transaction_logs WHERE "bookId" = ?', [bookId]).catch(() => {})
+      await conn.execute('DELETE FROM transactions WHERE "bookId" = ?', [bookId]).catch(() => {})
+      await conn.execute('DELETE FROM book_members WHERE "bookId" = ?', [bookId]).catch(() => {})
       await conn.execute('DELETE FROM books WHERE id = ?', [bookId]).catch(() => {})
     }
     for (const id of cleanupIds) {
-      await conn.execute('DELETE FROM book_members WHERE userId = ?', [id]).catch(() => {})
+      await conn.execute('DELETE FROM book_members WHERE "userId" = ?', [id]).catch(() => {})
+      await conn.execute('DELETE FROM book_groups WHERE "userId" = ?', [id]).catch(() => {})
       await conn.execute('DELETE FROM users WHERE id = ?', [id]).catch(() => {})
     }
     await conn.end()

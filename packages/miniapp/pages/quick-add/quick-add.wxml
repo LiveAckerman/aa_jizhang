@@ -1,0 +1,57 @@
+<view class="quick-page">
+  <!-- 录入方式切换 -->
+  <view class="mode-switch">
+    <view class="mode-tab {{mode === 'manual' ? 'active' : ''}}" data-mode="manual" bindtap="onSwitchMode">
+      <van-icon name="edit" size="18px" />
+      <text>手动录入</text>
+    </view>
+    <view class="mode-tab {{mode === 'ocr' ? 'active' : ''}}" data-mode="ocr" bindtap="onSwitchMode">
+      <van-icon name="scan" size="18px" />
+      <text>自动票据识别</text>
+    </view>
+  </view>
+
+  <!-- 账本选择 -->
+  <view class="sec-head">
+    <text class="sec-title">选择账本</text>
+    <view class="create-link" bindtap="onCreateBook">
+      <van-icon name="plus" size="14px" color="#4097a9" />
+      <text>新建账本</text>
+    </view>
+  </view>
+
+  <!-- 搜索 -->
+  <view class="search-box">
+    <van-icon name="search" size="16px" color="#8091a5" />
+    <input class="search-input" placeholder="搜索账本" value="{{keyword}}" bindinput="onSearch" confirm-type="search" />
+  </view>
+
+  <!-- 账本列表 -->
+  <view wx:if="{{loading}}" class="tip">加载中...</view>
+  <view wx:elif="{{filtered.length === 0}}" class="tip">没有账本，点右上「新建账本」</view>
+  <view wx:else class="book-list">
+    <view
+      wx:for="{{filtered}}"
+      wx:key="id"
+      class="book-item {{selectedId === item.id ? 'active' : ''}}"
+      data-id="{{item.id}}"
+      bindtap="onPickBook"
+    >
+      <image class="book-cover" src="{{item.coverUrl}}" mode="aspectFill" />
+      <view class="book-info">
+        <text class="book-name">{{item.name}}</text>
+        <text class="book-meta">{{item.memberCount}}人</text>
+      </view>
+      <view class="book-check {{selectedId === item.id ? 'on' : ''}}">
+        <van-icon wx:if="{{selectedId === item.id}}" name="success" size="16px" color="#fff" />
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部下一步 -->
+  <view class="bottom-bar">
+    <button class="btn-primary next-btn" bindtap="onNext">
+      {{mode === 'ocr' ? '选图识别' : '开始记账'}}
+    </button>
+  </view>
+</view>

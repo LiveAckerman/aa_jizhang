@@ -51,7 +51,7 @@ Page({
     try {
       const res = await wx.chooseMedia({ count: 1, mediaType: ['image'], sourceType: ['camera', 'album'] })
       const filePath = res.tempFiles[0].tempFilePath
-      wx.showLoading({ title: '上传中...' })
+      wx.showLoading({ title: '上传中...', mask: true })
       const url = await this.uploadImage(filePath)
       wx.hideLoading()
       this.setData({ cover: url })
