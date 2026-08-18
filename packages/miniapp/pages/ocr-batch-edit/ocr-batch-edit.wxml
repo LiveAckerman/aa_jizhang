@@ -1,35 +1,47 @@
-<view class="ocr-batch-page">
-  <block wx:if="{{records.length > 0}}">
-    <!-- 步骤指示器 -->
-    <view class="step-bar">
-      <view class="step-scroll">
-        <view
-          wx:for="{{records}}"
-          wx:key="id"
-          class="step-dot {{current === index ? 'active' : ''}} {{item.checked ? '' : 'unchecked'}}"
-          data-index="{{index}}"
-          bindtap="onSwitchTo"
-        >{{index + 1}}</view>
+<view class="batch-page">
+
+  <!-- 顶部区域：缩略图 + 进度 + 翻页 -->
+  <view class="top-bar" wx:if="{{records.length > 0}}">
+    <view class="top-left">
+      <!-- OCR 原图缩略图，带×关闭（设计图左上角） -->
+      <view class="thumb-wrap" wx:if="{{ocrImageUrl}}">
+        <image class="thumb-img" src="{{ocrImageUrl}}" mode="aspectFill" bindtap="onPreviewImage" />
+        <view class="thumb-close" catchtap="onSkipAll">
+          <van-icon name="cross" size="14px" color="#fff" />
+        </view>
       </view>
-      <text class="step-count">已选 {{checkedCount}}/{{records.length}}</text>
+      <!-- 识别结果 + 进度 + 重新上传 -->
+      <view class="top-meta">
+        <text class="top-title">识别结果</text>
+        <text class="top-progress">{{current + 1}}/{{total}}</text>
+        <view class="reupload-btn" catchtap="onReupload">
+          <van-icon name="replay" size="14px" color="#4097a9" />
+          <text class="reupload-text">重新上传</text>
+        </view>
+      </view>
     </view>
-
-    <!-- 每条记录一个表单，只显示 current 那条（其余保留挂载以留住编辑） -->
-    <view wx:for="{{records}}" wx:key="id" hidden="{{current !== index}}">
-      <!-- 当前条操作行 -->
-      <view class="record-head">
-        <view class="record-check {{item.checked ? 'on' : ''}}" data-index="{{index}}" bindtap="onToggleCheck">
-          <van-icon wx:if="{{item.checked}}" name="success" size="14px" color="#fff" />
-          <text class="record-check-label">{{item.checked ? '已选用' : '未选用'}}</text>
-        </view>
-        <view class="record-del" data-index="{{index}}" bindtap="onDelete">
-          <van-icon name="delete-o" size="16px" color="#fa9583" />
-          <text>删除此条</text>
-        </view>
+    <!-- 右侧翻页箭头 -->
+    <view class="top-pager">
+      <view
+        class="pager-arrow {{current === 0 ? 'disabled' : ''}}"
+        catchtap="onPrev"
+      >
+        <van-icon name="arrow-left" size="20px" color="{{current === 0 ? '#c4c4c4' : '#4097a9'}}" />
       </view>
+      <view
+        class="pager-arrow {{current === records.length - 1 ? 'disabled' : ''}}"
+        catchtap="onNext"
+      >
+        <van-icon name="arrow" size="20px" color="{{current === records.length - 1 ? '#c4c4c4' : '#4097a9'}}" />
+      </view>
+    </view>
+  </view>
 
+  <!-- 表单主体：每条记录一个 transaction-form -->
+  <block wx:if="{{records.length > 0}}">
+    <view wx:for="{{records}}" wx:key="id" hidden="{{current !== index}}">
       <transaction-form
-        id="form_{{index}}"
+        id="form_{{item.id}}"
         members="{{members}}"
         rates="{{rates}}"
         my-user-id="{{myUserId}}"
@@ -37,28 +49,29 @@
       />
     </view>
 
-    <!-- 上一条 / 下一条 -->
-    <view class="pager" wx:if="{{records.length > 1}}">
-      <button class="pager-btn" bindtap="onPrev" disabled="{{current === 0}}">上一条</button>
-      <button class="pager-btn" bindtap="onNext" disabled="{{current === records.length - 1}}">下一条</button>
+    <!-- 底部确认提交 + 跳过 -->
+    <view class="bottom-bar">
+      <view class="skip-row" wx:if="{{records.length > 1}}" bindtap="onSkipAll">
+        <text class="skip-text">跳过剩余 {{records.length}} 条</text>
+      </view>
+      <button
+        class="btn-submit"
+        bindtap="onSubmit"
+        disabled="{{submitting}}"
+      >{{submitting ? '提交中...' : '确认提交'}}</button>
     </view>
   </block>
 
-  <!-- 空态：ready 且无记录 -->
-  <view wx:elif="{{ready}}" class="empty">
-    <text class="empty-text">没有可入库的记录</text>
-    <button class="btn-primary empty-back" bindtap="onBack">返回</button>
+  <!-- 空态 -->
+  <view wx:elif="{{ready}}" class="empty-state">
+    <van-icon name="checked" size="64px" color="#52c41a" />
+    <text class="empty-title">全部处理完成</text>
+    <button class="btn-back" bindtap="onBack">返回账本</button>
   </view>
 
-  <!-- 加载中：成员/汇率还在加载 -->
-  <view wx:else class="loading">
-    <text>加载中...</text>
+  <!-- 加载中 -->
+  <view wx:else class="loading-state">
+    <text class="loading-text">加载中...</text>
   </view>
 
-  <!-- 底部确认入库 -->
-  <view wx:if="{{records.length > 0}}" class="bottom-bar">
-    <button class="btn-primary submit-btn" bindtap="onSubmit" disabled="{{submitting}}">
-      {{submitting ? '入库中...' : '确认入库（' + checkedCount + '）'}}
-    </button>
-  </view>
 </view>

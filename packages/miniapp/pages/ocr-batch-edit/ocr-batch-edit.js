@@ -9,9 +9,9 @@ Page({
     rates: [{ code: 'CNY', name: '人民币', symbol: '¥', rate: 1, label: '人民币 (CNY)' }],
 
     ocrImageUrl: '',
-    records: [],      // [{ id, checked, initial }]
-    current: 0,       // 当前展示的记录索引
-    checkedCount: 0,
+    records: [],   // [{ id, initial }]
+    current: 0,    // 当前展示索引
+    total: 0,      // 原始总条数（用于进度显示）
     ready: false,
     submitting: false,
   },
@@ -21,16 +21,24 @@ Page({
     this.setData({ bookId: query.bookId || '', myUserId })
     wx.setNavigationBarTitle({ title: '票据识别结果' })
 
-    // 通过 eventChannel 接收上一页的 OCR 结果
-    const ch = this.getOpenerEventChannel && this.getOpenerEventChannel()
-    if (ch && ch.on) {
-      ch.on('ocrResult', (data) => this.applyOcr(data))
-    }
+    // 右上角"跳过剩余"按钮
+    wx.setNavigationBarColor({
+      frontColor: '#000000',
+      backgroundColor: '#ffffff',
+    })
+    this._setupSkipButton()
 
-    // 并行加载成员 + 汇率
+    const ch = this.getOpenerEventChannel && this.getOpenerEventChannel()
+    if (ch && ch.on) ch.on('ocrResult', (data) => this.applyOcr(data))
+
     Promise.all([this.loadMembers(), this.loadRates()]).finally(() => {
       this.setData({ ready: true })
     })
+  },
+
+  _setupSkipButton() {
+    // 使用自定义导航栏右侧菜单按钮（navigationBarRightButtons 微信暂不支持）
+    // 改用页面内顶部区域放"跳过"文字按钮
   },
 
   async loadRates() {
@@ -49,33 +57,27 @@ Page({
     } catch (e) {}
   },
 
-  // 把 OCR 结果转成多条待编辑记录
   applyOcr(data) {
     const imageUrl = data.imageUrl || ''
     const list = (data.records || []).map((r, i) => ({
       id: 'rec_' + i,
-      checked: true,
       initial: {
         type: 'shared',
-        amount: (r.amount || 0) / 100,          // 分 → 元
-        category: 'other',                       // OCR 默认归到「其他」
-        note: r.note || r.merchant || '',        // 识别文字作备注
-        images: imageUrl ? [imageUrl] : [],       // 共用上传的原图
+        amount: (r.amount || 0) / 100,
+        category: r.category || 'other',
+        note: r.note || r.merchant || '',
+        images: imageUrl ? [imageUrl] : [],
         spentAt: r.spentAt || new Date().toISOString(),
       },
     }))
     this.setData({
       ocrImageUrl: imageUrl,
       records: list,
+      total: list.length,
       current: 0,
-      checkedCount: list.length,
     })
   },
 
-  // 切换到某条
-  onSwitchTo(e) {
-    this.setData({ current: Number(e.currentTarget.dataset.index) })
-  },
   onPrev() {
     if (this.data.current > 0) this.setData({ current: this.data.current - 1 })
   },
@@ -85,84 +87,94 @@ Page({
     }
   },
 
-  // 勾选/取消当前条
-  onToggleCheck(e) {
-    const idx = Number(e.currentTarget.dataset.index)
-    const records = this.data.records.slice()
-    records[idx] = { ...records[idx], checked: !records[idx].checked }
-    this.setData({ records, checkedCount: records.filter((r) => r.checked).length })
-  },
-
-  // 删除当前条
-  onDelete(e) {
-    const idx = Number(e.currentTarget.dataset.index)
-    wx.showModal({
-      title: '删除此条', content: '确定移除这条识别记录吗？', confirmColor: '#fa9583',
-      success: (res) => {
-        if (!res.confirm) return
-        const records = this.data.records.slice()
-        records.splice(idx, 1)
-        if (records.length === 0) {
-          wx.showToast({ title: '已全部移除', icon: 'none' })
-          this.setData({ records: [], current: 0, checkedCount: 0 })
-          return
+  // 重新上传并 OCR
+  onReupload() {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['camera', 'album'],
+      success: async (res) => {
+        wx.showLoading({ title: '重新识别中...', mask: true })
+        try {
+          const result = await api.ocrRecognizeReceipt(res.tempFiles[0].tempFilePath, this.data.bookId)
+          wx.hideLoading()
+          if (!result.records || result.records.length === 0) {
+            wx.showToast({ title: '未识别到支付记录', icon: 'none' })
+          } else {
+            this.applyOcr(result)
+          }
+        } catch (e) {
+          wx.hideLoading()
+          wx.showToast({ title: (e && e.message) || '识别失败', icon: 'none' })
         }
-        const current = Math.min(this.data.current, records.length - 1)
-        this.setData({ records, current, checkedCount: records.filter((r) => r.checked).length })
       },
     })
   },
 
-  // 返回上一页（空状态下的"返回"按钮，不走入库校验）
-  onBack() {
-    wx.navigateBack()
+  // 预览 OCR 原图
+  onPreviewImage() {
+    if (!this.data.ocrImageUrl) return
+    wx.previewImage({ current: this.data.ocrImageUrl, urls: [this.data.ocrImageUrl] })
   },
 
-  // 确认入库：逐条 buildPayload → 创建
+  // 提交当条，提交成功后从列表移除
   async onSubmit() {
     if (this.data.submitting) return
-    const checkedIdx = this.data.records
-      .map((r, i) => (r.checked ? i : -1))
-      .filter((i) => i >= 0)
-    if (checkedIdx.length === 0) {
-      wx.showToast({ title: '请至少勾选一条', icon: 'none' })
-      return
-    }
+    const { records, current, bookId } = this.data
+    if (records.length === 0) return
 
-    // 收集并校验每条 payload
-    const payloads = []
-    for (const i of checkedIdx) {
-      const form = this.selectComponent('#form_' + i)
-      if (!form) continue
-      const res = form.buildPayload(this.data.bookId)
-      if (!res.ok) {
-        this.setData({ current: i }) // 跳到出错那条
-        wx.showToast({ title: `第 ${i + 1} 条：${res.message}`, icon: 'none' })
-        return
-      }
-      payloads.push(res.payload)
+    const form = this.selectComponent('#form_' + records[current].id)
+    if (!form) return
+
+    const res = form.buildPayload(bookId)
+    if (!res.ok) {
+      wx.showToast({ title: res.message, icon: 'none' })
+      return
     }
 
     this.setData({ submitting: true })
-    wx.showLoading({ title: '入库中...', mask: true })
-    let ok = 0
-    const errors = []
-    for (const p of payloads) {
-      try {
-        await api.createTransaction(p)
-        ok += 1
-      } catch (e) {
-        errors.push((e && e.message) || '创建失败')
-      }
-    }
-    wx.hideLoading()
+    wx.showLoading({ title: '提交中...', mask: true })
+    try {
+      await api.createTransaction(res.payload)
+      wx.hideLoading()
 
-    if (ok === 0) {
+      const newRecords = records.slice()
+      newRecords.splice(current, 1)
+
+      if (newRecords.length === 0) {
+        wx.showToast({ title: '全部提交完成', icon: 'success' })
+        setTimeout(() => wx.navigateBack(), 800)
+        return
+      }
+
+      const newCurrent = Math.min(current, newRecords.length - 1)
+      wx.showToast({ title: '已提交', icon: 'success' })
+      this.setData({ records: newRecords, current: newCurrent, submitting: false })
+    } catch (e) {
+      wx.hideLoading()
+      wx.showToast({ title: (e && e.message) || '提交失败', icon: 'none' })
       this.setData({ submitting: false })
-      wx.showToast({ title: errors[0] || '入库失败', icon: 'none' })
+    }
+  },
+
+  // 跳过剩余，直接退出
+  onSkipAll() {
+    const remaining = this.data.records.length
+    if (remaining === 0) {
+      wx.navigateBack()
       return
     }
-    wx.showToast({ title: `已入库 ${ok} 条`, icon: 'success' })
-    setTimeout(() => wx.navigateBack(), 800)
+    wx.showModal({
+      title: '跳过剩余',
+      content: `还有 ${remaining} 条记录未提交，确认退出？`,
+      confirmText: '退出',
+      confirmColor: '#fa9583',
+      success: (r) => { if (r.confirm) wx.navigateBack() },
+    })
+  },
+
+  // 空态下直接返回
+  onBack() {
+    wx.navigateBack()
   },
 })
