@@ -13,7 +13,8 @@
       <!-- 识别结果 + 进度 + 重新上传 -->
       <view class="top-meta">
         <text class="top-title">识别结果</text>
-        <text class="top-progress">{{current + 1}}/{{total}}</text>
+        <!-- 进度：当前在剩余记录中的位置（翻页/删除都能正确反映） -->
+        <text class="top-progress">{{current + 1}}/{{records.length}}</text>
         <view class="reupload-btn" catchtap="onReupload">
           <van-icon name="replay" size="14px" color="#4097a9" />
           <text class="reupload-text">重新上传</text>

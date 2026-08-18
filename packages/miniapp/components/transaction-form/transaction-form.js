@@ -64,6 +64,7 @@ Component({
   lifetimes: {
     attached() {
       this.initForm()
+      this._inited = true
     },
   },
 
@@ -72,6 +73,13 @@ Component({
     members(list) {
       if (!this._participantsTouched && list && list.length && this.data.type === 'shared') {
         this.setParticipants(list.map((m) => m.userId))
+      }
+    },
+    // initial 变化时重新初始化（多条复用同一组件实例时，切换/删除记录后需重置表单）
+    initial() {
+      if (this._inited) {
+        this._participantsTouched = false
+        this.initForm()
       }
     },
   },

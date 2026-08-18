@@ -11,7 +11,6 @@ Page({
     ocrImageUrl: '',
     records: [],   // [{ id, initial }]
     current: 0,    // 当前展示索引
-    total: 0,      // 原始总条数（用于进度显示）
     ready: false,
     submitting: false,
   },
@@ -21,24 +20,12 @@ Page({
     this.setData({ bookId: query.bookId || '', myUserId })
     wx.setNavigationBarTitle({ title: '票据识别结果' })
 
-    // 右上角"跳过剩余"按钮
-    wx.setNavigationBarColor({
-      frontColor: '#000000',
-      backgroundColor: '#ffffff',
-    })
-    this._setupSkipButton()
-
     const ch = this.getOpenerEventChannel && this.getOpenerEventChannel()
     if (ch && ch.on) ch.on('ocrResult', (data) => this.applyOcr(data))
 
     Promise.all([this.loadMembers(), this.loadRates()]).finally(() => {
       this.setData({ ready: true })
     })
-  },
-
-  _setupSkipButton() {
-    // 使用自定义导航栏右侧菜单按钮（navigationBarRightButtons 微信暂不支持）
-    // 改用页面内顶部区域放"跳过"文字按钮
   },
 
   async loadRates() {
@@ -59,21 +46,22 @@ Page({
 
   applyOcr(data) {
     const imageUrl = data.imageUrl || ''
+    // 用时间戳生成稳定唯一 id，避免 splice 后下标重排导致 wx:key 组件复用错位
+    const now = Date.now()
     const list = (data.records || []).map((r, i) => ({
-      id: 'rec_' + i,
+      id: 'rec_' + now + '_' + i,
       initial: {
         type: 'shared',
         amount: (r.amount || 0) / 100,
         category: r.category || 'other',
         note: r.note || r.merchant || '',
-        images: imageUrl ? [imageUrl] : [],
+        images: [],   // 不自动把 OCR 原图塞入凭证，原图仅作顶部参考缩略图
         spentAt: r.spentAt || new Date().toISOString(),
       },
     }))
     this.setData({
       ocrImageUrl: imageUrl,
       records: list,
-      total: list.length,
       current: 0,
     })
   },
@@ -87,28 +75,43 @@ Page({
     }
   },
 
-  // 重新上传并 OCR
+  // 重新上传并 OCR，有未提交记录时加二次确认
   onReupload() {
-    wx.chooseMedia({
-      count: 1,
-      mediaType: ['image'],
-      sourceType: ['camera', 'album'],
-      success: async (res) => {
-        wx.showLoading({ title: '重新识别中...', mask: true })
-        try {
-          const result = await api.ocrRecognizeReceipt(res.tempFiles[0].tempFilePath, this.data.bookId)
-          wx.hideLoading()
-          if (!result.records || result.records.length === 0) {
-            wx.showToast({ title: '未识别到支付记录', icon: 'none' })
-          } else {
-            this.applyOcr(result)
+    const doReupload = () => {
+      wx.chooseMedia({
+        count: 1,
+        mediaType: ['image'],
+        sourceType: ['camera', 'album'],
+        success: async (res) => {
+          wx.showLoading({ title: '重新识别中...', mask: true })
+          try {
+            const result = await api.ocrRecognizeReceipt(res.tempFiles[0].tempFilePath, this.data.bookId)
+            wx.hideLoading()
+            if (!result.records || result.records.length === 0) {
+              wx.showToast({ title: '未识别到支付记录', icon: 'none' })
+            } else {
+              this.applyOcr(result)
+            }
+          } catch (e) {
+            wx.hideLoading()
+            wx.showToast({ title: (e && e.message) || '识别失败', icon: 'none' })
           }
-        } catch (e) {
-          wx.hideLoading()
-          wx.showToast({ title: (e && e.message) || '识别失败', icon: 'none' })
-        }
-      },
-    })
+        },
+      })
+    }
+
+    // 有未提交记录时，二次确认（防止丢失已编辑的内容）
+    if (this.data.records.length > 0) {
+      wx.showModal({
+        title: '重新上传',
+        content: `当前还有 ${this.data.records.length} 条记录未提交，重新上传将清空这些记录，确认继续？`,
+        confirmText: '继续',
+        confirmColor: '#fa9583',
+        success: (r) => { if (r.confirm) doReupload() },
+      })
+    } else {
+      doReupload()
+    }
   },
 
   // 预览 OCR 原图
@@ -149,6 +152,7 @@ Page({
 
       const newCurrent = Math.min(current, newRecords.length - 1)
       wx.showToast({ title: '已提交', icon: 'success' })
+      // total 保持原始总数，让进度显示"已处理/总计"的语义
       this.setData({ records: newRecords, current: newCurrent, submitting: false })
     } catch (e) {
       wx.hideLoading()
