@@ -94,8 +94,79 @@ export class OcrService {
   private parsePaymentRecords(fullText: string, results: any[]): PaymentRecord[] {
     const records: PaymentRecord[] = []
 
-    // 规则1: 微信支付格式
-    // "向XXX转账" + "¥123.45"
+    // ── 规则 0 (最高优先级)：结构化账单详情页 ──────────────────────────────
+    // 特征：含「支付成功」/「收款成功」/「交易成功」或「当前状态」+「支付」
+    // 包含：微信/支付宝/银联扫码付款详情页
+    const isDetailPage =
+      fullText.includes('支付成功') ||
+      fullText.includes('收款成功') ||
+      fullText.includes('交易成功') ||
+      (fullText.includes('当前状态') && fullText.includes('支付'))
+
+    if (isDetailPage) {
+      // 1. 从 results 中找大字号金额（bounding box 高度 > 60px + 匹配金额格式）
+      //    详情页的主金额通常用大字号居中显示，如 -15.00 / 15.00 / ¥15.00
+      const amountTextRe = /^[¥￥-]?\s*(\d+\.\d{1,2})$/
+      let amount = 0
+      let maxBoxHeight = 0
+      for (const r of results) {
+        const text = (r.text || '').trim()
+        const m = text.match(amountTextRe)
+        if (!m) continue
+        const boxHeight = Math.abs((r.box?.[2]?.[1] ?? 0) - (r.box?.[0]?.[1] ?? 0))
+        if (boxHeight > maxBoxHeight) {
+          maxBoxHeight = boxHeight
+          amount = Math.round(parseFloat(m[1]) * 100)
+        }
+      }
+
+      // 2. 提取商户名：优先「商品」字段，其次「商户全称」，再次「商户名称」
+      let merchant = ''
+      const fieldPatterns = [
+        /商品\n(.+?)(?:\n|$)/,
+        /商户全称\n(.+?)(?:\n|$)/,
+        /商户名称\n(.+?)(?:\n|$)/,
+        /收款方\n(.+?)(?:\n|$)/,
+      ]
+      for (const pat of fieldPatterns) {
+        const m = fullText.match(pat)
+        if (m && m[1].trim()) {
+          merchant = m[1].trim().slice(0, 20)
+          break
+        }
+      }
+
+      // 3. 提取支付时间（「支付时间」/「交易时间」字段）
+      let spentAt = new Date().toISOString()
+      const timeFieldMatch = fullText.match(/(?:支付|交易|完成)时间\n(.+?)(?:\n|$)/)
+      if (timeFieldMatch) {
+        try {
+          // "2026年8月18日11:20:40" → "2026-8-18T11:20:40"
+          const raw = timeFieldMatch[1]
+            .replace(/年/g, '-')
+            .replace(/月/g, '-')
+            .replace(/日\s*/g, 'T')
+            .trim()
+          const d = new Date(raw)
+          if (!isNaN(d.getTime())) spentAt = d.toISOString()
+        } catch (_) {}
+      }
+
+      if (amount > 0) {
+        records.push({
+          merchant: merchant || '未知商户',
+          amount,
+          confidence: merchant ? 0.92 : 0.75,
+          source: 'wechat',
+          spentAt,
+        })
+      }
+
+      // 详情页只有一笔，直接返回
+      return records
+    }
+
+    // ── 规则 1: 微信转账页 "向XXX转账 ¥123.45" ──────────────────────────────
     const wechatPattern = /向(.+?)转账[\s\S]*?[¥￥](\d+\.?\d*)/g
     let match: RegExpExecArray | null
 
@@ -108,8 +179,7 @@ export class OcrService {
       })
     }
 
-    // 规则2: 支付宝格式
-    // "付款给XXX" + "123.45元"
+    // ── 规则 2: 支付宝页 "付款给XXX 123.45元" ───────────────────────────────
     const alipayPattern = /付款给(.+?)[\s\S]*?(\d+\.?\d*)元/g
     while ((match = alipayPattern.exec(fullText)) !== null) {
       records.push({
@@ -120,7 +190,7 @@ export class OcrService {
       })
     }
 
-    // 规则3: 通用行扫描（微信/支付宝账单列表、付款成功页等）
+    // ── 规则 3: 通用行扫描（账单列表、付款成功页等）──────────────────────────
     // 逐行查找 "¥金额"，并向上关联最近的商户名
     if (records.length === 0) {
       const lines = fullText
@@ -130,18 +200,8 @@ export class OcrService {
 
       // 汇总类关键词：这类金额是统计值，需排除（如"本月支出¥836.87"）
       const summaryKeywords = [
-        '统计',
-        '本月',
-        '本周',
-        '本年',
-        '合计',
-        '总计',
-        '总支出',
-        '总收入',
-        '收入',
-        '结余',
-        '余额',
-        '较上',
+        '统计', '本月', '本周', '本年', '合计', '总计',
+        '总支出', '总收入', '收入', '结余', '余额', '较上',
       ]
 
       // 金额：¥/￥ 后跟数字（最多两位小数）
@@ -210,18 +270,17 @@ export class OcrService {
   }
 
   /**
-   * 智能匹配分类
+   * 智能匹配分类，并补全 spentAt（如已有则保留）
    */
   private enrichRecords(records: PaymentRecord[]): PaymentRecord[] {
     return records.map((record) => {
       const category = this.guessCategory(record.merchant)
-      const spentAt = new Date().toISOString()
-
       return {
         ...record,
         category,
-        spentAt,
-        note: record.merchant,
+        // 保留规则0提取的真实支付时间，没有时才用当前时间
+        spentAt: record.spentAt || new Date().toISOString(),
+        note: record.note || record.merchant,
       }
     })
   }
