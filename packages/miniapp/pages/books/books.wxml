@@ -176,6 +176,7 @@
           wx:key="id"
           wx:for-item="book"
           class="glass-card book-plain archived-card {{index === 0 ? 'first' : ''}}"
+          style="z-index: {{archivedStack.length - index}};"
         >
           <view class="book-plain-top">
             <text class="book-name">{{book.name}}</text>

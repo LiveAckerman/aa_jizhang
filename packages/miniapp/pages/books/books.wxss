@@ -444,13 +444,14 @@ page {
 
 /* 复用 book-plain 外观，覆写为堆叠：每张只露标题行 */
 .archived-card {
+  position: relative; /* 让 z-index 生效 */
   padding: 28rpx 32rpx;
   margin-bottom: 0;
-  /* 后一张用负 margin 上移，压在前一张上，只露出前一张的标题行(约96rpx) */
+  /* 后一张用负 margin 上移，压在前一张上，只露出前一张的标题行 */
   margin-top: -48rpx;
   border: 2rpx solid rgba(128, 145, 165, 0.10);
-  /* 顶部投影，强调层叠纵深 */
-  box-shadow: 0 -6rpx 20rpx rgba(47, 65, 89, 0.08);
+  /* 底部投影，强调下方还压着卡片的纵深 */
+  box-shadow: 0 8rpx 20rpx rgba(47, 65, 89, 0.10);
   transition: transform 0.2s;
 }
 
