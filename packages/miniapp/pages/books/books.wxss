@@ -438,39 +438,37 @@ page {
 }
 
 /* ── 已归档卡片堆叠 ── */
-.archived-stack-wrap {
-  position: relative;
-  margin: 8rpx 0 0;
+.archived-stack {
+  margin-top: 8rpx;
 }
 
-/* 每张堆叠卡片：position absolute，越靠底越低 */
-.archived-stack-card {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 80rpx;
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(16rpx);
-  border-radius: 20rpx;
-  box-shadow: 0 4rpx 16rpx rgba(47, 65, 89, 0.10);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 32rpx;
-  transform-origin: center bottom;
+/* 复用 book-plain 外观，覆写为堆叠：每张只露标题行 */
+.archived-card {
+  padding: 28rpx 32rpx;
+  margin-bottom: 0;
+  /* 后一张用负 margin 上移，压在前一张上，只露出前一张的标题行(约96rpx) */
+  margin-top: -48rpx;
+  border: 2rpx solid rgba(128, 145, 165, 0.10);
+  /* 顶部投影，强调层叠纵深 */
+  box-shadow: 0 -6rpx 20rpx rgba(47, 65, 89, 0.08);
+  transition: transform 0.2s;
 }
 
-.archived-stack-name {
-  font-size: 26rpx;
-  font-weight: 600;
-  color: var(--text-primary);
+/* 第一张不上移 */
+.archived-card.first {
+  margin-top: 0;
+  box-shadow: 0 4rpx 16rpx rgba(47, 65, 89, 0.06);
 }
 
-.archived-stack-badge {
-  font-size: 20rpx;
+.archived-card .book-plain-top {
+  padding-right: 0;
+}
+
+.archived-badge {
+  font-size: 22rpx;
   color: var(--text-secondary);
   background: rgba(128, 145, 165, 0.12);
-  padding: 4rpx 14rpx;
+  padding: 6rpx 18rpx;
   border-radius: 20rpx;
 }
 

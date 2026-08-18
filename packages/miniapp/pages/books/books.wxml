@@ -168,27 +168,20 @@
       </view>
     </block>
 
-    <!-- 已归档：卡片堆叠 -->
+    <!-- 已归档：卡片堆叠（复用 book-plain 外观，负 margin 层叠，只露标题行） -->
     <block wx:if="{{archivedStack.length > 0}}">
-      <view class="archived-stack-wrap" bindtap="onOpenArchivedDrawer">
-        <!--
-          参考效果：每张卡片向下错开，标题行全部可见，像钱包叠放。
-          index=0 是最顶层（z-index最高），依次向下压叠。
-          top = index * 88rpx（每张卡片露出的标题行高度）
-          整体容器高度 = 88 * n + 剩余最后一张卡片可见高度(56rpx)
-        -->
+      <view class="archived-stack" bindtap="onOpenArchivedDrawer">
         <view
           wx:for="{{archivedStack}}"
           wx:key="id"
           wx:for-item="book"
-          class="archived-stack-card"
-          style="top: {{index * 88}}rpx; z-index: {{archivedStack.length - index}};"
+          class="glass-card book-plain archived-card {{index === 0 ? 'first' : ''}}"
         >
-          <text class="archived-stack-name">{{book.name}}</text>
-          <text class="archived-stack-badge">已结算</text>
+          <view class="book-plain-top">
+            <text class="book-name">{{book.name}}</text>
+            <text class="archived-badge">已结算</text>
+          </view>
         </view>
-        <!-- 撑起整个堆叠区域的高度 -->
-        <view style="height: {{archivedStack.length * 88 + 56}}rpx; display: block;"></view>
       </view>
       <!-- 点击提示 -->
       <view class="archived-hint" bindtap="onOpenArchivedDrawer">
