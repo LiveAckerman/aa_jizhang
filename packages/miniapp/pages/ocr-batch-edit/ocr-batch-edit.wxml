@@ -47,7 +47,7 @@
   <!-- 空态 -->
   <view wx:elif="{{ready && records.length === 0}}" class="empty">
     <text class="empty-text">没有可入库的记录</text>
-    <button class="btn-primary empty-back" bindtap="onSubmit">返回</button>
+    <button class="btn-primary empty-back" bindtap="onBack">返回</button>
   </view>
 
   <!-- 加载中 -->

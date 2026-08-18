@@ -113,6 +113,11 @@ Page({
     })
   },
 
+  // 返回上一页（空状态下的"返回"按钮，不走入库校验）
+  onBack() {
+    wx.navigateBack()
+  },
+
   // 确认入库：逐条 buildPayload → 创建
   async onSubmit() {
     if (this.data.submitting) return
