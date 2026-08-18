@@ -1,23 +1,22 @@
 <view class="tab-page">
   <view class="page-header header-row">
     <text class="page-title">账本</text>
+    <!-- 搜索框 -->
+    <view class="search-box">
+      <van-icon name="search" size="16px" color="#8091a5" />
+      <input
+        class="search-input"
+        placeholder="搜索账本"
+        placeholder-class="search-input-ph"
+        value="{{keyword}}"
+        bindinput="onSearch"
+        confirm-type="search"
+      />
+      <van-icon wx:if="{{keyword}}" name="clear" size="16px" color="#c8c9cc" catchtap="onClearSearch" />
+    </view>
     <view class="header-add" bindtap="onTapCreate">
       <van-icon name="plus" size="20px" color="#fff" />
     </view>
-  </view>
-
-  <!-- 搜索框 -->
-  <view class="search-box">
-    <van-icon name="search" size="16px" color="#8091a5" />
-    <input
-      class="search-input"
-      placeholder="搜索账本"
-      placeholder-class="search-input-ph"
-      value="{{keyword}}"
-      bindinput="onSearch"
-      confirm-type="search"
-    />
-    <van-icon wx:if="{{keyword}}" name="clear" size="16px" color="#c8c9cc" catchtap="onClearSearch" />
   </view>
 
   <!-- 分组筛选 chips -->

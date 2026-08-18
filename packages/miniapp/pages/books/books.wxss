@@ -10,9 +10,10 @@ page {
 }
 
 .page-title {
-  font-size: 48rpx;
+  font-size: 40rpx;
   font-weight: 700;
   color: var(--text-primary);
+  flex-shrink: 0;
 }
 
 /* 空状态 */
@@ -52,10 +53,11 @@ page {
 .header-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 20rpx;
 }
 
 .header-add {
+  flex-shrink: 0;
   width: 64rpx;
   height: 64rpx;
   border-radius: 32rpx;
@@ -371,12 +373,13 @@ page {
 
 /* 搜索框 */
 .search-box {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 12rpx;
-  margin: 0 32rpx 20rpx;
   padding: 0 24rpx;
-  height: 72rpx;
+  height: 68rpx;
   background: #fff;
   border-radius: 40rpx;
   box-shadow: 0 4rpx 16rpx rgba(47, 65, 89, 0.06);
