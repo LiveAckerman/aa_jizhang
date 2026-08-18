@@ -578,3 +578,7 @@ page {
   font-weight: 600;
   color: var(--color-accent);
 }
+
+.drawer-book-menu {
+  flex-shrink: 0;
+}

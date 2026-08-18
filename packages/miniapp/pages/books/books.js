@@ -358,8 +358,15 @@ Page({
   // book-menu 组件抛出的操作事件
   onBookAction(e) {
     handleBookAction(e.detail, () => {
+      // 若在已归档抽屉内操作：先关抽屉并恢复 tabbar，避免刷新后抽屉悬空
+      if (this.data.showArchivedDrawer) {
+        this.onCloseArchivedDrawer()
+      }
       this.loadGroups()
       this.loadBooks()
     })
   },
+
+  // 阻止抽屉列表项内 book-menu 点击冒泡到 onTapBook
+  noop() {},
 })

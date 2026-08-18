@@ -217,7 +217,9 @@
           <text class="drawer-book-meta">{{book.memberCount}}人 · {{book.dateText}}</text>
           <text class="drawer-book-amount">¥{{book.myTotalText}}</text>
         </view>
-        <book-menu book="{{book}}" is-owner="{{book.isOwner}}" bind:action="onBookAction" />
+        <view class="drawer-book-menu" catchtap="noop">
+          <book-menu book="{{book}}" is-owner="{{book.isOwner}}" bind:action="onBookAction" />
+        </view>
       </view>
     </scroll-view>
   </view>
