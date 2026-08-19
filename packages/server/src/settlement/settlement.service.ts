@@ -5,12 +5,14 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository, DataSource } from 'typeorm'
+import { Repository, DataSource, IsNull, In } from 'typeorm'
 import { Settlement } from './settlement.entity'
+import { SettlementRound } from './settlement-round.entity'
 import { Transaction } from '../transaction/transaction.entity'
 import { BookService } from '../book/book.service'
 import { CreateSettlementDto } from './dto/create-settlement.dto'
 import { BatchCreateSettlementDto } from './dto/batch-create-settlement.dto'
+import { SettleDto } from './dto/settle.dto'
 import {
   calculateBalances,
   calculateOptimalSettlement,
@@ -23,6 +25,8 @@ export class SettlementService {
   constructor(
     @InjectRepository(Settlement)
     private readonly settlementRepo: Repository<Settlement>,
+    @InjectRepository(SettlementRound)
+    private readonly roundRepo: Repository<SettlementRound>,
     @InjectRepository(Transaction)
     private readonly txRepo: Repository<Transaction>,
     private readonly bookService: BookService,
@@ -36,48 +40,180 @@ export class SettlementService {
   async calculate(bookId: string, userId: string) {
     await this.bookService.assertMember(bookId, userId)
 
-    // 1. 拉取账本所有共享账单
+    // 仅取「未结算」的共享账单（已结算账单归属某轮，不再进入待结算计算）
     const txs = await this.txRepo.find({
-      where: { bookId, type: 'shared' },
+      where: { bookId, type: 'shared', settledRoundId: IsNull() },
     })
 
-    // 2. 计算每人净收支
-    const balances = calculateBalances(
-      txs.map((t) => ({
-        payerId: t.payerId,
-        splits: t.splits || [],
-      })),
-    )
-
-    // 3. 排除已完成的结算记录（减去已结算金额）
-    const completedSettlements = await this.settlementRepo.find({
-      where: { bookId, status: 'completed' },
-    })
-
-    const adjustedBalances = this.adjustBalancesWithSettlements(
-      balances,
-      completedSettlements,
-    )
-
-    // 4. 计算最优转账方案
-    const transferPlans = calculateOptimalSettlement(adjustedBalances)
-
-    // 5. 查询待结算记录
-    const pendingSettlements = await this.settlementRepo.find({
-      where: { bookId, status: 'pending' },
-      order: { createdAt: 'ASC' },
-    })
+    const plan = this.computePlanForTxs(txs)
 
     return {
-      // 当前净收支（已扣除完成的结算）——平账后为 0
-      balances: adjustedBalances,
-      // 原始净收支（未扣除任何结算）——用于展示成员平账前的金额
-      rawBalances: balances,
-      transferPlans,
-      pendingSettlements,
-      // 已完成的结算记录（供前端展示"已平账"明细并支持撤回）
-      completedSettlements,
+      balances: plan.balances,
+      // 兼容旧前端字段：未结算范围下二者相同
+      rawBalances: plan.balances,
+      transferPlans: plan.transferPlans,
+      txCount: plan.txCount,
+      totalAmount: plan.totalAmount,
     }
+  }
+
+  /**
+   * 纯计算：给定一组账单，算每人净收支 + 最优转账方案 + 快照
+   */
+  private computePlanForTxs(txs: Transaction[]) {
+    const balances = calculateBalances(
+      txs.map((t) => ({ payerId: t.payerId, splits: t.splits || [] })),
+    )
+    const transferPlans = calculateOptimalSettlement(balances)
+    const totalAmount = txs.reduce((sum, t) => sum + (t.amount || 0), 0)
+    return { balances, transferPlans, txCount: txs.length, totalAmount }
+  }
+
+  /**
+   * 部分结算预览：只对勾选的未结算账单算方案
+   */
+  async previewPartial(bookId: string, userId: string, txIds: string[]) {
+    await this.bookService.assertMember(bookId, userId)
+    if (!txIds || txIds.length === 0) {
+      throw new BadRequestException('请选择要结算的账单')
+    }
+    const txs = await this.txRepo.find({
+      where: {
+        id: In(txIds),
+        bookId,
+        type: 'shared',
+        settledRoundId: IsNull(),
+      },
+    })
+    if (txs.length !== txIds.length) {
+      throw new BadRequestException('部分账单已被结算或不存在，请刷新后重试')
+    }
+    const plan = this.computePlanForTxs(txs)
+    return { balances: plan.balances, transferPlans: plan.transferPlans, txCount: plan.txCount, totalAmount: plan.totalAmount }
+  }
+
+  /**
+   * 执行结算（全部/部分）：事务内锁定账单 + 生成轮次 + 生成已完成结算记录
+   */
+  async settle(userId: string, dto: SettleDto) {
+    await this.bookService.assertMember(dto.bookId, userId)
+
+    // 1. 确定本轮账单集合
+    const where: any = {
+      bookId: dto.bookId,
+      type: 'shared',
+      settledRoundId: IsNull(),
+    }
+    if (dto.type === 'partial') {
+      if (!dto.txIds || dto.txIds.length === 0) {
+        throw new BadRequestException('请选择要结算的账单')
+      }
+      where.id = In(dto.txIds)
+    }
+    const txs = await this.txRepo.find({ where })
+
+    if (dto.type === 'partial' && txs.length !== dto.txIds!.length) {
+      throw new BadRequestException('部分账单已被结算或不存在，请刷新后重试')
+    }
+    if (txs.length === 0) {
+      throw new BadRequestException('没有可结算的账单')
+    }
+
+    // 2. 计算方案
+    const plan = this.computePlanForTxs(txs)
+    const txIds = txs.map((t) => t.id)
+
+    // 3. 事务：建轮次 + 标记账单 + 生成已完成结算
+    const queryRunner = this.dataSource.createQueryRunner()
+    await queryRunner.connect()
+    await queryRunner.startTransaction()
+    try {
+      const round = await queryRunner.manager.save(
+        queryRunner.manager.create(SettlementRound, {
+          bookId: dto.bookId,
+          createdBy: userId,
+          type: dto.type,
+          txCount: plan.txCount,
+          totalAmount: plan.totalAmount,
+          transferPlans: plan.transferPlans,
+        }),
+      )
+
+      await queryRunner.manager.update(
+        Transaction,
+        { id: In(txIds) },
+        { settledRoundId: round.id },
+      )
+
+      const settlements = plan.transferPlans.map((p) =>
+        queryRunner.manager.create(Settlement, {
+          bookId: dto.bookId,
+          fromUserId: p.fromUserId,
+          toUserId: p.toUserId,
+          amount: p.amount,
+          status: 'completed' as const,
+          roundId: round.id,
+          completedAt: new Date(),
+        }),
+      )
+      if (settlements.length) await queryRunner.manager.save(settlements)
+
+      await queryRunner.commitTransaction()
+      return { round, settlements }
+    } catch (e) {
+      await queryRunner.rollbackTransaction()
+      throw e
+    } finally {
+      await queryRunner.release()
+    }
+  }
+
+  /**
+   * 撤销某一轮结算：清空账单标记 + 删除本轮结算记录 + 删除轮次
+   */
+  async revertRound(roundId: string, userId: string) {
+    const round = await this.roundRepo.findOne({ where: { id: roundId } })
+    if (!round) throw new NotFoundException('结算轮次不存在')
+    await this.bookService.assertMember(round.bookId, userId)
+
+    const queryRunner = this.dataSource.createQueryRunner()
+    await queryRunner.connect()
+    await queryRunner.startTransaction()
+    try {
+      await queryRunner.manager.update(
+        Transaction,
+        { settledRoundId: roundId },
+        { settledRoundId: null },
+      )
+      await queryRunner.manager.delete(Settlement, { roundId })
+      await queryRunner.manager.delete(SettlementRound, { id: roundId })
+      await queryRunner.commitTransaction()
+      return { reverted: true }
+    } catch (e) {
+      await queryRunner.rollbackTransaction()
+      throw e
+    } finally {
+      await queryRunner.release()
+    }
+  }
+
+  /**
+   * 结算轮次列表：每轮附带其转账明细（含昵称由前端 memberMap 补全）
+   */
+  async listRounds(bookId: string, userId: string) {
+    await this.bookService.assertMember(bookId, userId)
+    const rounds = await this.roundRepo.find({
+      where: { bookId },
+      order: { createdAt: 'DESC' },
+    })
+    if (rounds.length === 0) return []
+    const settlements = await this.settlementRepo.find({
+      where: { roundId: In(rounds.map((r) => r.id)) },
+    })
+    return rounds.map((r) => ({
+      ...r,
+      settlements: settlements.filter((s) => s.roundId === r.id),
+    }))
   }
 
   /**

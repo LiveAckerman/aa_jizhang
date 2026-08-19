@@ -8,7 +8,17 @@ import {
 } from 'typeorm'
 
 /** 账本场景类型 */
-export type BookScene = 'travel' | 'dinner' | 'rent' | 'activity' | 'custom'
+// 预设场景 key；自定义场景时 scene 存 'custom'，自定义名称存于 sceneName
+export type BookScene =
+  | 'travel'
+  | 'dinner'
+  | 'rent'
+  | 'activity'
+  | 'party'
+  | 'club'
+  | 'family'
+  | 'wedding'
+  | 'custom'
 
 @Entity('books')
 export class Book {
@@ -19,9 +29,13 @@ export class Book {
   @Column({ length: 64 })
   name: string
 
-  /** 场景类型 */
+  /** 场景类型（预设 key 或 'custom'） */
   @Column({ length: 16, default: 'custom' })
   scene: BookScene
+
+  /** 自定义场景名称（scene==='custom' 时使用；预设场景为空） */
+  @Column({ length: 32, default: '' })
+  sceneName: string
 
   /** 封面图标标识（存储图标 key，非 emoji） */
   @Column({ length: 128, default: '' })

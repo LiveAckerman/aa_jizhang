@@ -14,6 +14,7 @@ import { CurrentUser } from '../auth/current-user.decorator'
 import { SettlementService } from './settlement.service'
 import { CreateSettlementDto } from './dto/create-settlement.dto'
 import { BatchCreateSettlementDto } from './dto/batch-create-settlement.dto'
+import { SettleDto } from './dto/settle.dto'
 
 @Controller('settlements')
 @UseGuards(JwtAuthGuard)
@@ -30,6 +31,59 @@ export class SettlementController {
     @Query('bookId') bookId: string,
   ) {
     const data = await this.settlementService.calculate(bookId, userId)
+    return { code: 0, message: 'ok', data }
+  }
+
+  /**
+   * 执行结算（全部/部分）
+   * POST /api/settlements/settle
+   */
+  @Post('settle')
+  async settle(@CurrentUser('sub') userId: string, @Body() dto: SettleDto) {
+    const data = await this.settlementService.settle(userId, dto)
+    return { code: 0, message: 'ok', data }
+  }
+
+  /**
+   * 部分结算预览
+   * POST /api/settlements/preview-partial
+   */
+  @Post('preview-partial')
+  async previewPartial(
+    @CurrentUser('sub') userId: string,
+    @Body() body: { bookId: string; txIds: string[] },
+  ) {
+    const data = await this.settlementService.previewPartial(
+      body.bookId,
+      userId,
+      body.txIds,
+    )
+    return { code: 0, message: 'ok', data }
+  }
+
+  /**
+   * 结算轮次列表
+   * GET /api/settlements/rounds?bookId=xxx
+   */
+  @Get('rounds')
+  async listRounds(
+    @CurrentUser('sub') userId: string,
+    @Query('bookId') bookId: string,
+  ) {
+    const data = await this.settlementService.listRounds(bookId, userId)
+    return { code: 0, message: 'ok', data }
+  }
+
+  /**
+   * 撤销某一轮结算
+   * POST /api/settlements/rounds/:id/revert
+   */
+  @Post('rounds/:id/revert')
+  async revertRound(
+    @CurrentUser('sub') userId: string,
+    @Param('id') id: string,
+  ) {
+    const data = await this.settlementService.revertRound(id, userId)
     return { code: 0, message: 'ok', data }
   }
 

@@ -38,6 +38,11 @@ export class Settlement {
   @Column({ length: 16, default: 'pending' })
   status: SettlementStatus
 
+  /** 所属结算轮次（多次结算分组依据；旧数据为 null） */
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  roundId: string | null
+
   /** 完成时间 */
   @Column({ type: 'timestamptz', nullable: true })
   completedAt: Date | null

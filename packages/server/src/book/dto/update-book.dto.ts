@@ -1,7 +1,17 @@
 import { IsBoolean, IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator'
 import type { BookScene } from '../book.entity'
 
-const SCENES = ['travel', 'dinner', 'rent', 'activity', 'custom']
+const SCENES = [
+  'travel',
+  'dinner',
+  'rent',
+  'activity',
+  'party',
+  'club',
+  'family',
+  'wedding',
+  'custom',
+]
 
 export class UpdateBookDto {
   @IsOptional()
@@ -13,6 +23,11 @@ export class UpdateBookDto {
   @IsOptional()
   @IsIn(SCENES)
   scene?: BookScene
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  sceneName?: string
 
   @IsOptional()
   @IsString()

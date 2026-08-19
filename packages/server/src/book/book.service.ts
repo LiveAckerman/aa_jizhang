@@ -57,6 +57,7 @@ export class BookService {
     const book = this.bookRepo.create({
       name: dto.name,
       scene: dto.scene || 'custom',
+      sceneName: dto.scene === 'custom' ? (dto.sceneName || '').slice(0, 32) : '',
       icon: dto.icon || '',
       cover: dto.cover || '',
       description: dto.description || '',
@@ -224,6 +225,10 @@ export class BookService {
       throw new ForbiddenException('只有创建者可以修改账本')
     }
     Object.assign(book, dto)
+    // 切到预设场景时清空自定义名，避免残留
+    if (dto.scene && dto.scene !== 'custom') {
+      book.sceneName = ''
+    }
     await this.bookRepo.save(book)
     return { ...book, coverUrl: this.resolveCover(book) }
   }
@@ -259,6 +264,7 @@ export class BookService {
       id: book.id,
       name: book.name,
       scene: book.scene,
+      sceneName: book.sceneName || '',
       coverUrl: this.resolveCover(book),
       memberCount,
       ownerName: owner?.nickname || '好友',

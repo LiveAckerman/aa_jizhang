@@ -148,6 +148,9 @@ export class TransactionService {
     if (tx.creatorId !== userId) {
       throw new ForbiddenException('只有记录人可以修改该账单')
     }
+    if (tx.settledRoundId != null) {
+      throw new BadRequestException('该账单已结算，请先撤销结算再编辑')
+    }
 
     // 用来 diff 的旧值快照
     const before = {
@@ -318,6 +321,9 @@ export class TransactionService {
     await this.bookService.assertMember(tx.bookId, userId)
     if (tx.creatorId !== userId) {
       throw new ForbiddenException('只有记录人可以删除该账单')
+    }
+    if (tx.settledRoundId != null) {
+      throw new BadRequestException('该账单已结算，请先撤销结算再删除')
     }
     await this.logRepo.delete({ transactionId: id })
     await this.txRepo.delete({ id })

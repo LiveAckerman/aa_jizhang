@@ -18,6 +18,7 @@ import { BookGroup } from './book/book-group.entity'
 import { Transaction } from './transaction/transaction.entity'
 import { TransactionLog } from './transaction/transaction-log.entity'
 import { Settlement } from './settlement/settlement.entity'
+import { SettlementRound } from './settlement/settlement-round.entity'
 
 @Module({
   imports: [
@@ -36,7 +37,7 @@ import { Settlement } from './settlement/settlement.entity'
         username: config.get('DB_USERNAME'),
         password: config.get('DB_PASSWORD'),
         database: config.get('DB_DATABASE'),
-        entities: [User, Book, BookMember, BookGroup, Transaction, TransactionLog, Settlement],
+        entities: [User, Book, BookMember, BookGroup, Transaction, TransactionLog, Settlement, SettlementRound],
         synchronize: true, // 开发环境自动建表；生产环境应关闭并用迁移
         // 断线重连：热重载 / 网络抖动后自动重建连接，避免复用已被服务端关闭的死连接
         keepConnectionAlive: true,

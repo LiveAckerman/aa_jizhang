@@ -1,7 +1,17 @@
 import { IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator'
 import type { BookScene } from '../book.entity'
 
-const SCENES = ['travel', 'dinner', 'rent', 'activity', 'custom']
+const SCENES = [
+  'travel',
+  'dinner',
+  'rent',
+  'activity',
+  'party',
+  'club',
+  'family',
+  'wedding',
+  'custom',
+]
 
 export class CreateBookDto {
   @IsString()
@@ -12,6 +22,11 @@ export class CreateBookDto {
   @IsOptional()
   @IsIn(SCENES, { message: '无效的场景类型' })
   scene?: BookScene
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(32, { message: '场景名称过长' })
+  sceneName?: string
 
   @IsOptional()
   @IsString()

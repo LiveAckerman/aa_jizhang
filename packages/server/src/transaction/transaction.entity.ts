@@ -79,6 +79,11 @@ export class Transaction {
   @Column({ type: 'jsonb', nullable: true })
   splits: SplitDetail[] | null
 
+  /** 所属结算轮次 id：null=未结算；有值=已属于某轮结算（多次结算） */
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  settledRoundId: string | null
+
   /** 图片凭证 URL 列表（JSON） */
   @Column({ type: 'jsonb', nullable: true })
   images: string[] | null
