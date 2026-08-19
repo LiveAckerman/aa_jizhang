@@ -62,6 +62,16 @@ const api = {
   // 按成员撤回已完成结算（targetUserId 为空则撤回全部）
   revertSettlementByUser: (bookId, targetUserId) =>
     request({ url: '/settlements/revert-by-user', method: 'POST', data: { bookId, targetUserId } }),
+  // 多次结算：执行结算（全部/部分）
+  settle: (data) => request({ url: '/settlements/settle', method: 'POST', data }),
+  // 部分结算预览
+  previewPartialSettlement: (bookId, txIds) =>
+    request({ url: '/settlements/preview-partial', method: 'POST', data: { bookId, txIds } }),
+  // 结算轮次列表
+  listSettlementRounds: (bookId) => request({ url: `/settlements/rounds?bookId=${bookId}` }),
+  // 撤销某一轮结算
+  revertSettlementRound: (roundId) =>
+    request({ url: `/settlements/rounds/${roundId}/revert`, method: 'POST' }),
 
   // ===== OCR识别 =====
   ocrRecognizeReceipt: (filePath, bookId) => {

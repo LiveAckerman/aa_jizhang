@@ -140,6 +140,7 @@
               <view class="tx-title-row">
                 <text class="tx-cat">{{tx.categoryName}}</text>
                 <van-icon wx:if="{{tx.isPrivate}}" name="lock" size="13px" color="#8091a5" />
+                <text wx:if="{{tx.isSettled}}" class="tx-settled-tag">已结算</text>
               </view>
               <text class="tx-note">{{tx.note || tx.payerName + ' 付款'}}</text>
               <text wx:if="{{tx.myShareText}}" class="tx-myshare">我应付 ¥{{tx.myShareText}}</text>

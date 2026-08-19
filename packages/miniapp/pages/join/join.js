@@ -52,7 +52,11 @@ Page({
         return
       }
       // scene(key) → 中文场景名，供卡片展示标签
-      const sceneName = (SCENE_MAP[info.scene] && SCENE_MAP[info.scene].name) || ''
+      // 自定义场景优先显示后端存的自定义名，否则用预设场景名
+      const sceneName =
+        info.scene === 'custom'
+          ? info.sceneName || ''
+          : (SCENE_MAP[info.scene] && SCENE_MAP[info.scene].name) || ''
       this.setData({ info: { ...info, sceneName }, coverUrl: info.coverUrl, loading: false })
       // 新用户从登录页回跳：先弹头像/昵称授权，完善后再加入
       this.maybeShowAuthDrawer()

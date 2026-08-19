@@ -5,116 +5,97 @@ Page({
   data: {
     bookId: '',
     bookName: '',
-    members: [],
-    memberMap: {}, // userId -> {nickname, avatar}
+    mode: 'all',          // all=全部结算 / partial=部分结算
+    partialTxIds: [],     // 部分结算的账单 id
+    memberMap: {},        // userId -> {nickname, avatar}
 
-    balances: [], // 净收支列表
-    transferPlans: [], // 最优转账方案
-    pendingSettlements: [], // 待结算记录
-    completedList: [], // 已完成（已平账）结算记录
+    balances: [],         // 本次结算涉及的净收支
+    transferPlans: [],    // 本次结算的最优转账方案
+    txCount: 0,
+    totalAmountText: '0.00',
 
+    rounds: [],           // 已有结算轮次（历史）
     loading: true,
-    calculating: false,
+    submitting: false,
   },
 
   onLoad(query) {
-    // 跳转时 bookName 经过 encodeURIComponent 编码，这里需解码还原中文
     let bookName = '账本'
     try {
       bookName = decodeURIComponent(query.bookName || '') || '账本'
     } catch (e) {
       bookName = query.bookName || '账本'
     }
-    this.setData({
-      bookId: query.bookId || '',
-      bookName,
-    })
+    const mode = query.mode === 'partial' ? 'partial' : 'all'
+    this.setData({ bookId: query.bookId || '', bookName, mode })
     wx.setNavigationBarTitle({ title: `${bookName} - 结算` })
     this.loadData()
-  },
-
-  onShow() {
-    // 从其他页面返回时刷新
-    if (this.data.bookId && !this.data.loading) {
-      this.loadData()
-    }
   },
 
   async loadData() {
     this.setData({ loading: true })
     try {
-      // 并行拉取账本详情和结算方案
-      const [book, settlement] = await Promise.all([
-        api.bookDetail(this.data.bookId),
-        api.calculateSettlement(this.data.bookId),
-      ])
-
-      // 构建成员映射
+      const book = await api.bookDetail(this.data.bookId)
       const memberMap = {}
       ;(book.members || []).forEach((m) => {
-        memberMap[m.userId] = {
-          nickname: m.nickname || '成员',
-          avatar: m.avatar || '',
-        }
+        memberMap[m.userId] = { nickname: m.nickname || '成员', avatar: m.avatar || '' }
       })
 
-      // 原始净收支映射（未扣除结算），用于「已平账」时仍显示平账前金额
-      const rawMap = {}
-      ;(settlement.rawBalances || []).forEach((b) => {
-        rawMap[b.userId] = b.balance
-      })
+      // 本次结算方案：部分结算用 storage 里的预览；全部结算实时算
+      let plan
+      if (this.data.mode === 'partial') {
+        const cache = wx.getStorageSync('partialSettleData') || {}
+        plan = cache.preview || { balances: [], transferPlans: [], txCount: 0, totalAmount: 0 }
+        this.setData({ partialTxIds: cache.txIds || [] })
+      } else {
+        plan = await api.calculateSettlement(this.data.bookId)
+      }
 
-      // 处理净收支（分转元）
-      // settled：当前净额已为 0，但原始金额非 0 → 说明该成员已平账
-      const balances = (settlement.balances || []).map((b) => {
-        const raw = rawMap[b.userId] != null ? rawMap[b.userId] : b.balance
-        const settled = b.balance === 0 && raw !== 0
-        // 已平账显示原始金额，否则显示当前净额
-        const shown = settled ? raw : b.balance
-        return {
-          userId: b.userId,
-          nickname: memberMap[b.userId]?.nickname || '成员',
-          avatar: memberMap[b.userId]?.avatar || '',
-          balance: b.balance,
-          balanceText: (Math.abs(shown) / 100).toFixed(2),
-          isPositive: shown > 0,
-          isNegative: shown < 0,
-          settled, // 已平账标识
-        }
-      })
-
-      // 处理转账方案（分转元）
-      const transferPlans = (settlement.transferPlans || []).map((plan) => ({
-        fromUserId: plan.fromUserId,
-        toUserId: plan.toUserId,
-        amount: plan.amount,
-        amountText: (plan.amount / 100).toFixed(2),
-        fromNickname: memberMap[plan.fromUserId]?.nickname || '成员',
-        toNickname: memberMap[plan.toUserId]?.nickname || '成员',
-        fromAvatar: memberMap[plan.fromUserId]?.avatar || '',
-        toAvatar: memberMap[plan.toUserId]?.avatar || '',
+      const balances = (plan.balances || []).map((b) => ({
+        userId: b.userId,
+        nickname: memberMap[b.userId]?.nickname || '成员',
+        avatar: memberMap[b.userId]?.avatar || '',
+        balanceText: (Math.abs(b.balance) / 100).toFixed(2),
+        isPositive: b.balance > 0,
+        isNegative: b.balance < 0,
       }))
 
-      // 已完成结算记录（已平账明细，支持撤回单条）
-      const completedList = (settlement.completedSettlements || []).map((s) => ({
-        id: s.id,
-        fromUserId: s.fromUserId,
-        toUserId: s.toUserId,
-        amount: s.amount,
-        amountText: (s.amount / 100).toFixed(2),
-        fromNickname: memberMap[s.fromUserId]?.nickname || '成员',
-        toNickname: memberMap[s.toUserId]?.nickname || '成员',
-        fromAvatar: memberMap[s.fromUserId]?.avatar || '',
-        toAvatar: memberMap[s.toUserId]?.avatar || '',
+      const transferPlans = (plan.transferPlans || []).map((p) => ({
+        fromUserId: p.fromUserId,
+        toUserId: p.toUserId,
+        amount: p.amount,
+        amountText: (p.amount / 100).toFixed(2),
+        fromNickname: memberMap[p.fromUserId]?.nickname || '成员',
+        toNickname: memberMap[p.toUserId]?.nickname || '成员',
+        fromAvatar: memberMap[p.fromUserId]?.avatar || '',
+        toAvatar: memberMap[p.toUserId]?.avatar || '',
+      }))
+
+      // 历史结算轮次
+      const roundsRaw = await api.listSettlementRounds(this.data.bookId)
+      const rounds = (roundsRaw || []).map((r, i) => ({
+        id: r.id,
+        seq: (roundsRaw.length - i), // 最新的序号最大
+        typeText: r.type === 'partial' ? '部分结算' : '全部结算',
+        txCount: r.txCount,
+        totalAmountText: (r.totalAmount / 100).toFixed(2),
+        dateText: (r.createdAt || '').slice(0, 10),
+        plans: (r.settlements || []).map((s) => ({
+          amountText: (s.amount / 100).toFixed(2),
+          fromNickname: memberMap[s.fromUserId]?.nickname || '成员',
+          toNickname: memberMap[s.toUserId]?.nickname || '成员',
+          fromAvatar: memberMap[s.fromUserId]?.avatar || '',
+          toAvatar: memberMap[s.toUserId]?.avatar || '',
+        })),
       }))
 
       this.setData({
-        members: book.members || [],
         memberMap,
         balances,
         transferPlans,
-        completedList,
-        pendingSettlements: settlement.pendingSettlements || [],
+        txCount: plan.txCount || 0,
+        totalAmountText: ((plan.totalAmount || 0) / 100).toFixed(2),
+        rounds,
         loading: false,
       })
     } catch (e) {
@@ -123,152 +104,62 @@ Page({
     }
   },
 
-  // 标记某笔转账为已完成
-  onMarkComplete(e) {
-    const { from, to, amount } = e.currentTarget.dataset
-    const fromName = this.data.memberMap[from]?.nickname || '成员'
-    const toName = this.data.memberMap[to]?.nickname || '成员'
-    const amountYuan = (amount / 100).toFixed(2)
+  // 确认结算：把本次涉及账单标记为已结算，生成一轮
+  onConfirmSettle() {
+    if (this.data.submitting) return
+    if (this.data.transferPlans.length === 0 && this.data.txCount === 0) {
+      wx.showToast({ title: '没有可结算的账单', icon: 'none' })
+      return
+    }
+    const tip =
+      this.data.mode === 'partial'
+        ? `确认结算所选 ${this.data.txCount} 笔账单吗？`
+        : `确认结算全部 ${this.data.txCount} 笔未结算账单吗？`
 
     wx.showModal({
-      title: '确认已转账',
-      content: `确认「${fromName}」已向「${toName}」转账 ¥${amountYuan} 吗？`,
+      title: '确认结算',
+      content: tip,
       confirmColor: '#4097a9',
       success: async (res) => {
         if (!res.confirm) return
+        this.setData({ submitting: true })
+        wx.showLoading({ title: '结算中...', mask: true })
         try {
-          wx.showLoading({ title: '保存中...', mask: true })
-          // 创建结算记录
-          const settlement = await api.createSettlement({
-            bookId: this.data.bookId,
-            fromUserId: from,
-            toUserId: to,
-            amount: amount,
-          })
-          // 立即标记为已完成
-          await api.completeSettlement(settlement.id)
+          const payload = { bookId: this.data.bookId, type: this.data.mode }
+          if (this.data.mode === 'partial') payload.txIds = this.data.partialTxIds
+          await api.settle(payload)
+          if (this.data.mode === 'partial') wx.removeStorageSync('partialSettleData')
           wx.hideLoading()
-          wx.showToast({ title: '已标记', icon: 'success' })
-          setTimeout(() => this.loadData(), 600)
+          wx.showToast({ title: '结算完成', icon: 'success' })
+          setTimeout(() => wx.navigateBack(), 800)
         } catch (e) {
           wx.hideLoading()
-          wx.showToast({ title: (e && e.message) || '操作失败', icon: 'none' })
+          this.setData({ submitting: false })
+          wx.showToast({ title: (e && e.message) || '结算失败', icon: 'none' })
         }
       },
     })
   },
 
-  // 全部完成（所有转账都已完成）
-  onCompleteAll() {
-    if (this.data.transferPlans.length === 0) {
-      wx.showToast({ title: '已结清', icon: 'none' })
-      return
-    }
-
+  // 撤销某一轮结算
+  onRevertRound(e) {
+    const { id, seq } = e.currentTarget.dataset
     wx.showModal({
-      title: '全部结清',
-      content: `确认所有转账都已完成吗？共 ${this.data.transferPlans.length} 笔转账。`,
-      confirmColor: '#4097a9',
-      success: async (res) => {
-        if (!res.confirm) return
-        try {
-          wx.showLoading({ title: '保存中...', mask: true })
-          // 使用批量API，原子性创建并完成所有结算
-          const settlements = this.data.transferPlans.map((plan) => ({
-            fromUserId: plan.fromUserId,
-            toUserId: plan.toUserId,
-            amount: plan.amount,
-          }))
-          await api.batchCreateSettlement({
-            bookId: this.data.bookId,
-            settlements,
-          })
-          wx.hideLoading()
-          wx.showToast({ title: '已全部标记', icon: 'success' })
-          setTimeout(() => this.loadData(), 600)
-        } catch (e) {
-          wx.hideLoading()
-          wx.showToast({ title: (e && e.message) || '操作失败', icon: 'none' })
-        }
-      },
-    })
-  },
-
-  // 撤回单条已平账记录
-  onRevertOne(e) {
-    const { id, from, to, amount } = e.currentTarget.dataset
-    const fromName = this.data.memberMap[from]?.nickname || '成员'
-    const toName = this.data.memberMap[to]?.nickname || '成员'
-    const amountYuan = (amount / 100).toFixed(2)
-
-    wx.showModal({
-      title: '撤回结算',
-      content: `确认撤回「${fromName}」向「${toName}」的 ¥${amountYuan} 结算吗？撤回后将重新计入待结算。`,
-      confirmText: '撤回',
+      title: '撤销结算',
+      content: `确认撤销「第 ${seq} 次结算」吗？该轮账单将恢复为未结算。`,
+      confirmText: '撤销',
       confirmColor: '#fa9583',
       success: async (res) => {
         if (!res.confirm) return
+        wx.showLoading({ title: '撤销中...', mask: true })
         try {
-          wx.showLoading({ title: '撤回中...', mask: true })
-          await api.revertSettlement(id)
+          await api.revertSettlementRound(id)
           wx.hideLoading()
-          wx.showToast({ title: '已撤回', icon: 'success' })
+          wx.showToast({ title: '已撤销', icon: 'success' })
           setTimeout(() => this.loadData(), 600)
-        } catch (e) {
+        } catch (err) {
           wx.hideLoading()
-          wx.showToast({ title: (e && e.message) || '撤回失败', icon: 'none' })
-        }
-      },
-    })
-  },
-
-  // 撤回某成员相关的全部已平账
-  onRevertMember(e) {
-    const { id } = e.currentTarget.dataset
-    const name = this.data.memberMap[id]?.nickname || '成员'
-    wx.showModal({
-      title: '撤回结算',
-      content: `确认撤回与「${name}」相关的全部已平账吗？`,
-      confirmText: '撤回',
-      confirmColor: '#fa9583',
-      success: async (res) => {
-        if (!res.confirm) return
-        try {
-          wx.showLoading({ title: '撤回中...', mask: true })
-          await api.revertSettlementByUser(this.data.bookId, id)
-          wx.hideLoading()
-          wx.showToast({ title: '已撤回', icon: 'success' })
-          setTimeout(() => this.loadData(), 600)
-        } catch (e) {
-          wx.hideLoading()
-          wx.showToast({ title: (e && e.message) || '撤回失败', icon: 'none' })
-        }
-      },
-    })
-  },
-
-  // 撤回全部已平账
-  onRevertAll() {
-    if (this.data.completedList.length === 0) {
-      wx.showToast({ title: '没有可撤回的结算', icon: 'none' })
-      return
-    }
-    wx.showModal({
-      title: '撤回全部结算',
-      content: `确认撤回全部 ${this.data.completedList.length} 笔已平账吗？撤回后将全部重新计入待结算。`,
-      confirmText: '全部撤回',
-      confirmColor: '#fa9583',
-      success: async (res) => {
-        if (!res.confirm) return
-        try {
-          wx.showLoading({ title: '撤回中...', mask: true })
-          await api.revertSettlementByUser(this.data.bookId, '')
-          wx.hideLoading()
-          wx.showToast({ title: '已全部撤回', icon: 'success' })
-          setTimeout(() => this.loadData(), 600)
-        } catch (e) {
-          wx.hideLoading()
-          wx.showToast({ title: (e && e.message) || '撤回失败', icon: 'none' })
+          wx.showToast({ title: (err && err.message) || '撤销失败', icon: 'none' })
         }
       },
     })

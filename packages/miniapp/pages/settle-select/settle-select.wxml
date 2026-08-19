@@ -1,0 +1,67 @@
+<view class="select-page">
+  <block wx:if="{{loading}}">
+    <view class="loading-tip">加载中...</view>
+  </block>
+
+  <block wx:elif="{{groups.length === 0}}">
+    <view class="empty-state">
+      <van-icon name="checked" size="64px" color="#52c41a" />
+      <text class="empty-text">没有可结算的账单</text>
+      <text class="empty-sub">所有公账都已结算</text>
+    </view>
+  </block>
+
+  <block wx:else>
+    <!-- 全选栏 -->
+    <view class="select-all-bar" bindtap="onToggleAll">
+      <van-icon
+        name="{{allChecked ? 'checked' : 'circle'}}"
+        size="22px"
+        color="{{allChecked ? '#4097a9' : '#c8c9cc'}}"
+      />
+      <text>全选</text>
+    </view>
+
+    <!-- 账单分组列表 -->
+    <view class="tx-groups">
+      <view wx:for="{{groups}}" wx:key="date" class="tx-group">
+        <view class="tx-date">{{item.date}}</view>
+        <view class="glass-card tx-list">
+          <view
+            wx:for="{{item.items}}"
+            wx:for-item="tx"
+            wx:key="id"
+            class="tx-item {{checkedMap[tx.id] ? 'checked' : ''}}"
+            data-id="{{tx.id}}"
+            bindtap="onToggle"
+          >
+            <van-icon
+              name="{{checkedMap[tx.id] ? 'checked' : 'circle'}}"
+              size="22px"
+              color="{{checkedMap[tx.id] ? '#4097a9' : '#c8c9cc'}}"
+            />
+            <view class="tx-icon">
+              <van-icon name="{{tx.categoryIcon}}" size="20px" color="#4097a9" />
+            </view>
+            <view class="tx-mid">
+              <text class="tx-cat">{{tx.categoryName}}</text>
+              <text class="tx-note">{{tx.note}}</text>
+            </view>
+            <text class="tx-amount">¥{{tx.amountText}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 底部确认栏 -->
+  <view wx:if="{{!loading && groups.length > 0}}" class="footer-bar">
+    <view class="footer-info">
+      <text class="footer-count">已选 {{checkedCount}} 笔</text>
+      <text class="footer-amount">¥{{checkedAmountText}}</text>
+    </view>
+    <button class="btn-preview" bindtap="onPreview" disabled="{{submitting || checkedCount === 0}}">
+      预览结算
+    </button>
+  </view>
+</view>

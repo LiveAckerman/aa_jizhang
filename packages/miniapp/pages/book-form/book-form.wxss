@@ -8,7 +8,10 @@
   border-radius: 32rpx;
   overflow: hidden;
   margin-bottom: 24rpx;
-  background: var(--color-secondary);
+  /* 柔和的浅色渐变 + 虚线描边，替代突兀的米黄纯色 */
+  background: linear-gradient(135deg, rgba(64, 151, 169, 0.06), rgba(250, 149, 131, 0.06));
+  border: 2rpx dashed rgba(64, 151, 169, 0.3);
+  box-sizing: border-box;
 }
 
 .cover-img {
@@ -86,6 +89,22 @@
   font-size: 24rpx;
   color: var(--text-primary);
   margin-top: 12rpx;
+}
+
+/* 自定义场景名输入 */
+.custom-scene-wrap {
+  margin-top: 24rpx;
+  padding-top: 24rpx;
+  border-top: 2rpx solid rgba(128, 145, 165, 0.12);
+}
+
+.custom-scene-input {
+  height: 80rpx;
+  padding: 0 28rpx;
+  background: rgba(64, 151, 169, 0.06);
+  border-radius: 20rpx;
+  font-size: 28rpx;
+  color: var(--text-primary);
 }
 
 .save-btn {

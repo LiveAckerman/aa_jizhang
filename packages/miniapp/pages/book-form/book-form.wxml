@@ -35,6 +35,17 @@
         <text class="scene-name">{{item.name}}</text>
       </view>
     </view>
+
+    <!-- 自定义场景名输入 -->
+    <view wx:if="{{scene === 'custom'}}" class="custom-scene-wrap">
+      <input
+        class="custom-scene-input"
+        placeholder="输入自定义场景名，如：宿舍聚会"
+        value="{{customName}}"
+        maxlength="16"
+        bindinput="onCustomNameInput"
+      />
+    </view>
   </view>
 
   <!-- 描述 -->

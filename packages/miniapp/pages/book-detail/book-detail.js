@@ -121,6 +121,7 @@ Page({
         categoryIcon: cat.icon,
         payerName: memberMap[t.payerId] || '成员',
         isPrivate: t.type === 'private',
+        isSettled: !!t.settledRoundId,
         myShareText,
       })
     })
@@ -177,8 +178,22 @@ Page({
   },
 
   onSettlement() {
-    wx.navigateTo({
-      url: `/pages/settlement/settlement?bookId=${this.data.id}&bookName=${encodeURIComponent(this.data.book.name || '账本')}`
+    const bookName = encodeURIComponent(this.data.book.name || '账本')
+    wx.showActionSheet({
+      itemList: ['全部结算', '部分结算'],
+      success: (res) => {
+        if (res.tapIndex === 0) {
+          // 全部结算：结算当前所有未结算账单
+          wx.navigateTo({
+            url: `/pages/settlement/settlement?bookId=${this.data.id}&bookName=${bookName}&mode=all`,
+          })
+        } else if (res.tapIndex === 1) {
+          // 部分结算：进勾选页
+          wx.navigateTo({
+            url: `/pages/settle-select/settle-select?bookId=${this.data.id}&bookName=${bookName}`,
+          })
+        }
+      },
     })
   },
 

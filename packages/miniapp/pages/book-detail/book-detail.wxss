@@ -233,6 +233,15 @@
   color: var(--text-primary);
 }
 
+/* 已结算小标签 */
+.tx-settled-tag {
+  font-size: 18rpx;
+  color: #52c41a;
+  background: rgba(82, 196, 26, 0.12);
+  padding: 2rpx 12rpx;
+  border-radius: 16rpx;
+}
+
 .tx-note {
   font-size: 24rpx;
   color: var(--text-secondary);

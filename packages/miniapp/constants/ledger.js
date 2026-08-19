@@ -3,12 +3,16 @@
  * 图标统一使用 @vant/weapp 的 van-icon 字体图标名（严禁 emoji）
  */
 
-// 场景模板
+// 场景模板（custom 固定放最后，选中后可自定义名称）
 const SCENES = [
   { key: 'travel', name: '旅行', icon: 'guide-o' },
   { key: 'dinner', name: '聚餐', icon: 'goods-collect-o' },
   { key: 'rent', name: '合租', icon: 'hotel-o' },
   { key: 'activity', name: '活动', icon: 'flag-o' },
+  { key: 'party', name: '团建', icon: 'friends-o' },
+  { key: 'club', name: '社团', icon: 'cluster-o' },
+  { key: 'family', name: '家庭', icon: 'home-o' },
+  { key: 'wedding', name: '份子钱', icon: 'gift-o' },
   { key: 'custom', name: '自定义', icon: 'edit' },
 ]
 

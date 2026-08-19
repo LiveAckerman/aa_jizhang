@@ -10,6 +10,7 @@
     "pages/profile-edit/profile-edit",
     "pages/transaction-logs/transaction-logs",
     "pages/settlement/settlement",
+    "pages/settle-select/settle-select",
     "pages/ocr-batch-edit/ocr-batch-edit",
     "pages/invite/invite",
     "pages/join/join",

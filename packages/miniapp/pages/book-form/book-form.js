@@ -9,6 +9,7 @@ Page({
     name: '',
     description: '',
     scene: 'travel',
+    customName: '', // scene==='custom' 时用户自定义的场景名
     cover: '',
     scenes: SCENES,
     saving: false,
@@ -27,12 +28,24 @@ Page({
   async loadBook(id) {
     try {
       const book = await api.bookDetail(id)
-      this.setData({
-        name: book.name,
-        description: book.description || '',
-        scene: book.scene,
-        cover: book.cover || '',
-      })
+      // scene 不在预设列表里 → 视为自定义场景，回填到自定义输入框
+      const isPreset = SCENES.some((s) => s.key === book.scene && s.key !== 'custom')
+      if (isPreset) {
+        this.setData({
+          name: book.name,
+          description: book.description || '',
+          scene: book.scene,
+          cover: book.cover || '',
+        })
+      } else {
+        this.setData({
+          name: book.name,
+          description: book.description || '',
+          scene: 'custom',
+          customName: book.sceneName || book.scene || '',
+          cover: book.cover || '',
+        })
+      }
     } catch (e) {}
   },
 
@@ -44,6 +57,9 @@ Page({
   },
   onPickScene(e) {
     this.setData({ scene: e.currentTarget.dataset.key })
+  },
+  onCustomNameInput(e) {
+    this.setData({ customName: e.detail.value })
   },
 
   // 选择并上传自定义封面
@@ -89,11 +105,18 @@ Page({
       wx.showToast({ title: '请输入账本名称', icon: 'none' })
       return
     }
+    // 自定义场景需填写场景名
+    const customName = (this.data.customName || '').trim()
+    if (this.data.scene === 'custom' && !customName) {
+      wx.showToast({ title: '请输入自定义场景名', icon: 'none' })
+      return
+    }
     if (this.data.saving) return
     this.setData({ saving: true })
     const payload = {
       name,
       scene: this.data.scene,
+      sceneName: this.data.scene === 'custom' ? customName : '',
       description: this.data.description,
       cover: this.data.cover,
     }

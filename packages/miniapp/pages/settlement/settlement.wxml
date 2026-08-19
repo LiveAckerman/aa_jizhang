@@ -3,29 +3,26 @@
   <view wx:if="{{loading}}" class="loading-container">
     <view class="skeleton-card"></view>
     <view class="skeleton-card"></view>
-    <view class="skeleton-card"></view>
   </view>
 
-  <!-- 真实内容 -->
   <block wx:else>
+    <!-- 本次结算范围提示 -->
+    <view wx:if="{{txCount > 0}}" class="settle-banner">
+      <text class="settle-banner-title">{{mode === 'partial' ? '部分结算' : '全部结算'}}</text>
+      <text class="settle-banner-sub">本次涉及 {{txCount}} 笔账单 · 合计 ¥{{totalAmountText}}</text>
+    </view>
+
     <!-- 净收支汇总 -->
-    <view class="glass-card section">
+    <view wx:if="{{balances.length > 0}}" class="glass-card section">
       <view class="section-header">
-        <text class="section-title">净收支汇总</text>
+        <text class="section-title">净收支</text>
         <text class="section-subtitle">{{balances.length}}位成员</text>
       </view>
-
-      <view wx:if="{{balances.length === 0}}" class="empty-state">
-        <van-icon name="checked" size="48px" color="#52c41a" />
-        <text class="empty-text">已结清，无需转账</text>
-      </view>
-
-      <view wx:else class="balance-list">
-        <view wx:for="{{balances}}" wx:key="userId" class="balance-item {{item.settled ? 'settled' : item.isPositive ? 'positive' : item.isNegative ? 'negative' : ''}}">
+      <view class="balance-list">
+        <view wx:for="{{balances}}" wx:key="userId" class="balance-item {{item.isPositive ? 'positive' : item.isNegative ? 'negative' : ''}}">
           <image class="balance-avatar" src="{{item.avatar}}" mode="aspectFill" />
           <view class="balance-name-block">
             <text class="balance-name">{{item.nickname}}</text>
-            <text wx:if="{{item.settled}}" class="balance-settled-tag">已平账</text>
           </view>
           <view class="balance-amount-block">
             <text class="balance-label">{{item.isPositive ? '应收' : item.isNegative ? '应付' : '已平'}}</text>
@@ -38,10 +35,9 @@
     <!-- 最优转账方案 -->
     <view wx:if="{{transferPlans.length > 0}}" class="glass-card section">
       <view class="section-header">
-        <text class="section-title">最优转账方案</text>
-        <text class="section-subtitle">共{{transferPlans.length}}笔转账</text>
+        <text class="section-title">转账方案</text>
+        <text class="section-subtitle">{{transferPlans.length}}笔</text>
       </view>
-
       <view class="transfer-list">
         <view wx:for="{{transferPlans}}" wx:key="index" class="transfer-item">
           <view class="transfer-row">
@@ -58,66 +54,49 @@
               <text class="transfer-name">{{item.toNickname}}</text>
             </view>
           </view>
-          <button
-            class="transfer-btn"
-            data-from="{{item.fromUserId}}"
-            data-to="{{item.toUserId}}"
-            data-amount="{{item.amount}}"
-            bindtap="onMarkComplete"
-          >
-            标记已完成
-          </button>
         </view>
       </view>
     </view>
 
-    <!-- 操作按钮 -->
-    <view wx:if="{{transferPlans.length > 0}}" class="action-buttons">
-      <button class="btn-primary" bindtap="onCompleteAll">全部标记已完成</button>
+    <!-- 确认结算按钮 -->
+    <view wx:if="{{txCount > 0}}" class="action-buttons">
+      <button class="btn-primary" bindtap="onConfirmSettle" disabled="{{submitting}}">确认结算</button>
     </view>
 
-    <!-- 已平账记录（可撤回） -->
-    <view wx:if="{{completedList.length > 0}}" class="glass-card section">
-      <view class="section-header">
-        <text class="section-title">已平账记录</text>
-        <text class="section-revert-all" bindtap="onRevertAll">撤回全部</text>
-      </view>
+    <!-- 无可结算 -->
+    <view wx:if="{{txCount === 0}}" class="settled-banner">
+      <van-icon name="passed" size="64px" color="#52c41a" />
+      <text class="settled-text">没有可结算的账单</text>
+      <text class="settled-subtext">当前账本已全部结算</text>
+    </view>
 
-      <view class="transfer-list">
-        <view wx:for="{{completedList}}" wx:key="id" class="transfer-item settled-item">
-          <view class="transfer-row">
-            <view class="transfer-member">
-              <image class="transfer-avatar" src="{{item.fromAvatar}}" mode="aspectFill" />
-              <text class="transfer-name">{{item.fromNickname}}</text>
-            </view>
-            <view class="transfer-arrow">
-              <van-icon name="arrow" size="20px" color="#52c41a" />
-              <text class="transfer-amount settled">¥{{item.amountText}}</text>
-            </view>
-            <view class="transfer-member">
-              <image class="transfer-avatar" src="{{item.toAvatar}}" mode="aspectFill" />
-              <text class="transfer-name">{{item.toNickname}}</text>
+    <!-- 历史结算记录（按轮次） -->
+    <view wx:if="{{rounds.length > 0}}" class="glass-card section">
+      <view class="section-header">
+        <text class="section-title">结算记录</text>
+        <text class="section-subtitle">{{rounds.length}}次</text>
+      </view>
+      <view class="round-list">
+        <view wx:for="{{rounds}}" wx:key="id" class="round-item">
+          <view class="round-head">
+            <text class="round-title">第 {{item.seq}} 次结算 · {{item.typeText}}</text>
+            <text class="round-meta">{{item.txCount}}笔 · ¥{{item.totalAmountText}}</text>
+          </view>
+          <text class="round-date">{{item.dateText}}</text>
+          <view class="round-plans">
+            <view wx:for="{{item.plans}}" wx:for-item="p" wx:key="index" class="round-plan-row">
+              <text class="round-plan-text">{{p.fromNickname}} → {{p.toNickname}}</text>
+              <text class="round-plan-amount">¥{{p.amountText}}</text>
             </view>
           </view>
           <button
-            class="transfer-btn revert"
+            class="round-revert-btn"
             data-id="{{item.id}}"
-            data-from="{{item.fromUserId}}"
-            data-to="{{item.toUserId}}"
-            data-amount="{{item.amount}}"
-            bindtap="onRevertOne"
-          >
-            撤回结算
-          </button>
+            data-seq="{{item.seq}}"
+            bindtap="onRevertRound"
+          >撤销本轮</button>
         </view>
       </view>
-    </view>
-
-    <!-- 已结清提示 -->
-    <view wx:if="{{transferPlans.length === 0 && balances.length === 0}}" class="settled-banner">
-      <van-icon name="passed" size="64px" color="#52c41a" />
-      <text class="settled-text">账本已结清</text>
-      <text class="settled-subtext">所有成员已结清账目</text>
     </view>
   </block>
 </view>

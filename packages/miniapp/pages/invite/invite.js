@@ -23,7 +23,10 @@ Page({
   async loadBook() {
     try {
       const book = await api.bookDetail(this.data.id)
-      const sceneName = (SCENE_MAP[book.scene] && SCENE_MAP[book.scene].name) || ''
+      const sceneName =
+        book.scene === 'custom'
+          ? book.sceneName || ''
+          : (SCENE_MAP[book.scene] && SCENE_MAP[book.scene].name) || ''
       this.setData({
         book,
         coverUrl: book.coverUrl,
