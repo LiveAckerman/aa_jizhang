@@ -40,7 +40,7 @@
 
   <!-- 表单主体：每条记录一个 transaction-form -->
   <block wx:if="{{records.length > 0}}">
-    <view wx:for="{{records}}" wx:key="id" hidden="{{current !== index}}">
+    <view wx:for="{{records}}" wx:key="id" class="form-wrap" hidden="{{current !== index}}">
       <transaction-form
         id="form_{{item.id}}"
         members="{{members}}"
@@ -52,7 +52,7 @@
 
     <!-- 底部确认提交 + 跳过 -->
     <view class="bottom-bar">
-      <view class="skip-row" wx:if="{{records.length > 1}}" bindtap="onSkipAll">
+      <view class="skip-row" wx:if="{{records.length > 0}}" bindtap="onSkipAll">
         <text class="skip-text">跳过剩余 {{records.length}} 条</text>
       </view>
       <button
