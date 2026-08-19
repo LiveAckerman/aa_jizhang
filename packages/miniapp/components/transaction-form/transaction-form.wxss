@@ -350,3 +350,17 @@
   color: #fff;
 }
 .split-dialog-btn::after { border: none; }
+
+/* 付款人：label 与 chip 同一行 */
+.payer-section {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+.payer-section .section-label {
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+.payer-chip {
+  margin: 0;
+}

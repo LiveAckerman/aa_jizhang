@@ -3,11 +3,11 @@
   <view class="type-switch">
     <view class="type-tab {{type === 'shared' ? 'active' : ''}}" data-type="shared" bindtap="onSwitchType">
       <van-icon name="friends-o" size="16px" />
-      <text>共享账</text>
+      <text>公账</text>
     </view>
     <view class="type-tab {{type === 'private' ? 'active' : ''}}" data-type="private" bindtap="onSwitchType">
       <van-icon name="lock" size="16px" />
-      <text>私密账</text>
+      <text>私账</text>
     </view>
   </view>
 
@@ -52,7 +52,7 @@
     </view>
   </view>
 
-  <!-- 共享账专属 -->
+  <!-- 公账专属 -->
   <block wx:if="{{type === 'shared'}}">
     <view class="glass-card section">
       <view class="section-label">分账方式</view>
@@ -83,20 +83,15 @@
       </view>
     </view>
 
-    <view class="glass-card section">
+    <view class="glass-card section payer-section">
       <view class="section-label">付款人</view>
-      <view class="member-row">
-        <!-- 谁记账谁付款：只显示当前用户，固定为付款人 -->
-        <block wx:for="{{members}}" wx:key="userId">
-          <view
-            wx:if="{{item.userId === myUserId}}"
-            class="member-chip active"
-          >
-            <image class="member-chip-avatar" src="{{item.avatar}}" mode="aspectFill" />
-            <text>{{item.nickname}}</text>
-          </view>
-        </block>
-      </view>
+      <!-- 谁记账谁付款：只显示当前用户，label 与 chip 同一行 -->
+      <block wx:for="{{members}}" wx:key="userId">
+        <view wx:if="{{item.userId === myUserId}}" class="member-chip active payer-chip">
+          <image class="member-chip-avatar" src="{{item.avatar}}" mode="aspectFill" />
+          <text>{{item.nickname}}</text>
+        </view>
+      </block>
     </view>
   </block>
 
