@@ -236,9 +236,9 @@ no text, professional and trustworthy,
 1024x1024px
 ```
 
-**DepartureAA 应用图标示例：**
+**一起分账吧 应用图标示例：**
 ```
-A modern iOS app icon for a group travel expense splitting app "DepartureAA",
+A modern iOS app icon for a group travel expense splitting app "一起分账吧",
 featuring a minimalist airplane silhouette combined with a simple split-arrow symbol,
 gradient background from teal #4097a9 to coral #fa9583,
 iOS rounded square format, clean flat design, no text,
