@@ -86,16 +86,16 @@
     <view class="glass-card section">
       <view class="section-label">付款人</view>
       <view class="member-row">
-        <view
-          wx:for="{{members}}"
-          wx:key="userId"
-          class="member-chip {{payerId === item.userId ? 'active' : ''}}"
-          data-id="{{item.userId}}"
-          bindtap="onPickPayer"
-        >
-          <image class="member-chip-avatar" src="{{item.avatar}}" mode="aspectFill" />
-          <text>{{item.nickname}}</text>
-        </view>
+        <!-- 谁记账谁付款：只显示当前用户，固定为付款人 -->
+        <block wx:for="{{members}}" wx:key="userId">
+          <view
+            wx:if="{{item.userId === myUserId}}"
+            class="member-chip active"
+          >
+            <image class="member-chip-avatar" src="{{item.avatar}}" mode="aspectFill" />
+            <text>{{item.nickname}}</text>
+          </view>
+        </block>
       </view>
     </view>
   </block>
