@@ -133,8 +133,11 @@ export class BookService {
       const bucket = amountMap.get(t.bookId)
       if (!bucket) return
       if (t.type === 'shared') {
-        bucket.bookTotal += t.amount
+        // 公账仅统计「当前用户参与」的账单（与账本详情口径一致，每人看到的金额不同）
         const mine = (t.splits || []).find((s) => s.userId === userId)
+        const involved = !!mine || t.payerId === userId
+        if (!involved) return
+        bucket.bookTotal += t.amount
         if (mine) bucket.myShared += mine.amount
       } else if (t.creatorId === userId) {
         bucket.myPrivate += t.amount

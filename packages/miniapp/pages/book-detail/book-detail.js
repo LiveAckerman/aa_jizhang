@@ -107,13 +107,12 @@ Page({
       const d = t.spentAt ? t.spentAt.slice(0, 10) : ''
       if (!map[d]) map[d] = []
       const cat = CATEGORY_MAP[t.category] || CATEGORY_MAP.other
-      // 计算"我应付"：共享账取 splits 中当前用户的份额；私密账不显示
+      // 计算"我应付"：公账取 splits 中当前用户的份额；私账不显示
+      // （列表已按参与人过滤，能看到的公账当前用户必然参与，无需"未参与"标记）
       let myShareText = ''
-      let notInvolved = false
       if (t.type !== 'private') {
         const mine = (t.splits || []).find((s) => s.userId === myUserId)
         if (mine) myShareText = (mine.amount / 100).toFixed(2)
-        else notInvolved = true
       }
       map[d].push({
         ...t,
@@ -123,7 +122,6 @@ Page({
         payerName: memberMap[t.payerId] || '成员',
         isPrivate: t.type === 'private',
         myShareText,
-        notInvolved,
       })
     })
     return Object.keys(map)

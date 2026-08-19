@@ -121,7 +121,11 @@ export class StatsService {
 
   private amountForScope(t: Transaction, userId: string, scope: StatsScope): number {
     if (scope === 'team') {
-      return t.type === 'shared' ? t.amount : 0
+      // 公账仅统计「当前用户参与」的账单整笔金额（口径与账本详情/列表一致，每人不同）
+      if (t.type !== 'shared') return 0
+      const involved =
+        (t.splits || []).some((s) => s.userId === userId) || t.payerId === userId
+      return involved ? t.amount : 0
     }
     // mine
     if (t.type === 'shared') {

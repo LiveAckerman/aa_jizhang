@@ -110,14 +110,24 @@ export class TransactionService {
     return tx
   }
 
-  /** 账本流水：共享账全体可见；私密账仅创建者本人可见 */
+  /**
+   * 账本流水可见性规则：
+   * - 私账：仅创建者本人可见
+   * - 公账：仅「参与人（splits 里有份）」可见；付款人若未在 splits 里也算参与
+   *   → 未参与该笔的成员看不到这条账单（如：甲乙一间房只甲乙分账，丙看不到）
+   */
   async listByBook(bookId: string, userId: string) {
     await this.bookService.assertMember(bookId, userId)
     const rows = await this.txRepo.find({
       where: { bookId },
       order: { spentAt: 'DESC', createdAt: 'DESC' },
     })
-    return rows.filter((t) => t.type === 'shared' || t.creatorId === userId)
+    return rows.filter((t) => {
+      if (t.type === 'private') return t.creatorId === userId
+      // 公账：当前用户在 splits 参与人里，或是付款人
+      const inSplits = (t.splits || []).some((s) => s.userId === userId)
+      return inSplits || t.payerId === userId
+    })
   }
 
   async detail(id: string, userId: string) {
@@ -337,14 +347,17 @@ export class TransactionService {
     await this.bookService.assertMember(bookId, userId)
     const rows = await this.txRepo.find({ where: { bookId } })
 
+    // sharedTotal：仅累加「当前用户参与」的公账整笔金额（每人看到的公账不同）
     let sharedTotal = 0
     let myShared = 0
     let myPrivate = 0
 
     for (const t of rows) {
       if (t.type === 'shared') {
-        sharedTotal += t.amount
         const mine = (t.splits || []).find((s) => s.userId === userId)
+        const involved = !!mine || t.payerId === userId
+        if (!involved) continue // 未参与的公账不计入该用户的任何统计
+        sharedTotal += t.amount
         if (mine) myShared += mine.amount
       } else if (t.creatorId === userId) {
         myPrivate += t.amount
