@@ -182,6 +182,9 @@
             <text class="book-name">{{book.name}}</text>
             <text class="archived-badge">已结算</text>
           </view>
+          <view class="archived-card-meta">
+            <text class="archived-meta-text">{{book.memberCount}}人 · {{book.dateText}} · ¥{{book.myTotalText}}</text>
+          </view>
         </view>
       </view>
       <!-- 点击提示 -->

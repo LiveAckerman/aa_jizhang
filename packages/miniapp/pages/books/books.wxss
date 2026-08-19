@@ -447,10 +447,9 @@ page {
   position: relative; /* 让 z-index 生效 */
   padding: 28rpx 32rpx;
   margin-bottom: 0;
-  /* 后一张用负 margin 上移，压在前一张上，只露出前一张的标题行 */
-  margin-top: -48rpx;
+  /* 负 margin 上移，只露出前一张的标题+副标题（约96rpx） */
+  margin-top: -72rpx;
   border: 2rpx solid rgba(128, 145, 165, 0.10);
-  /* 底部投影，强调下方还压着卡片的纵深 */
   box-shadow: 0 8rpx 20rpx rgba(47, 65, 89, 0.10);
   transition: transform 0.2s;
 }
@@ -463,6 +462,16 @@ page {
 
 .archived-card .book-plain-top {
   padding-right: 0;
+}
+
+/* 第二行：人数 · 日期 · 支出 */
+.archived-card-meta {
+  margin-top: 8rpx;
+}
+
+.archived-meta-text {
+  font-size: 22rpx;
+  color: var(--text-secondary);
 }
 
 .archived-badge {
