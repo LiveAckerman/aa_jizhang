@@ -88,9 +88,12 @@ Page({
       success: async (res) => {
         if (!res.confirm) return
         try {
+          wx.showLoading({ title: '保存中...', mask: true })
           await api.renameGroup(group.id, (res.content || '').trim())
-          this.loadGroups()
+          await this.loadGroups()
+          wx.hideLoading()
         } catch (e) {
+          wx.hideLoading()
           wx.showToast({ title: (e && e.message) || '操作失败', icon: 'none' })
         }
       },
