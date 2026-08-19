@@ -2,7 +2,7 @@
   "name": "departure-aa",
   "version": "0.1.0",
   "private": true,
-  "description": "出发AA记账 - 多人场景记账小程序 monorepo",
+  "description": "一起分账吧 - 多人场景记账小程序 monorepo",
   "scripts": {
     "dev:server": "pnpm --filter @departure/server start:dev",
     "build:server": "pnpm --filter @departure/server build",

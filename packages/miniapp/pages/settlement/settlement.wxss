@@ -1,7 +1,7 @@
 .settlement-page {
   min-height: 100vh;
   padding: 24rpx 32rpx calc(60rpx + env(safe-area-inset-bottom));
-  background: linear-gradient(135deg, #e8f4f8 0%, #fef5ed 100%);
+  /* 背景继承全局圆点网格 */
 }
 
 .loading-container {
@@ -113,6 +113,50 @@
 
 .balance-item.negative .balance-amount {
   color: var(--color-danger);
+}
+
+/* 已平账成员：灰调 + 金额删除线弱化 */
+.balance-item.settled {
+  background: rgba(82, 196, 26, 0.08);
+}
+.balance-item.settled .balance-amount {
+  color: var(--text-secondary);
+  text-decoration: line-through;
+}
+.balance-name-block {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+.balance-name-block .balance-name {
+  flex: none;
+}
+.balance-settled-tag {
+  font-size: 20rpx;
+  color: #52c41a;
+  background: rgba(82, 196, 26, 0.14);
+  padding: 4rpx 12rpx;
+  border-radius: 16rpx;
+}
+
+/* 撤回全部入口 */
+.section-revert-all {
+  font-size: 24rpx;
+  color: #fa9583;
+}
+
+/* 已平账明细项 */
+.transfer-item.settled-item {
+  background: rgba(82, 196, 26, 0.06);
+}
+.transfer-amount.settled {
+  color: #52c41a;
+}
+.transfer-btn.revert {
+  background: #fff;
+  color: #fa9583;
+  border: 2rpx solid #fa9583;
 }
 
 /* 转账方案列表 */

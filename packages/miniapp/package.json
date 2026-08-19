@@ -2,7 +2,7 @@
   "name": "@departure/miniapp",
   "version": "0.1.0",
   "private": true,
-  "description": "出发AA记账 - 微信原生小程序",
+  "description": "一起分账吧 - 微信原生小程序",
   "dependencies": {
     "@departure/shared": "workspace:*",
     "@vant/weapp": "^1.11.7"

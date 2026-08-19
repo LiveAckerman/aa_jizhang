@@ -17,7 +17,7 @@ const terms = {
   version: '1.0.0',
   updatedAt: '2026-08-13',
   content: `
-<p style="${COMMON_STYLE.p}">欢迎使用「出发AA记账」（以下简称"本应用"）。本协议是您与本应用之间就使用服务所订立的协议。请您在使用前仔细阅读本协议全部内容。</p>
+<p style="${COMMON_STYLE.p}">欢迎使用「一起分账吧」（以下简称"本应用"）。本协议是您与本应用之间就使用服务所订立的协议。请您在使用前仔细阅读本协议全部内容。</p>
 <p style="${COMMON_STYLE.h}">一、服务内容</p>
 <p style="${COMMON_STYLE.p}">本应用为您提供多人场景下的记账、分账、账目统计等服务。您可创建账本、邀请成员共同记账，并进行费用分摊结算。</p>
 <p style="${COMMON_STYLE.h}">二、账号与使用</p>
@@ -38,7 +38,7 @@ const privacy = {
   version: '1.0.0',
   updatedAt: '2026-08-13',
   content: `
-<p style="${COMMON_STYLE.p}">「出发AA记账」（以下简称"我们"）非常重视您的隐私保护。本政策说明我们如何收集、使用和保护您的个人信息。</p>
+<p style="${COMMON_STYLE.p}">「一起分账吧」（以下简称"我们"）非常重视您的隐私保护。本政策说明我们如何收集、使用和保护您的个人信息。</p>
 <p style="${COMMON_STYLE.h}">一、我们收集的信息</p>
 <p style="${COMMON_STYLE.p}">1. 微信授权信息：登录时获取的微信 openid，用于识别您的账号。</p>
 <p style="${COMMON_STYLE.p}">2. 您主动填写的信息：昵称、头像等个人资料。</p>
@@ -49,7 +49,7 @@ const privacy = {
 <p style="${COMMON_STYLE.p}">3. 我们不会将您的个人信息出售或提供给无关第三方。</p>
 <p style="${COMMON_STYLE.h}">三、信息的保护</p>
 <p style="${COMMON_STYLE.p}">1. 我们采用加密传输、访问控制等措施保护您的信息安全。</p>
-<p style="${COMMON_STYLE.p}">2. 私密账目仅您本人可见，其他账本成员无法查看。</p>
+<p style="${COMMON_STYLE.p}">2. 私账账目仅您本人可见，其他账本成员无法查看。</p>
 <p style="${COMMON_STYLE.h}">四、您的权利</p>
 <p style="${COMMON_STYLE.p}">您有权访问、更正、删除您的个人信息，也可注销账号。注销后我们将删除或匿名化您的相关数据。</p>
 <p style="${COMMON_STYLE.p}">如您对本政策有任何疑问，可通过应用内的反馈渠道与我们联系。</p>
@@ -61,11 +61,11 @@ const about = {
   version: '1.0.0',
   updatedAt: '2026-08-14',
   content: `
-<p style="${COMMON_STYLE.p}">「出发AA记账」是一款专注于多人场景分账的记账应用，主打旅行、聚餐、活动等多人协作记账场景，同时支持个人私密记账需求。</p>
+<p style="${COMMON_STYLE.p}">「一起分账吧」是一款专注于多人场景分账的记账应用，主打旅行、聚餐、活动等多人协作记账场景，同时支持个人私账记账需求。</p>
 <p style="${COMMON_STYLE.h}">我们要解决的问题</p>
-<p style="${COMMON_STYLE.p}">多人出行时，既有需要分摊的共享支出（门票、餐饮、住宿），也有不便公开的私密消费。传统记账工具往往二选一，切换账本十分繁琐。我们用「共享账 + 私密账」双账本模式，让一个账本同时兼顾两种需求。</p>
+<p style="${COMMON_STYLE.p}">多人出行时，既有需要分摊的公账支出（门票、餐饮、住宿），也有不便公开的私账消费。传统记账工具往往二选一，切换账本十分繁琐。我们用「公账 + 私账」双账本模式，让一个账本同时兼顾两种需求。</p>
 <p style="${COMMON_STYLE.h}">核心功能</p>
-<p style="${COMMON_STYLE.p}">1. 双账本模式：共享账所有成员可见，私密账仅自己可见。</p>
+<p style="${COMMON_STYLE.p}">1. 双账本模式：公账所有成员可见，私账仅自己可见。</p>
 <p style="${COMMON_STYLE.p}">2. 智能分账：支持平均、按比例、按份额、指定金额多种分账方式，并自动计算最优结算方案。</p>
 <p style="${COMMON_STYLE.p}">3. 账目统计：按分类、时间、成员多维度统计支出，账目一目了然。</p>
 <p style="${COMMON_STYLE.p}">4. 多人协作：邀请好友加入账本，一起记账、实时同步。</p>

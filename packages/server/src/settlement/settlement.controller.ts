@@ -73,6 +73,33 @@ export class SettlementController {
   }
 
   /**
+   * 撤回单条已完成结算
+   * PATCH /api/settlements/:id/revert
+   */
+  @Patch(':id/revert')
+  async revert(@CurrentUser('sub') userId: string, @Param('id') id: string) {
+    const data = await this.settlementService.revert(id, userId)
+    return { code: 0, message: 'ok', data }
+  }
+
+  /**
+   * 按成员撤回已完成结算（targetUserId 为空则撤回该账本全部）
+   * POST /api/settlements/revert-by-user
+   */
+  @Post('revert-by-user')
+  async revertByUser(
+    @CurrentUser('sub') userId: string,
+    @Body() body: { bookId: string; targetUserId?: string },
+  ) {
+    const data = await this.settlementService.revertByUser(
+      body.bookId,
+      userId,
+      body.targetUserId,
+    )
+    return { code: 0, message: 'ok', data }
+  }
+
+  /**
    * 删除结算记录
    * DELETE /api/settlements/:id
    */

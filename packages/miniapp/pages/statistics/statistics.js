@@ -88,7 +88,7 @@ Page({
   onScope(e) {
     const scope = e.currentTarget.dataset.scope
     if (scope === this.data.scope) return
-    this.setData({ scope, scopeLabel: scope === 'mine' ? '我的支出' : '团队共享', loading: true })
+    this.setData({ scope, scopeLabel: scope === 'mine' ? '我的支出' : '团队公账', loading: true })
     this.load()
   },
 

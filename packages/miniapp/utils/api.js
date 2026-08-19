@@ -57,6 +57,11 @@ const api = {
   listSettlements: (bookId) => request({ url: `/settlements?bookId=${bookId}` }),
   completeSettlement: (id) => request({ url: `/settlements/${id}/complete`, method: 'PATCH' }),
   deleteSettlement: (id) => request({ url: `/settlements/${id}`, method: 'DELETE' }),
+  // 撤回单条已完成结算
+  revertSettlement: (id) => request({ url: `/settlements/${id}/revert`, method: 'PATCH' }),
+  // 按成员撤回已完成结算（targetUserId 为空则撤回全部）
+  revertSettlementByUser: (bookId, targetUserId) =>
+    request({ url: '/settlements/revert-by-user', method: 'POST', data: { bookId, targetUserId } }),
 
   // ===== OCR识别 =====
   ocrRecognizeReceipt: (filePath, bookId) => {

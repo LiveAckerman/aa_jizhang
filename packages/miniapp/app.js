@@ -1,5 +1,5 @@
 /**
- * 出发AA记账 - 小程序入口
+ * 一起分账吧 - 小程序入口
  */
 const { API_BASE_URL } = require('./config/index')
 

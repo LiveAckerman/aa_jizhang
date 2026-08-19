@@ -1,8 +1,48 @@
-<view class="container invite-page">
+<view class="invite-page">
+  <!-- 骨架屏 -->
+  <block wx:if="{{loading}}">
+    <view class="glass-card invite-card">
+      <view class="invite-head">
+        <view class="sk-cover-sm"></view>
+        <view class="invite-head-info">
+          <view class="sk-line sk-name"></view>
+          <view class="sk-line sk-meta"></view>
+        </view>
+      </view>
+      <view class="sk-line sk-tip"></view>
+      <view class="sk-qr"></view>
+      <view class="sk-code"></view>
+    </view>
+    <view class="glass-card invite-steps">
+      <view class="sk-line sk-steps-title"></view>
+      <view class="sk-step" wx:for="{{[1,2]}}" wx:key="*this">
+        <view class="sk-step-no"></view>
+        <view class="sk-line sk-step-text"></view>
+      </view>
+    </view>
+    <view class="sk-btn"></view>
+  </block>
+
+  <!-- 主卡片：账本信息 + 二维码 + 邀请码 -->
+  <block wx:else>
   <view class="glass-card invite-card">
-    <text class="invite-book-name">{{book.name}}</text>
+    <!-- 账本头部 -->
+    <view class="invite-head">
+      <view class="invite-cover-wrap">
+        <image class="invite-cover" src="{{coverUrl}}" mode="aspectFill" />
+      </view>
+      <view class="invite-head-info">
+        <text class="invite-book-name">{{book.name}}</text>
+        <view class="invite-head-meta">
+          <text wx:if="{{sceneName}}" class="invite-scene">{{sceneName}}</text>
+          <text class="invite-member-count">{{memberCount}} 位成员</text>
+        </view>
+      </view>
+    </view>
+
     <text class="invite-tip">邀请好友扫码，一起记账分账</text>
 
+    <!-- 二维码 -->
     <view class="qr-wrap">
       <image wx:if="{{qrUrl}}" class="qr-img" src="{{qrUrl}}" mode="aspectFit" />
       <view wx:elif="{{qrLoading}}" class="qr-loading">
@@ -15,15 +55,34 @@
       </view>
     </view>
 
+    <!-- 邀请码（点击复制） -->
     <view class="code-row" bindtap="onCopyCode">
       <text class="code-label">邀请码</text>
       <text class="code-value">{{inviteCode}}</text>
-      <van-icon name="records" size="18px" color="#4097a9" />
+      <view class="code-copy">
+        <van-icon name="records" size="16px" color="#4097a9" />
+        <text class="code-copy-text">复制</text>
+      </view>
     </view>
   </view>
 
+  <!-- 如何加入引导 -->
+  <view class="glass-card invite-steps">
+    <text class="invite-steps-title">好友如何加入</text>
+    <view class="invite-step">
+      <view class="invite-step-no">1</view>
+      <text class="invite-step-text">分享给微信好友，或让对方扫描上方二维码</text>
+    </view>
+    <view class="invite-step">
+      <view class="invite-step-no">2</view>
+      <text class="invite-step-text">好友进入后点击「加入账本」即可一起记账</text>
+    </view>
+  </view>
+
+  <!-- 分享按钮 -->
   <button class="btn-primary share-wechat-btn" open-type="share">
     <van-icon name="share-o" size="18px" color="#fff" />
     <text>分享给微信好友</text>
   </button>
+  </block>
 </view>

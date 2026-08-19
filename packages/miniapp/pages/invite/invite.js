@@ -1,6 +1,6 @@
 const app = getApp()
 const api = require('../../utils/api')
-const { shareImageForScene } = require('../../constants/ledger')
+const { shareImageForScene, SCENE_MAP } = require('../../constants/ledger')
 
 Page({
   data: {
@@ -8,8 +8,11 @@ Page({
     book: null,
     coverUrl: '',
     inviteCode: '',
+    sceneName: '',
+    memberCount: 0,
     qrUrl: '',
     qrLoading: true,
+    loading: true,
   },
 
   onLoad(query) {
@@ -20,13 +23,20 @@ Page({
   async loadBook() {
     try {
       const book = await api.bookDetail(this.data.id)
+      const sceneName = (SCENE_MAP[book.scene] && SCENE_MAP[book.scene].name) || ''
       this.setData({
         book,
         coverUrl: book.coverUrl,
         inviteCode: book.inviteCode,
+        sceneName,
+        memberCount: (book.members || []).length,
+        loading: false,
       })
       this.loadQrCode()
-    } catch (e) {}
+    } catch (e) {
+      this.setData({ loading: false })
+      wx.showToast({ title: (e && e.message) || '加载失败', icon: 'none' })
+    }
   },
 
   // 小程序码由后端生成，需要带 token，用 wx.request 拿二进制转本地文件

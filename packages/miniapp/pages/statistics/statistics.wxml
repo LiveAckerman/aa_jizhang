@@ -9,7 +9,7 @@
       我的支出
     </view>
     <view class="scope-tab {{scope === 'team' ? 'active' : ''}}" data-scope="team" bindtap="onScope">
-      团队共享
+      团队公账
     </view>
   </view>
 

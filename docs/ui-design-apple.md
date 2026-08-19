@@ -1,8 +1,8 @@
-# 出发AA记账 - Apple Design System UI设计文档
+# 一起分账吧 - Apple Design System UI设计文档
 
 ## 项目信息
 
-**产品名称：** 出发AA记账 / DepartureAA  
+**产品名称：** 一起分账吧 / 一起分账吧  
 **设计版本：** v2.0 - Apple Design Language  
 **目标平台：** iOS / Android 移动应用  
 **设计基准：** iPhone 14 Pro (393x852)
@@ -928,7 +928,7 @@ wx.vibrateShort({ type: 'light' })
 ```
 ┌─────────────────────────────────────┐
 │ [Large Title Navigation]            │
-│ 出发AA记账                           │ ← 34pt Large Title
+│ 一起分账吧                           │ ← 34pt Large Title
 │                                     │
 │ [搜索框]                             │ ← 磨砂输入框
 │                                     │
@@ -1052,7 +1052,7 @@ wx.vibrateShort({ type: 'light' })
 
 ### Figma / Sketch 文件结构
 ```
-出发AA记账 - Apple Design
+一起分账吧 - Apple Design
 ├── 📁 Design System
 │   ├── Colors (iOS System Colors)
 │   ├── Typography (SF Pro)

@@ -2,7 +2,7 @@
   "name": "@departure/server",
   "version": "0.1.0",
   "private": true,
-  "description": "出发AA记账 - Nest.js 后端",
+  "description": "一起分账吧 - Nest.js 后端",
   "scripts": {
     "build": "nest build",
     "start": "nest start",

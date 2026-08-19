@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**出发AA记账 (DepartureAA)** — 多人场景记账微信小程序，专注旅行、聚餐、活动等分账场景，支持共享账和私密账双账本模式。
+**一起分账吧 (一起分账吧)** — 多人场景记账微信小程序，专注旅行、聚餐、活动等分账场景，支持共享账和私密账双账本模式。
 
 **Architecture:** pnpm workspace monorepo with 3 packages:
 - `packages/miniapp` — 微信原生小程序 (WeChat native miniapp, appid: wxcd442ce3374ec257)

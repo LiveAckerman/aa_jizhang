@@ -55,7 +55,7 @@ Page({
         amount: (r.amount || 0) / 100,
         category: r.category || 'other',
         note: r.note || r.merchant || '',
-        images: [],   // 不自动把 OCR 原图塞入凭证，原图仅作顶部参考缩略图
+        images: imageUrl ? [imageUrl] : [],   // 自动回填 OCR 原图作为凭证图片
         spentAt: r.spentAt || new Date().toISOString(),
       },
     }))

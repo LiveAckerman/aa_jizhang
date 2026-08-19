@@ -21,9 +21,12 @@
       </view>
 
       <view wx:else class="balance-list">
-        <view wx:for="{{balances}}" wx:key="userId" class="balance-item {{item.isPositive ? 'positive' : item.isNegative ? 'negative' : ''}}">
+        <view wx:for="{{balances}}" wx:key="userId" class="balance-item {{item.settled ? 'settled' : item.isPositive ? 'positive' : item.isNegative ? 'negative' : ''}}">
           <image class="balance-avatar" src="{{item.avatar}}" mode="aspectFill" />
-          <text class="balance-name">{{item.nickname}}</text>
+          <view class="balance-name-block">
+            <text class="balance-name">{{item.nickname}}</text>
+            <text wx:if="{{item.settled}}" class="balance-settled-tag">已平账</text>
+          </view>
           <view class="balance-amount-block">
             <text class="balance-label">{{item.isPositive ? '应收' : item.isNegative ? '应付' : '已平'}}</text>
             <text class="balance-amount">¥{{item.balanceText}}</text>
@@ -71,6 +74,43 @@
     <!-- 操作按钮 -->
     <view wx:if="{{transferPlans.length > 0}}" class="action-buttons">
       <button class="btn-primary" bindtap="onCompleteAll">全部标记已完成</button>
+    </view>
+
+    <!-- 已平账记录（可撤回） -->
+    <view wx:if="{{completedList.length > 0}}" class="glass-card section">
+      <view class="section-header">
+        <text class="section-title">已平账记录</text>
+        <text class="section-revert-all" bindtap="onRevertAll">撤回全部</text>
+      </view>
+
+      <view class="transfer-list">
+        <view wx:for="{{completedList}}" wx:key="id" class="transfer-item settled-item">
+          <view class="transfer-row">
+            <view class="transfer-member">
+              <image class="transfer-avatar" src="{{item.fromAvatar}}" mode="aspectFill" />
+              <text class="transfer-name">{{item.fromNickname}}</text>
+            </view>
+            <view class="transfer-arrow">
+              <van-icon name="arrow" size="20px" color="#52c41a" />
+              <text class="transfer-amount settled">¥{{item.amountText}}</text>
+            </view>
+            <view class="transfer-member">
+              <image class="transfer-avatar" src="{{item.toAvatar}}" mode="aspectFill" />
+              <text class="transfer-name">{{item.toNickname}}</text>
+            </view>
+          </view>
+          <button
+            class="transfer-btn revert"
+            data-id="{{item.id}}"
+            data-from="{{item.fromUserId}}"
+            data-to="{{item.toUserId}}"
+            data-amount="{{item.amount}}"
+            bindtap="onRevertOne"
+          >
+            撤回结算
+          </button>
+        </view>
+      </view>
     </view>
 
     <!-- 已结清提示 -->

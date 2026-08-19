@@ -69,9 +69,14 @@ export class SettlementService {
     })
 
     return {
+      // 当前净收支（已扣除完成的结算）——平账后为 0
       balances: adjustedBalances,
+      // 原始净收支（未扣除任何结算）——用于展示成员平账前的金额
+      rawBalances: balances,
       transferPlans,
       pendingSettlements,
+      // 已完成的结算记录（供前端展示"已平账"明细并支持撤回）
+      completedSettlements,
     }
   }
 
@@ -173,6 +178,55 @@ export class SettlementService {
     })
 
     return settlements
+  }
+
+  /**
+   * 撤回已完成的结算（平账反悔）：把 completed 记录删除，使其重新计入待结算余额
+   * 支持撤回单条；批量撤回由 controller 循环调用或走 revertByUser
+   */
+  async revert(settlementId: string, userId: string) {
+    const settlement = await this.settlementRepo.findOne({
+      where: { id: settlementId },
+    })
+    if (!settlement) throw new NotFoundException('结算记录不存在')
+
+    await this.bookService.assertMember(settlement.bookId, userId)
+
+    if (settlement.status !== 'completed') {
+      throw new BadRequestException('只有已完成的结算才能撤回')
+    }
+
+    // 撤回即删除该已完成记录，balance 自然恢复（calculate 只按 completed 记录调整余额）
+    await this.settlementRepo.delete({ id: settlementId })
+    return { reverted: true }
+  }
+
+  /**
+   * 按用户撤回：撤回某账本中与该用户相关的全部已完成结算
+   * targetUserId 为空时撤回该账本所有已完成结算（撤回所有人）
+   */
+  async revertByUser(bookId: string, userId: string, targetUserId?: string) {
+    await this.bookService.assertMember(bookId, userId)
+
+    const completed = await this.settlementRepo.find({
+      where: { bookId, status: 'completed' },
+    })
+    if (completed.length === 0) {
+      throw new BadRequestException('没有可撤回的已完成结算')
+    }
+
+    const toRevert = targetUserId
+      ? completed.filter(
+          (s) => s.fromUserId === targetUserId || s.toUserId === targetUserId,
+        )
+      : completed
+
+    if (toRevert.length === 0) {
+      throw new BadRequestException('该成员没有可撤回的已完成结算')
+    }
+
+    await this.settlementRepo.delete(toRevert.map((s) => s.id))
+    return { reverted: true, count: toRevert.length }
   }
 
   /**

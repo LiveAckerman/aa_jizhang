@@ -98,6 +98,11 @@
   opacity: 0.4;
 }
 
+/* ── 表单包裹：左右边距 ── */
+.form-wrap {
+  padding: 0 32rpx;
+}
+
 /* ── 底部操作栏 ── */
 .bottom-bar {
   position: fixed;

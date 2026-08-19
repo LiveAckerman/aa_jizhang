@@ -1,6 +1,7 @@
 const app = getApp()
 const api = require('../../utils/api')
 const { request } = require('../../utils/request')
+const { SCENE_MAP } = require('../../constants/ledger')
 
 Page({
   data: {
@@ -50,7 +51,9 @@ Page({
         wx.redirectTo({ url: `/pages/book-detail/book-detail?id=${info.id}` })
         return
       }
-      this.setData({ info, coverUrl: info.coverUrl, loading: false })
+      // scene(key) → 中文场景名，供卡片展示标签
+      const sceneName = (SCENE_MAP[info.scene] && SCENE_MAP[info.scene].name) || ''
+      this.setData({ info: { ...info, sceneName }, coverUrl: info.coverUrl, loading: false })
       // 新用户从登录页回跳：先弹头像/昵称授权，完善后再加入
       this.maybeShowAuthDrawer()
     } catch (e) {

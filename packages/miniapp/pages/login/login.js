@@ -61,7 +61,14 @@ Page({
       setTimeout(() => {
         if (pendingCode) {
           wx.removeStorageSync('pendingInviteCode')
-          wx.reLaunch({ url: `/pages/join/join?code=${pendingCode}` })
+          // 先 reLaunch 到 tabbar 首页作为栈底，再 navigateTo 到加入页，
+          // 这样加入页左上角 home 图标能正确回到首页，而不是回登录页
+          wx.reLaunch({
+            url: '/pages/books/books',
+            complete: () => {
+              wx.navigateTo({ url: `/pages/join/join?code=${pendingCode}` })
+            },
+          })
         } else {
           wx.reLaunch({ url: '/pages/books/books' })
         }

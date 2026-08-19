@@ -115,8 +115,8 @@
                 <text class="amount-label">支出</text>
                 <text class="book-plain-amount">¥{{book.myTotalText}}</text>
                 <view wx:if="{{book.hasPrivate}}" class="amount-tags">
-                  <text class="amount-tag">共享 ¥{{book.mySharedText}}</text>
-                  <text class="amount-tag private">私密 ¥{{book.myPrivateText}}</text>
+                  <text class="amount-tag">公账 ¥{{book.mySharedText}}</text>
+                  <text class="amount-tag private">私账 ¥{{book.myPrivateText}}</text>
                 </view>
               </view>
             </view>
@@ -155,8 +155,8 @@
               <text class="amount-label">支出</text>
               <text class="book-plain-amount">¥{{book.myTotalText}}</text>
               <view wx:if="{{book.hasPrivate}}" class="amount-tags">
-                <text class="amount-tag">共享 ¥{{book.mySharedText}}</text>
-                <text class="amount-tag private">私密 ¥{{book.myPrivateText}}</text>
+                <text class="amount-tag">公账 ¥{{book.mySharedText}}</text>
+                <text class="amount-tag private">私账 ¥{{book.myPrivateText}}</text>
               </view>
             </view>
             <text class="book-plain-more">统计 ›</text>

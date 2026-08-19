@@ -108,13 +108,15 @@ Page({
       success: async (res) => {
         if (!res.confirm) return
         try {
+          wx.showLoading({ title: '删除中...', mask: true })
           await api.deleteGroup(group.id)
           if (this.data.activeGroupId === group.id) {
             this.setData({ activeGroupId: 'all' })
           }
-          this.loadGroups()
-          this.loadBooks()
+          await Promise.all([this.loadGroups(), this.loadBooks()])
+          wx.hideLoading()
         } catch (e) {
+          wx.hideLoading()
           wx.showToast({ title: (e && e.message) || '操作失败', icon: 'none' })
         }
       },
@@ -131,9 +133,12 @@ Page({
         const name = (res.content || '').trim()
         if (!name) return
         try {
+          wx.showLoading({ title: '创建中...', mask: true })
           await api.createGroup(name)
-          this.loadGroups()
+          await this.loadGroups()
+          wx.hideLoading()
         } catch (e) {
+          wx.hideLoading()
           wx.showToast({ title: (e && e.message) || '操作失败', icon: 'none' })
         }
       },

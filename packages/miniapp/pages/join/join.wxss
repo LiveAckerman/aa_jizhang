@@ -1,11 +1,9 @@
 .join-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-top: 120rpx;
+  min-height: 100vh;
+  padding: 40rpx 32rpx calc(60rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
 }
 
-.join-loading,
 .join-error {
   display: flex;
   flex-direction: column;
@@ -13,7 +11,62 @@
   gap: 20rpx;
   color: var(--text-secondary);
   font-size: 28rpx;
-  padding-top: 80rpx;
+  padding-top: 160rpx;
+}
+
+/* 骨架屏 */
+.sk-cover,
+.sk-line,
+.sk-pill,
+.sk-btn,
+.sk-feature-icon {
+  background: #eef0f2;
+  animation: sk-blink 1.2s ease-in-out infinite;
+}
+@keyframes sk-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.sk-cover {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 40rpx;
+  margin-bottom: 32rpx;
+  align-self: center;
+}
+.sk-line {
+  border-radius: 10rpx;
+  height: 28rpx;
+}
+.sk-line-title { width: 320rpx; height: 40rpx; align-self: center; }
+.sk-line-scene { width: 120rpx; height: 32rpx; margin-top: 20rpx; align-self: center; }
+.sk-line-meta { width: 260rpx; margin-top: 24rpx; align-self: center; }
+.sk-pill { width: 220rpx; height: 56rpx; border-radius: 32rpx; margin-top: 24rpx; align-self: center; }
+.sk-line-sub { width: 160rpx; height: 26rpx; margin-bottom: 28rpx; }
+.sk-feature {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 28rpx;
+}
+.sk-feature-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 20rpx;
+  flex-shrink: 0;
+}
+.sk-feature-lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+.sk-line-fname { width: 160rpx; height: 28rpx; }
+.sk-line-fdesc { width: 100%; height: 24rpx; }
+.sk-btn {
+  width: 100%;
+  height: 96rpx;
+  border-radius: 48rpx;
 }
 
 .error-text {
@@ -21,19 +74,33 @@
   color: var(--text-primary);
 }
 
+.join-body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 邀请卡片 */
 .join-card {
-  width: 100%;
-  padding: 48rpx 32rpx;
+  padding: 56rpx 40rpx 48rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.join-cover-wrap {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 40rpx;
+  padding: 8rpx;
+  background: linear-gradient(135deg, rgba(64, 151, 169, 0.25), rgba(250, 149, 131, 0.25));
+  margin-bottom: 32rpx;
 }
 
 .join-cover {
-  width: 200rpx;
-  height: 200rpx;
+  width: 100%;
+  height: 100%;
   border-radius: 32rpx;
-  margin-bottom: 32rpx;
   background: var(--color-secondary);
 }
 
@@ -41,19 +108,111 @@
   font-size: 40rpx;
   font-weight: 700;
   color: var(--text-primary);
+  text-align: center;
 }
 
-.join-meta {
+.join-scene {
+  margin-top: 16rpx;
+  padding: 6rpx 20rpx;
+  border-radius: 24rpx;
+  background: rgba(64, 151, 169, 0.1);
+  font-size: 22rpx;
+  color: var(--color-primary);
+}
+
+.join-inviter {
+  margin-top: 28rpx;
+  display: flex;
+  align-items: baseline;
+  gap: 8rpx;
+}
+
+.join-inviter-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--color-primary);
+  max-width: 300rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.join-inviter-text {
   font-size: 26rpx;
   color: var(--text-secondary);
-  margin-top: 12rpx;
+}
+
+.join-member-count {
+  margin-top: 20rpx;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 12rpx 28rpx;
+  border-radius: 32rpx;
+  background: rgba(64, 151, 169, 0.06);
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+/* 加入后能做什么 */
+.join-intro {
+  padding: 36rpx 32rpx 16rpx;
+  margin-bottom: 40rpx;
+}
+
+.join-intro-title {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  margin-bottom: 24rpx;
+  display: block;
+}
+
+.join-feature {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 28rpx;
+}
+
+.join-feature-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 20rpx;
+  background: rgba(64, 151, 169, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.join-feature-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.join-feature-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.join-feature-desc {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+/* 操作区 */
+.join-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .join-btn {
   width: 100%;
   height: 96rpx;
   line-height: 96rpx;
-  margin-top: 48rpx;
 }
 
 .back-btn {
@@ -67,4 +226,5 @@
   font-size: 26rpx;
   color: var(--text-secondary);
   margin-top: 28rpx;
+  padding: 12rpx 32rpx;
 }

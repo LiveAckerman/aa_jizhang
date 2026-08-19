@@ -1,28 +1,83 @@
 .invite-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  min-height: 100vh;
+  padding: 40rpx 32rpx calc(60rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
 }
 
 .invite-card {
-  width: 100%;
-  padding: 48rpx 32rpx;
+  padding: 40rpx 40rpx 48rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 32rpx;
+  margin-bottom: 24rpx;
+}
+
+/* 账本头部：封面 + 名称 + 场景/成员 */
+.invite-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding-bottom: 32rpx;
+  border-bottom: 2rpx solid rgba(128, 145, 165, 0.12);
+}
+
+.invite-cover-wrap {
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 28rpx;
+  padding: 6rpx;
+  background: linear-gradient(135deg, rgba(64, 151, 169, 0.25), rgba(250, 149, 131, 0.25));
+  flex-shrink: 0;
+}
+
+.invite-cover {
+  width: 100%;
+  height: 100%;
+  border-radius: 22rpx;
+  background: var(--color-secondary);
+}
+
+.invite-head-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
 }
 
 .invite-book-name {
-  font-size: 38rpx;
+  font-size: 36rpx;
   font-weight: 700;
   color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.invite-head-meta {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.invite-scene {
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+  background: rgba(64, 151, 169, 0.1);
+  font-size: 22rpx;
+  color: var(--color-primary);
+}
+
+.invite-member-count {
+  font-size: 24rpx;
+  color: var(--text-secondary);
 }
 
 .invite-tip {
   font-size: 26rpx;
   color: var(--text-secondary);
-  margin-top: 12rpx;
+  margin-top: 32rpx;
 }
 
 .qr-wrap {
@@ -60,7 +115,7 @@
   display: flex;
   align-items: center;
   gap: 16rpx;
-  padding: 20rpx 32rpx;
+  padding: 20rpx 24rpx 20rpx 32rpx;
   background: rgba(64, 151, 169, 0.08);
   border-radius: 24rpx;
 }
@@ -71,19 +126,134 @@
 }
 
 .code-value {
+  flex: 1;
   font-size: 34rpx;
   font-weight: 700;
   letter-spacing: 4rpx;
   color: var(--color-primary);
 }
 
+.code-copy {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 8rpx 20rpx;
+  border-radius: 24rpx;
+  background: rgba(64, 151, 169, 0.12);
+}
+
+.code-copy-text {
+  font-size: 24rpx;
+  color: var(--color-primary);
+}
+
+/* 如何加入 */
+.invite-steps {
+  padding: 36rpx 32rpx;
+  margin-bottom: 40rpx;
+}
+
+.invite-steps-title {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  margin-bottom: 24rpx;
+  display: block;
+}
+
+.invite-step {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 24rpx;
+}
+
+.invite-step:last-child {
+  margin-bottom: 0;
+}
+
+.invite-step-no {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 22rpx;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 26rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.invite-step-text {
+  flex: 1;
+  font-size: 26rpx;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
 .share-wechat-btn {
   width: 100%;
   height: 96rpx;
   line-height: 96rpx;
-  margin-top: 48rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12rpx;
+}
+
+/* 骨架屏 */
+.sk-line,
+.sk-cover-sm,
+.sk-qr,
+.sk-code,
+.sk-btn,
+.sk-step-no {
+  background: #eef0f2;
+  animation: sk-blink 1.2s ease-in-out infinite;
+}
+@keyframes sk-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.sk-line { border-radius: 10rpx; height: 28rpx; }
+.sk-cover-sm {
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 28rpx;
+  flex-shrink: 0;
+}
+.sk-name { width: 240rpx; height: 36rpx; }
+.sk-meta { width: 180rpx; margin-top: 16rpx; }
+.sk-tip { width: 300rpx; height: 26rpx; margin-top: 32rpx; align-self: center; }
+.sk-qr {
+  width: 400rpx;
+  height: 400rpx;
+  border-radius: 24rpx;
+  margin: 48rpx 0;
+  align-self: center;
+}
+.sk-code {
+  width: 100%;
+  height: 84rpx;
+  border-radius: 24rpx;
+}
+.sk-steps-title { width: 160rpx; height: 26rpx; margin-bottom: 24rpx; }
+.sk-step {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 24rpx;
+}
+.sk-step-no {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 22rpx;
+  flex-shrink: 0;
+}
+.sk-step-text { flex: 1; height: 26rpx; }
+.sk-btn {
+  width: 100%;
+  height: 96rpx;
+  border-radius: 48rpx;
 }
