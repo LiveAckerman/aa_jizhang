@@ -351,10 +351,11 @@
 }
 .split-dialog-btn::after { border: none; }
 
-/* 付款人：label 与 chip 同一行 */
+/* 付款人：label 左、chip 右，两端对齐 */
 .payer-section {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 24rpx;
 }
 .payer-section .section-label {
