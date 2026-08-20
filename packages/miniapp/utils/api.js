@@ -72,6 +72,15 @@ const api = {
   // 撤销某一轮结算
   revertSettlementRound: (roundId) =>
     request({ url: `/settlements/rounds/${roundId}/revert`, method: 'POST' }),
+  // 取账本进行中的轮次（存在待确认转账）
+  getActiveRound: (bookId) => request({ url: `/settlements/active-round?bookId=${bookId}` }),
+  // 确认单笔转账收款
+  confirmTransfer: (id) => request({ url: `/settlements/transfers/${id}/confirm`, method: 'POST' }),
+  // 撤销单笔已确认转账
+  revertTransfer: (id) => request({ url: `/settlements/transfers/${id}/revert`, method: 'POST' }),
+  // 一键确认本轮与我相关的待确认转账
+  confirmMyTransfers: (roundId) =>
+    request({ url: `/settlements/rounds/${roundId}/confirm-mine`, method: 'POST' }),
 
   // ===== OCR识别 =====
   ocrRecognizeReceipt: (filePath, bookId) => {

@@ -422,3 +422,64 @@
 .round-revert-btn::after {
   border: none;
 }
+
+/* ── 逐笔确认（进行态）── */
+.transfer-item.mine {
+  background: rgba(64, 151, 169, 0.05);
+  border-radius: 16rpx;
+  padding: 20rpx;
+  margin-bottom: 16rpx;
+}
+.transfer-item.other {
+  opacity: 0.85;
+  padding: 16rpx 0;
+}
+.transfer-action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20rpx;
+  margin-top: 12rpx;
+}
+.transfer-confirm-btn {
+  margin: 0;
+  height: 60rpx;
+  line-height: 60rpx;
+  padding: 0 32rpx;
+  font-size: 26rpx;
+  color: #fff;
+  background: var(--color-primary);
+  border-radius: 30rpx;
+}
+.transfer-confirm-btn::after { border: none; }
+.transfer-done {
+  font-size: 26rpx;
+  color: #52c41a;
+  font-weight: 500;
+}
+.transfer-waiting {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+.transfer-revert-link {
+  font-size: 24rpx;
+  color: #fa9583;
+}
+.confirm-all-btn {
+  margin-top: 24rpx;
+}
+.btn-outline {
+  background: transparent;
+  color: var(--color-primary);
+  border: 2rpx solid var(--color-primary);
+}
+.btn-outline::after { border: none; }
+
+/* 轮次状态标记 */
+.round-status {
+  font-size: 24rpx;
+  color: #fa9583;
+}
+.round-status.done {
+  color: #52c41a;
+}

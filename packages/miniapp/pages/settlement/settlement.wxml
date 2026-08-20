@@ -27,69 +27,149 @@
   </view>
 
   <block wx:else>
-    <!-- 本次结算范围提示 -->
-    <view wx:if="{{txCount > 0}}" class="settle-banner">
-      <text class="settle-banner-title">{{mode === 'partial' ? '部分结算' : '全部结算'}}</text>
-      <text class="settle-banner-sub">本次涉及 {{txCount}} 笔账单 · 合计 ¥{{totalAmountText}}</text>
-    </view>
-
-    <!-- 净收支汇总 -->
-    <view wx:if="{{balances.length > 0}}" class="glass-card section">
-      <view class="section-header">
-        <text class="section-title">净收支</text>
-        <text class="section-subtitle">{{balances.length}}位成员</text>
+    <!-- ========== 预览态：还没生成轮次 ========== -->
+    <block wx:if="{{stage === 'preview'}}">
+      <view wx:if="{{txCount > 0}}" class="settle-banner">
+        <text class="settle-banner-title">{{mode === 'partial' ? '部分结算' : '全部结算'}}</text>
+        <text class="settle-banner-sub">本次涉及 {{txCount}} 笔账单 · 合计 ¥{{totalAmountText}}</text>
       </view>
-      <view class="balance-list">
-        <view wx:for="{{balances}}" wx:key="userId" class="balance-item {{item.isPositive ? 'positive' : item.isNegative ? 'negative' : ''}}">
-          <image class="balance-avatar" src="{{item.avatar}}" mode="aspectFill" />
-          <view class="balance-name-block">
-            <text class="balance-name">{{item.nickname}}</text>
-          </view>
-          <view class="balance-amount-block">
-            <text class="balance-label">{{item.isPositive ? '应收' : item.isNegative ? '应付' : '已平'}}</text>
-            <text class="balance-amount">¥{{item.balanceText}}</text>
-          </view>
+
+      <!-- 净收支汇总 -->
+      <view wx:if="{{balances.length > 0}}" class="glass-card section">
+        <view class="section-header">
+          <text class="section-title">净收支</text>
+          <text class="section-subtitle">{{balances.length}}位成员</text>
         </view>
-      </view>
-    </view>
-
-    <!-- 最优转账方案 -->
-    <view wx:if="{{transferPlans.length > 0}}" class="glass-card section">
-      <view class="section-header">
-        <text class="section-title">转账方案</text>
-        <text class="section-subtitle">{{transferPlans.length}}笔</text>
-      </view>
-      <view class="transfer-list">
-        <view wx:for="{{transferPlans}}" wx:key="index" class="transfer-item">
-          <view class="transfer-row">
-            <view class="transfer-member">
-              <image class="transfer-avatar" src="{{item.fromAvatar}}" mode="aspectFill" />
-              <text class="transfer-name">{{item.fromNickname}}</text>
+        <view class="balance-list">
+          <view wx:for="{{balances}}" wx:key="userId" class="balance-item {{item.isPositive ? 'positive' : item.isNegative ? 'negative' : ''}}">
+            <image class="balance-avatar" src="{{item.avatar}}" mode="aspectFill" />
+            <view class="balance-name-block">
+              <text class="balance-name">{{item.nickname}}</text>
             </view>
-            <view class="transfer-arrow">
-              <van-icon name="arrow" size="20px" color="#4097a9" />
-              <text class="transfer-amount">¥{{item.amountText}}</text>
-            </view>
-            <view class="transfer-member">
-              <image class="transfer-avatar" src="{{item.toAvatar}}" mode="aspectFill" />
-              <text class="transfer-name">{{item.toNickname}}</text>
+            <view class="balance-amount-block">
+              <text class="balance-label">{{item.isPositive ? '应收' : item.isNegative ? '应付' : '已平'}}</text>
+              <text class="balance-amount">¥{{item.balanceText}}</text>
             </view>
           </view>
         </view>
       </view>
-    </view>
 
-    <!-- 确认结算按钮 -->
-    <view wx:if="{{txCount > 0}}" class="action-buttons">
-      <button class="btn-primary" bindtap="onConfirmSettle" disabled="{{submitting}}">确认结算</button>
-    </view>
+      <!-- 转账方案预览 -->
+      <view wx:if="{{previewPlans.length > 0}}" class="glass-card section">
+        <view class="section-header">
+          <text class="section-title">转账方案</text>
+          <text class="section-subtitle">{{previewPlans.length}}笔</text>
+        </view>
+        <view class="transfer-list">
+          <view wx:for="{{previewPlans}}" wx:key="index" class="transfer-item">
+            <view class="transfer-row">
+              <view class="transfer-member">
+                <image class="transfer-avatar" src="{{item.fromAvatar}}" mode="aspectFill" />
+                <text class="transfer-name">{{item.fromNickname}}</text>
+              </view>
+              <view class="transfer-arrow">
+                <van-icon name="arrow" size="20px" color="#4097a9" />
+                <text class="transfer-amount">¥{{item.amountText}}</text>
+              </view>
+              <view class="transfer-member">
+                <image class="transfer-avatar" src="{{item.toAvatar}}" mode="aspectFill" />
+                <text class="transfer-name">{{item.toNickname}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
 
-    <!-- 无可结算 -->
-    <view wx:if="{{txCount === 0}}" class="settled-banner">
-      <van-icon name="passed" size="64px" color="#52c41a" />
-      <text class="settled-text">没有可结算的账单</text>
-      <text class="settled-subtext">当前账本已全部结算</text>
-    </view>
+      <view wx:if="{{txCount > 0}}" class="action-buttons">
+        <button class="btn-primary" bindtap="onConfirmSettle" disabled="{{submitting}}">确认结算</button>
+      </view>
+
+      <view wx:if="{{txCount === 0}}" class="settled-banner">
+        <van-icon name="passed" size="64px" color="#52c41a" />
+        <text class="settled-text">没有可结算的账单</text>
+        <text class="settled-subtext">当前账本已全部结算</text>
+      </view>
+    </block>
+
+    <!-- ========== 进行态：逐笔确认收款 ========== -->
+    <block wx:if="{{stage === 'active'}}">
+      <view class="settle-banner">
+        <text class="settle-banner-title">待确认收款</text>
+        <text class="settle-banner-sub">本轮涉及 {{txCount}} 笔账单 · 合计 ¥{{totalAmountText}}</text>
+      </view>
+
+      <!-- 与我相关（可操作）-->
+      <view wx:if="{{mineTransfers.length > 0}}" class="glass-card section">
+        <view class="section-header">
+          <text class="section-title">与我相关</text>
+          <text class="section-subtitle">{{minePendingCount}} 笔待确认</text>
+        </view>
+        <view class="transfer-list">
+          <view wx:for="{{mineTransfers}}" wx:key="id" class="transfer-item mine">
+            <view class="transfer-row">
+              <view class="transfer-member">
+                <image class="transfer-avatar" src="{{item.fromAvatar}}" mode="aspectFill" />
+                <text class="transfer-name">{{item.fromNickname}}</text>
+              </view>
+              <view class="transfer-arrow">
+                <van-icon name="arrow" size="20px" color="#4097a9" />
+                <text class="transfer-amount">¥{{item.amountText}}</text>
+              </view>
+              <view class="transfer-member">
+                <image class="transfer-avatar" src="{{item.toAvatar}}" mode="aspectFill" />
+                <text class="transfer-name">{{item.toNickname}}</text>
+              </view>
+            </view>
+            <view class="transfer-action">
+              <block wx:if="{{item.confirmed}}">
+                <text class="transfer-done">✓ 已确认</text>
+                <text class="transfer-revert-link" data-id="{{item.id}}" bindtap="onRevertTransfer">撤销</text>
+              </block>
+              <button wx:else class="transfer-confirm-btn" data-id="{{item.id}}" bindtap="onConfirmTransfer">确认收款</button>
+            </view>
+          </view>
+        </view>
+        <button
+          wx:if="{{minePendingCount > 0}}"
+          class="btn-primary confirm-all-btn"
+          bindtap="onConfirmAllMine"
+          disabled="{{acting}}"
+        >全部确认（{{minePendingCount}}）</button>
+      </view>
+
+      <!-- 其他成员之间（只读）-->
+      <view wx:if="{{otherTransfers.length > 0}}" class="glass-card section">
+        <view class="section-header">
+          <text class="section-title">其他成员之间</text>
+          <text class="section-subtitle">仅展示</text>
+        </view>
+        <view class="transfer-list">
+          <view wx:for="{{otherTransfers}}" wx:key="id" class="transfer-item other">
+            <view class="transfer-row">
+              <view class="transfer-member">
+                <image class="transfer-avatar" src="{{item.fromAvatar}}" mode="aspectFill" />
+                <text class="transfer-name">{{item.fromNickname}}</text>
+              </view>
+              <view class="transfer-arrow">
+                <van-icon name="arrow" size="20px" color="#c8c9cc" />
+                <text class="transfer-amount">¥{{item.amountText}}</text>
+              </view>
+              <view class="transfer-member">
+                <image class="transfer-avatar" src="{{item.toAvatar}}" mode="aspectFill" />
+                <text class="transfer-name">{{item.toNickname}}</text>
+              </view>
+            </view>
+            <view class="transfer-action">
+              <text class="{{item.confirmed ? 'transfer-done' : 'transfer-waiting'}}">{{item.confirmed ? '✓ 已确认' : '待对方确认'}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="action-buttons">
+        <button class="btn-outline" bindtap="onBack">返回账本</button>
+      </view>
+    </block>
 
     <!-- 历史结算记录（按轮次） -->
     <view wx:if="{{rounds.length > 0}}" class="glass-card section">
@@ -101,12 +181,12 @@
         <view wx:for="{{rounds}}" wx:key="id" class="round-item">
           <view class="round-head">
             <text class="round-title">第 {{item.seq}} 次结算 · {{item.typeText}}</text>
-            <text class="round-meta">{{item.txCount}}笔 · ¥{{item.totalAmountText}}</text>
+            <text class="round-status {{item.allDone ? 'done' : ''}}">{{item.statusText}}</text>
           </view>
-          <text class="round-date">{{item.dateText}}</text>
+          <text class="round-date">{{item.txCount}}笔 · ¥{{item.totalAmountText}} · {{item.dateText}}</text>
           <view class="round-plans">
             <view wx:for="{{item.plans}}" wx:for-item="p" wx:key="index" class="round-plan-row">
-              <text class="round-plan-text">{{p.fromNickname}} → {{p.toNickname}}</text>
+              <text class="round-plan-text">{{p.fromNickname}} → {{p.toNickname}}{{p.confirmed ? ' ✓' : ''}}</text>
               <text class="round-plan-amount">¥{{p.amountText}}</text>
             </view>
           </view>
