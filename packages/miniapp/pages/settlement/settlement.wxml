@@ -1,8 +1,29 @@
 <view class="settlement-page">
-  <!-- 加载中 -->
+  <!-- 加载中：骨架屏 -->
   <view wx:if="{{loading}}" class="loading-container">
-    <view class="skeleton-card"></view>
-    <view class="skeleton-card"></view>
+    <!-- 结算范围横幅 -->
+    <view class="sk-banner">
+      <view class="sk-line sk-line-title"></view>
+      <view class="sk-line sk-line-sub"></view>
+    </view>
+    <!-- 净收支卡片 -->
+    <view class="glass-card section">
+      <view class="sk-line sk-line-head"></view>
+      <view class="sk-row" wx:for="{{[1,2,3]}}" wx:key="*this">
+        <view class="sk-avatar"></view>
+        <view class="sk-line sk-line-name"></view>
+        <view class="sk-line sk-line-amount"></view>
+      </view>
+    </view>
+    <!-- 转账方案卡片 -->
+    <view class="glass-card section">
+      <view class="sk-line sk-line-head"></view>
+      <view class="sk-plan" wx:for="{{[1,2]}}" wx:key="*this">
+        <view class="sk-avatar"></view>
+        <view class="sk-line sk-line-plan"></view>
+        <view class="sk-avatar"></view>
+      </view>
+    </view>
   </view>
 
   <block wx:else>
