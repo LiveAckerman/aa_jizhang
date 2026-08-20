@@ -140,9 +140,8 @@
               <view class="tx-title-row">
                 <text class="tx-cat">{{tx.categoryName}}</text>
                 <van-icon wx:if="{{tx.isPrivate}}" name="lock" size="13px" color="#8091a5" />
-                <text wx:if="{{tx.isSettled}}" class="tx-settled-tag">已结算</text>
+                <text class="tx-note">{{tx.note || tx.payerName + ' 付款'}}</text>
               </view>
-              <text class="tx-note">{{tx.note || tx.payerName + ' 付款'}}</text>
               <text wx:if="{{tx.myShareText}}" class="tx-myshare">我应付 ¥{{tx.myShareText}}</text>
             </view>
             <text class="tx-amount">¥{{tx.amountText}}</text>
@@ -150,5 +149,75 @@
         </view>
       </view>
     </view>
+
+    <!-- 已结算账单堆叠（复用 tx-item 完整样式，负 margin 层叠） -->
+    <block wx:if="{{settledStack.length > 0}}">
+      <view class="settled-stack" bindtap="onOpenSettledDrawer">
+        <view
+          wx:for="{{settledStack}}"
+          wx:key="id"
+          wx:for-item="tx"
+          class="glass-card tx-list settled-card {{index === 0 ? 'first' : ''}}"
+        >
+          <view class="tx-item">
+            <view class="tx-icon">
+              <van-icon name="{{tx.categoryIcon}}" size="22px" color="#4097a9" />
+            </view>
+            <view class="tx-mid">
+              <view class="tx-title-row">
+                <text class="tx-cat">{{tx.categoryName}}</text>
+                <text class="tx-settled-tag">已结算</text>
+                <text class="tx-note">{{tx.note || tx.payerName + ' 付款'}}</text>
+              </view>
+              <text wx:if="{{tx.myShareText}}" class="tx-myshare">我应付 ¥{{tx.myShareText}}</text>
+            </view>
+            <text class="tx-amount">¥{{tx.amountText}}</text>
+          </view>
+        </view>
+      </view>
+      <!-- 点击提示 -->
+      <view class="settled-hint" bindtap="onOpenSettledDrawer">
+        <van-icon name="records" size="14px" color="#8091a5" />
+        <text>{{settledList.length}} 笔已结算账单</text>
+        <van-icon name="arrow" size="14px" color="#8091a5" />
+      </view>
+    </block>
   </block>
+</view>
+
+<!-- 已结算账单抽屉 -->
+<view wx:if="{{showSettledDrawer}}" class="drawer-mask" bindtap="onCloseSettledDrawer">
+  <view class="drawer-panel" catchtap>
+    <view class="drawer-header">
+      <view class="drawer-handle"></view>
+      <text class="drawer-title">已结算账单（{{settledList.length}}）</text>
+      <van-icon name="cross" size="20px" color="#8091a5" bindtap="onCloseSettledDrawer" />
+    </view>
+    <scroll-view scroll-y class="drawer-scroll">
+      <view class="glass-card tx-list drawer-tx-list">
+        <view
+          wx:for="{{settledList}}"
+          wx:key="id"
+          wx:for-item="tx"
+          class="tx-item {{tx.isPrivate ? 'private' : ''}}"
+          data-id="{{tx.id}}"
+          bindtap="onTapTransaction"
+        >
+          <view class="tx-icon">
+            <van-icon name="{{tx.categoryIcon}}" size="22px" color="#4097a9" />
+          </view>
+          <view class="tx-mid">
+            <view class="tx-title-row">
+              <text class="tx-cat">{{tx.categoryName}}</text>
+              <van-icon wx:if="{{tx.isPrivate}}" name="lock" size="13px" color="#8091a5" />
+              <text class="tx-settled-tag">已结算</text>
+              <text class="tx-note">{{tx.note || tx.payerName + ' 付款'}}</text>
+            </view>
+            <text wx:if="{{tx.myShareText}}" class="tx-myshare">我应付 ¥{{tx.myShareText}}</text>
+          </view>
+          <text class="tx-amount">¥{{tx.amountText}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
 </view>

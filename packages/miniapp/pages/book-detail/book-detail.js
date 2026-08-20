@@ -14,7 +14,10 @@ Page({
     summary: { sharedTotal: 0, myShared: 0, myPrivate: 0, myTotal: 0 },
     summaryText: { sharedTotal: '0.00', myShared: '0.00', myPrivate: '0.00', myTotal: '0.00' },
     allTxs: [],       // 原始账单列表（未过滤）
-    groups: [],       // 按日期分组的流水（已按 filter 过滤）
+    groups: [],       // 未结算账单按日期分组
+    settledList: [],  // 已结算账单（抽屉全量）
+    settledStack: [], // 已结算堆叠展示（最多5条）
+    showSettledDrawer: false,
     txFilter: 'all',  // 账单筛选：all / shared(公账) / private(私账)
     filterStat: { count: 0, amountText: '0.00' }, // 当前筛选下的统计
     loading: true,
@@ -86,15 +89,56 @@ Page({
       if (filter === 'private') return t.type === 'private'
       return true
     })
-    // 统计：当前筛选下的笔数与总额
+    // 统计：当前筛选下的笔数与总额（含已结算，反映账本全貌）
     const totalCent = list.reduce((sum, t) => sum + (t.amount || 0), 0)
+
+    // 拆分：未结算按日期分组正常展示；已结算折叠成堆叠 + 抽屉
+    const unsettled = list.filter((t) => !t.settledRoundId)
+    const settled = list.filter((t) => !!t.settledRoundId)
+
+    const memberMap = {}
+    ;(this.data.members || []).forEach((m) => (memberMap[m.userId] = m.nickname))
+    const myUserId = this.data.myUserId
+    const settledList = settled.map((t) => this.decorateTx(t, memberMap, myUserId))
+
     this.setData({
-      groups: this.groupByDate(list),
+      groups: this.groupByDate(unsettled),
+      settledList,
+      settledStack: settledList.slice(0, 5),
       filterStat: {
         count: list.length,
         amountText: (totalCent / 100).toFixed(2),
       },
     })
+  },
+
+  // 打开/关闭已结算抽屉
+  onOpenSettledDrawer() {
+    this.setData({ showSettledDrawer: true })
+  },
+  onCloseSettledDrawer() {
+    this.setData({ showSettledDrawer: false })
+  },
+
+  // 给单条账单附加展示字段（供列表 / 堆叠 / 抽屉复用）
+  decorateTx(t, memberMap, myUserId) {
+    const cat = CATEGORY_MAP[t.category] || CATEGORY_MAP.other
+    // 计算"我应付"：公账取 splits 中当前用户的份额；私账不显示
+    let myShareText = ''
+    if (t.type !== 'private') {
+      const mine = (t.splits || []).find((s) => s.userId === myUserId)
+      if (mine) myShareText = (mine.amount / 100).toFixed(2)
+    }
+    return {
+      ...t,
+      amountText: (t.amount / 100).toFixed(2),
+      categoryName: cat.name,
+      categoryIcon: cat.icon,
+      payerName: memberMap[t.payerId] || '成员',
+      isPrivate: t.type === 'private',
+      isSettled: !!t.settledRoundId,
+      myShareText,
+    }
   },
 
   // 把流水按日期分组，附带展示字段
@@ -106,24 +150,7 @@ Page({
     txs.forEach((t) => {
       const d = t.spentAt ? t.spentAt.slice(0, 10) : ''
       if (!map[d]) map[d] = []
-      const cat = CATEGORY_MAP[t.category] || CATEGORY_MAP.other
-      // 计算"我应付"：公账取 splits 中当前用户的份额；私账不显示
-      // （列表已按参与人过滤，能看到的公账当前用户必然参与，无需"未参与"标记）
-      let myShareText = ''
-      if (t.type !== 'private') {
-        const mine = (t.splits || []).find((s) => s.userId === myUserId)
-        if (mine) myShareText = (mine.amount / 100).toFixed(2)
-      }
-      map[d].push({
-        ...t,
-        amountText: (t.amount / 100).toFixed(2),
-        categoryName: cat.name,
-        categoryIcon: cat.icon,
-        payerName: memberMap[t.payerId] || '成员',
-        isPrivate: t.type === 'private',
-        isSettled: !!t.settledRoundId,
-        myShareText,
-      })
+      map[d].push(this.decorateTx(t, memberMap, myUserId))
     })
     return Object.keys(map)
       .sort((a, b) => (a < b ? 1 : -1))
