@@ -209,6 +209,7 @@
   align-items: center;
   justify-content: center;
   margin-right: 20rpx;
+  flex-shrink: 0;
 }
 
 .tx-item.private .tx-icon {
@@ -217,8 +218,10 @@
 
 .tx-mid {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .tx-title-row {
@@ -251,8 +254,8 @@
 .settled-card {
   position: relative;
   margin-bottom: 0;
-  /* 后一张上移压在前一张底部，露出前一张标题行区域 */
-  margin-top: -110rpx;
+  /* 后一张上移压在前一张底部，只露出前一张标题行（约 88rpx） */
+  margin-top: -72rpx;
   border: 2rpx solid rgba(128, 145, 165, 0.10);
   /* 顶部投影：本卡压在下方卡片之上（DOM 后渲染的天然层级更高） */
   box-shadow: 0 -6rpx 18rpx rgba(47, 65, 89, 0.08);
@@ -362,6 +365,8 @@
   font-size: 32rpx;
   font-weight: 600;
   color: var(--color-accent);
+  flex-shrink: 0;
+  margin-left: 16rpx;
 }
 
 .empty-tx {
