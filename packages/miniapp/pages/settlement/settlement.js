@@ -212,13 +212,15 @@ Page({
         try {
           const payload = { bookId: this.data.bookId, type: this.data.mode }
           if (this.data.mode === 'partial') payload.txIds = this.data.partialTxIds
-          await api.settle(payload)
+          const result = await api.settle(payload)
           if (this.data.mode === 'partial') wx.removeStorageSync('partialSettleData')
           wx.hideLoading()
           this.setData({ submitting: false })
           wx.showToast({ title: '已生成结算', icon: 'success' })
-          // 留在页面进入逐笔确认态
-          this.loadData()
+          // 前端直接切到进行态，不重新 loadData。
+          // 后端返回 { round, settlements }，组装成 applyActiveRound 需要的结构
+          this.applyActiveRound({ ...result.round, settlements: result.settlements })
+          this.loadRounds() // 只刷新历史记录
         } catch (e) {
           wx.hideLoading()
           this.setData({ submitting: false })
