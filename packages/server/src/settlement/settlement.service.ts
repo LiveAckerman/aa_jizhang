@@ -13,12 +13,7 @@ import { BookService } from '../book/book.service'
 import { CreateSettlementDto } from './dto/create-settlement.dto'
 import { BatchCreateSettlementDto } from './dto/batch-create-settlement.dto'
 import { SettleDto } from './dto/settle.dto'
-import {
-  calculateBalances,
-  calculateOptimalSettlement,
-  TransferPlan,
-  UserBalance,
-} from './settlement.algorithm'
+import { calculateBalances, calculateOptimalSettlement } from './settlement.algorithm'
 
 @Injectable()
 export class SettlementService {
@@ -97,37 +92,39 @@ export class SettlementService {
    */
   async settle(userId: string, dto: SettleDto) {
     await this.bookService.assertMember(dto.bookId, userId)
-
-    // 1. 确定本轮账单集合
-    const where: any = {
-      bookId: dto.bookId,
-      type: 'shared',
-      settledRoundId: IsNull(),
-    }
-    if (dto.type === 'partial') {
-      if (!dto.txIds || dto.txIds.length === 0) {
-        throw new BadRequestException('请选择要结算的账单')
-      }
-      where.id = In(dto.txIds)
-    }
-    const txs = await this.txRepo.find({ where })
-
-    if (dto.type === 'partial' && txs.length !== dto.txIds!.length) {
-      throw new BadRequestException('部分账单已被结算或不存在，请刷新后重试')
-    }
-    if (txs.length === 0) {
-      throw new BadRequestException('没有可结算的账单')
+    if (dto.type === 'partial' && (!dto.txIds || dto.txIds.length === 0)) {
+      throw new BadRequestException('请选择要结算的账单')
     }
 
-    // 2. 计算方案
-    const plan = this.computePlanForTxs(txs)
-    const txIds = txs.map((t) => t.id)
-
-    // 3. 事务：建轮次 + 标记账单 + 生成已完成结算
     const queryRunner = this.dataSource.createQueryRunner()
-    await queryRunner.connect()
-    await queryRunner.startTransaction()
     try {
+      await queryRunner.connect()
+      await queryRunner.startTransaction()
+
+      // 1. 事务内加悲观写锁读取候选账单，防止并发结算重复结算同一批账单
+      const qb = queryRunner.manager
+        .createQueryBuilder(Transaction, 't')
+        .setLock('pessimistic_write')
+        .where('t.bookId = :bookId', { bookId: dto.bookId })
+        .andWhere("t.type = 'shared'")
+        .andWhere('t.settledRoundId IS NULL')
+      if (dto.type === 'partial') {
+        qb.andWhere('t.id IN (:...ids)', { ids: dto.txIds })
+      }
+      const txs = await qb.getMany()
+
+      if (dto.type === 'partial' && txs.length !== dto.txIds!.length) {
+        throw new BadRequestException('部分账单已被结算或不存在，请刷新后重试')
+      }
+      if (txs.length === 0) {
+        throw new BadRequestException('没有可结算的账单')
+      }
+
+      // 2. 计算方案
+      const plan = this.computePlanForTxs(txs)
+      const txIds = txs.map((t) => t.id)
+
+      // 3. 建轮次
       const round = await queryRunner.manager.save(
         queryRunner.manager.create(SettlementRound, {
           bookId: dto.bookId,
@@ -139,12 +136,17 @@ export class SettlementService {
         }),
       )
 
-      await queryRunner.manager.update(
+      // 4. 条件更新：只标记仍未结算的账单，校验影响行数防并发
+      const updateRes = await queryRunner.manager.update(
         Transaction,
-        { id: In(txIds) },
+        { id: In(txIds), settledRoundId: IsNull() },
         { settledRoundId: round.id },
       )
+      if (updateRes.affected !== txIds.length) {
+        throw new BadRequestException('部分账单已被结算，请刷新后重试')
+      }
 
+      // 5. 生成已完成结算记录
       const settlements = plan.transferPlans.map((p) =>
         queryRunner.manager.create(Settlement, {
           bookId: dto.bookId,
@@ -161,10 +163,10 @@ export class SettlementService {
       await queryRunner.commitTransaction()
       return { round, settlements }
     } catch (e) {
-      await queryRunner.rollbackTransaction()
+      if (queryRunner.isTransactionActive) await queryRunner.rollbackTransaction()
       throw e
     } finally {
-      await queryRunner.release()
+      if (!queryRunner.isReleased) await queryRunner.release()
     }
   }
 
@@ -177,9 +179,9 @@ export class SettlementService {
     await this.bookService.assertMember(round.bookId, userId)
 
     const queryRunner = this.dataSource.createQueryRunner()
-    await queryRunner.connect()
-    await queryRunner.startTransaction()
     try {
+      await queryRunner.connect()
+      await queryRunner.startTransaction()
       await queryRunner.manager.update(
         Transaction,
         { settledRoundId: roundId },
@@ -190,10 +192,10 @@ export class SettlementService {
       await queryRunner.commitTransaction()
       return { reverted: true }
     } catch (e) {
-      await queryRunner.rollbackTransaction()
+      if (queryRunner.isTransactionActive) await queryRunner.rollbackTransaction()
       throw e
     } finally {
-      await queryRunner.release()
+      if (!queryRunner.isReleased) await queryRunner.release()
     }
   }
 
@@ -213,32 +215,6 @@ export class SettlementService {
     return rounds.map((r) => ({
       ...r,
       settlements: settlements.filter((s) => s.roundId === r.id),
-    }))
-  }
-
-  /**
-   * 调整余额：减去已完成的结算金额
-   */
-  private adjustBalancesWithSettlements(
-    balances: UserBalance[],
-    settlements: Settlement[],
-  ): UserBalance[] {
-    const balanceMap = new Map<string, number>()
-    balances.forEach((b) => balanceMap.set(b.userId, b.balance))
-
-    for (const s of settlements) {
-      // 付款方：应付减少（余额增加）
-      const fromBalance = balanceMap.get(s.fromUserId) || 0
-      balanceMap.set(s.fromUserId, fromBalance + s.amount)
-
-      // 收款方：应收减少（余额减少）
-      const toBalance = balanceMap.get(s.toUserId) || 0
-      balanceMap.set(s.toUserId, toBalance - s.amount)
-    }
-
-    return Array.from(balanceMap.entries()).map(([userId, balance]) => ({
-      userId,
-      balance,
     }))
   }
 
@@ -331,6 +307,10 @@ export class SettlementService {
     if (settlement.status !== 'completed') {
       throw new BadRequestException('只有已完成的结算才能撤回')
     }
+    // 轮次结算不能走遗留单条撤回，必须用 revertRound（否则会留下孤儿账单标记）
+    if (settlement.roundId != null) {
+      throw new BadRequestException('该结算属于某次结算轮次，请在结算记录中撤销整轮')
+    }
 
     // 撤回即删除该已完成记录，balance 自然恢复（calculate 只按 completed 记录调整余额）
     await this.settlementRepo.delete({ id: settlementId })
@@ -344,8 +324,9 @@ export class SettlementService {
   async revertByUser(bookId: string, userId: string, targetUserId?: string) {
     await this.bookService.assertMember(bookId, userId)
 
+    // 只处理遗留的非轮次结算（roundId 为空）；轮次结算须走 revertRound
     const completed = await this.settlementRepo.find({
-      where: { bookId, status: 'completed' },
+      where: { bookId, status: 'completed', roundId: IsNull() },
     })
     if (completed.length === 0) {
       throw new BadRequestException('没有可撤回的已完成结算')
@@ -419,10 +400,9 @@ export class SettlementService {
 
     // 使用事务批量创建并完成
     const queryRunner = this.dataSource.createQueryRunner()
-    await queryRunner.connect()
-    await queryRunner.startTransaction()
-
     try {
+      await queryRunner.connect()
+      await queryRunner.startTransaction()
       const createdSettlements: Settlement[] = []
 
       for (const item of dto.settlements) {
@@ -441,10 +421,10 @@ export class SettlementService {
       await queryRunner.commitTransaction()
       return { count: createdSettlements.length, settlements: createdSettlements }
     } catch (error) {
-      await queryRunner.rollbackTransaction()
+      if (queryRunner.isTransactionActive) await queryRunner.rollbackTransaction()
       throw error
     } finally {
-      await queryRunner.release()
+      if (!queryRunner.isReleased) await queryRunner.release()
     }
   }
 }

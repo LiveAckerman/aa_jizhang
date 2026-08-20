@@ -17,6 +17,7 @@ Page({
     rounds: [],           // 已有结算轮次（历史）
     loading: true,
     submitting: false,
+    reverting: false,
   },
 
   onLoad(query) {
@@ -111,6 +112,8 @@ Page({
       wx.showToast({ title: '没有可结算的账单', icon: 'none' })
       return
     }
+    // 提前上锁，防止确认前连点弹出多个 modal
+    this.setData({ submitting: true })
     const tip =
       this.data.mode === 'partial'
         ? `确认结算所选 ${this.data.txCount} 笔账单吗？`
@@ -121,8 +124,10 @@ Page({
       content: tip,
       confirmColor: '#4097a9',
       success: async (res) => {
-        if (!res.confirm) return
-        this.setData({ submitting: true })
+        if (!res.confirm) {
+          this.setData({ submitting: false })
+          return
+        }
         wx.showLoading({ title: '结算中...', mask: true })
         try {
           const payload = { bookId: this.data.bookId, type: this.data.mode }
@@ -131,37 +136,51 @@ Page({
           if (this.data.mode === 'partial') wx.removeStorageSync('partialSettleData')
           wx.hideLoading()
           wx.showToast({ title: '结算完成', icon: 'success' })
-          setTimeout(() => wx.navigateBack(), 800)
+          // 部分结算链路 book-detail→settle-select→settlement，回退 2 级到账本；
+          // 全部结算链路 book-detail→settlement，回退 1 级。账本页 onShow 会自动刷新。
+          const delta = this.data.mode === 'partial' ? 2 : 1
+          setTimeout(() => wx.navigateBack({ delta }), 800)
         } catch (e) {
           wx.hideLoading()
           this.setData({ submitting: false })
           wx.showToast({ title: (e && e.message) || '结算失败', icon: 'none' })
         }
       },
+      fail: () => this.setData({ submitting: false }),
     })
   },
 
   // 撤销某一轮结算
   onRevertRound(e) {
+    if (this.data.reverting) return
     const { id, seq } = e.currentTarget.dataset
+    this.setData({ reverting: true })
     wx.showModal({
       title: '撤销结算',
       content: `确认撤销「第 ${seq} 次结算」吗？该轮账单将恢复为未结算。`,
       confirmText: '撤销',
       confirmColor: '#fa9583',
       success: async (res) => {
-        if (!res.confirm) return
+        if (!res.confirm) {
+          this.setData({ reverting: false })
+          return
+        }
         wx.showLoading({ title: '撤销中...', mask: true })
         try {
           await api.revertSettlementRound(id)
           wx.hideLoading()
           wx.showToast({ title: '已撤销', icon: 'success' })
-          setTimeout(() => this.loadData(), 600)
+          setTimeout(() => {
+            this.setData({ reverting: false })
+            this.loadData()
+          }, 600)
         } catch (err) {
           wx.hideLoading()
+          this.setData({ reverting: false })
           wx.showToast({ title: (err && err.message) || '撤销失败', icon: 'none' })
         }
       },
+      fail: () => this.setData({ reverting: false }),
     })
   },
 })

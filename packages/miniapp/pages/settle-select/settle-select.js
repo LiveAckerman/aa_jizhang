@@ -32,6 +32,14 @@ Page({
     this.loadData()
   },
 
+  onShow() {
+    // 从结算页返回（未确认）时刷新，避免展示已结算的陈旧账单；首次 onLoad 已触发一次，跳过
+    if (this.data.bookId && !this.data.loading && this._loadedOnce) {
+      this._recalc({}) // 清空勾选，防止对已变更列表的旧选择
+      this.loadData()
+    }
+  },
+
   async loadData() {
     this.setData({ loading: true })
     try {
@@ -39,6 +47,7 @@ Page({
         api.bookDetail(this.data.bookId),
         api.listTransactions(this.data.bookId),
       ])
+      this._loadedOnce = true
       const memberMap = {}
       ;(book.members || []).forEach((m) => (memberMap[m.userId] = m.nickname))
       // 只列未结算的公账
