@@ -88,6 +88,58 @@ export class SettlementController {
   }
 
   /**
+   * 取账本进行中的轮次（存在待确认转账）；无则 data=null
+   * GET /api/settlements/active-round?bookId=xxx
+   */
+  @Get('active-round')
+  async activeRound(
+    @CurrentUser('sub') userId: string,
+    @Query('bookId') bookId: string,
+  ) {
+    const data = await this.settlementService.getActiveRound(bookId, userId)
+    return { code: 0, message: 'ok', data }
+  }
+
+  /**
+   * 一键确认本轮中与我相关的待确认转账
+   * POST /api/settlements/rounds/:id/confirm-mine
+   */
+  @Post('rounds/:id/confirm-mine')
+  async confirmMine(
+    @CurrentUser('sub') userId: string,
+    @Param('id') id: string,
+  ) {
+    const data = await this.settlementService.confirmMyTransfers(id, userId)
+    return { code: 0, message: 'ok', data }
+  }
+
+  /**
+   * 确认单笔转账收款
+   * POST /api/settlements/transfers/:id/confirm
+   */
+  @Post('transfers/:id/confirm')
+  async confirmTransfer(
+    @CurrentUser('sub') userId: string,
+    @Param('id') id: string,
+  ) {
+    const data = await this.settlementService.confirmTransfer(id, userId)
+    return { code: 0, message: 'ok', data }
+  }
+
+  /**
+   * 撤销单笔已确认转账
+   * POST /api/settlements/transfers/:id/revert
+   */
+  @Post('transfers/:id/revert')
+  async revertTransfer(
+    @CurrentUser('sub') userId: string,
+    @Param('id') id: string,
+  ) {
+    const data = await this.settlementService.revertTransfer(id, userId)
+    return { code: 0, message: 'ok', data }
+  }
+
+  /**
    * 创建结算记录
    * POST /api/settlements
    */

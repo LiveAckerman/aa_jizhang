@@ -96,6 +96,12 @@ export class SettlementService {
       throw new BadRequestException('请选择要结算的账单')
     }
 
+    // 守卫：同一账本只允许一个"进行中"轮次（存在待确认转账的轮次）
+    const activeRound = await this.findActiveRound(dto.bookId)
+    if (activeRound) {
+      throw new BadRequestException('上一次结算还有未确认的转账，请先处理')
+    }
+
     const queryRunner = this.dataSource.createQueryRunner()
     try {
       await queryRunner.connect()
@@ -146,16 +152,16 @@ export class SettlementService {
         throw new BadRequestException('部分账单已被结算，请刷新后重试')
       }
 
-      // 5. 生成已完成结算记录
+      // 5. 生成待确认（pending）转账记录 —— 由收/付款方逐笔确认收款
       const settlements = plan.transferPlans.map((p) =>
         queryRunner.manager.create(Settlement, {
           bookId: dto.bookId,
           fromUserId: p.fromUserId,
           toUserId: p.toUserId,
           amount: p.amount,
-          status: 'completed' as const,
+          status: 'pending' as const,
           roundId: round.id,
-          completedAt: new Date(),
+          completedAt: null,
         }),
       )
       if (settlements.length) await queryRunner.manager.save(settlements)
@@ -216,6 +222,99 @@ export class SettlementService {
       ...r,
       settlements: settlements.filter((s) => s.roundId === r.id),
     }))
+  }
+
+  /**
+   * 查找账本"进行中"的轮次（存在待确认 pending 转账）。无则返回 null。
+   */
+  private async findActiveRound(bookId: string): Promise<SettlementRound | null> {
+    const rounds = await this.roundRepo.find({ where: { bookId } })
+    if (rounds.length === 0) return null
+    const pendings = await this.settlementRepo.find({
+      where: { roundId: In(rounds.map((r) => r.id)), status: 'pending' },
+    })
+    if (pendings.length === 0) return null
+    const activeId = pendings[0].roundId
+    return rounds.find((r) => r.id === activeId) || null
+  }
+
+  /**
+   * 取账本进行中轮次及其转账明细（供前端"进行态"展示）。无则返回 null。
+   */
+  async getActiveRound(bookId: string, userId: string) {
+    await this.bookService.assertMember(bookId, userId)
+    const round = await this.findActiveRound(bookId)
+    if (!round) return null
+    const settlements = await this.settlementRepo.find({
+      where: { roundId: round.id },
+      order: { createdAt: 'ASC' },
+    })
+    return { ...round, settlements }
+  }
+
+  /**
+   * 确认单笔转账收款（仅付款方或收款方可操作）。
+   * 若该确认后本轮已无 pending，轮次自动视为完成（由前端据 settlements 判断）。
+   */
+  async confirmTransfer(settlementId: string, userId: string) {
+    const s = await this.settlementRepo.findOne({ where: { id: settlementId } })
+    if (!s) throw new NotFoundException('转账记录不存在')
+    if (s.roundId == null) {
+      throw new BadRequestException('该记录不属于结算轮次')
+    }
+    await this.bookService.assertMember(s.bookId, userId)
+    if (s.fromUserId !== userId && s.toUserId !== userId) {
+      throw new ForbiddenException('只能确认与自己相关的转账')
+    }
+    if (s.status === 'completed') return s // 幂等
+    s.status = 'completed'
+    s.completedAt = new Date()
+    await this.settlementRepo.save(s)
+    return s
+  }
+
+  /**
+   * 一键确认本轮中与当前用户相关的所有待确认转账
+   */
+  async confirmMyTransfers(roundId: string, userId: string) {
+    const round = await this.roundRepo.findOne({ where: { id: roundId } })
+    if (!round) throw new NotFoundException('结算轮次不存在')
+    await this.bookService.assertMember(round.bookId, userId)
+
+    const mine = await this.settlementRepo.find({
+      where: { roundId, status: 'pending' },
+    })
+    const toConfirm = mine.filter(
+      (s) => s.fromUserId === userId || s.toUserId === userId,
+    )
+    if (toConfirm.length === 0) return { count: 0 }
+    const now = new Date()
+    toConfirm.forEach((s) => {
+      s.status = 'completed'
+      s.completedAt = now
+    })
+    await this.settlementRepo.save(toConfirm)
+    return { count: toConfirm.length }
+  }
+
+  /**
+   * 撤销单笔已确认转账（恢复 pending，仅付款方或收款方可操作）
+   */
+  async revertTransfer(settlementId: string, userId: string) {
+    const s = await this.settlementRepo.findOne({ where: { id: settlementId } })
+    if (!s) throw new NotFoundException('转账记录不存在')
+    if (s.roundId == null) {
+      throw new BadRequestException('该记录不属于结算轮次')
+    }
+    await this.bookService.assertMember(s.bookId, userId)
+    if (s.fromUserId !== userId && s.toUserId !== userId) {
+      throw new ForbiddenException('只能撤销与自己相关的转账')
+    }
+    if (s.status !== 'completed') return s // 幂等
+    s.status = 'pending'
+    s.completedAt = null
+    await this.settlementRepo.save(s)
+    return s
   }
 
   /**
