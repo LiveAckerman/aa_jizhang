@@ -55,6 +55,14 @@ Page({
     }
     wx.setNavigationBarTitle({ title: '统计' })
     setTabBarSelected(this, 1)
+
+    // 从账本详情跳转过来：定位到指定账本（switchTab 无法传参，走全局变量）
+    const target = app.globalData.statsTargetBookId
+    if (target) {
+      app.globalData.statsTargetBookId = null
+      this.setData({ bookId: target })
+    }
+
     this.loadBooks()
     this.load()
   },
@@ -65,9 +73,10 @@ Page({
       const opts = [{ id: 'all', name: '全部账本' }].concat(
         (books || []).map((b) => ({ id: b.id, name: b.name })),
       )
-      // 保留当前选中项
+      // 保留/应用当前选中项（可能来自账本详情跳转）
       const idx = Math.max(0, opts.findIndex((o) => o.id === this.data.bookId))
-      this.setData({ bookOptions: opts, bookIndex: idx })
+      const cur = opts[idx] || opts[0]
+      this.setData({ bookOptions: opts, bookIndex: idx, bookLabel: cur.name })
     } catch (e) {}
   },
 

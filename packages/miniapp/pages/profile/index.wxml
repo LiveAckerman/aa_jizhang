@@ -40,6 +40,22 @@
         </view>
       </view>
 
+      <!-- 意见反馈：微信客服会话（open-type="contact"，需 button） -->
+      <button
+        class="list-item list-item-btn"
+        open-type="contact"
+        bindcontact="onContact"
+        session-from="feedback"
+      >
+        <view class="list-item-content">
+          <view class="list-icon-wrap accent"><van-icon name="service-o" size="20px" color="#fff" /></view>
+          <text class="list-item-label">意见反馈</text>
+        </view>
+        <view class="list-item-right">
+          <van-icon name="arrow" size="14px" color="#c4c4c4" />
+        </view>
+      </button>
+
       <view class="list-item" bindtap="goToVersion">
         <view class="list-item-content">
           <view class="list-icon-wrap gray"><van-icon name="setting-o" size="20px" color="#fff" /></view>

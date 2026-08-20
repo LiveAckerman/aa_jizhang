@@ -498,7 +498,11 @@ page {
 /* ── 已归档抽屉 ── */
 .drawer-mask {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
   background: rgba(0, 0, 0, 0.45);
   z-index: 1001; /* 高于 tabbar(1000)，配合 tabbar hide 双保险 */
   display: flex;
@@ -506,7 +510,8 @@ page {
 }
 
 .drawer-panel {
-  width: 100%;
+  width: 100vw;
+  box-sizing: border-box;
   height: 90vh;
   background: #f5f6fa;
   border-radius: 32rpx 32rpx 0 0;
@@ -544,6 +549,8 @@ page {
 
 .drawer-scroll {
   flex: 1;
+  width: 100%;
+  box-sizing: border-box;
   padding: 0 24rpx 24rpx;
   overflow: hidden;
 }
@@ -555,6 +562,8 @@ page {
   padding: 20rpx 24rpx;
   margin-bottom: 16rpx;
   border-radius: 24rpx;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .drawer-book-cover {

@@ -174,6 +174,8 @@ Page({
   },
 
   onStatistics() {
+    // 统计页是 tabbar 页，switchTab 不支持 query，用全局变量传递目标账本
+    getApp().globalData.statsTargetBookId = this.data.id
     wx.switchTab({ url: '/pages/statistics/statistics' })
   },
 

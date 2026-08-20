@@ -124,6 +124,26 @@ page {
 .list-icon-wrap.primary { background: linear-gradient(135deg, #4097a9, #5fb5c4); }
 .list-icon-wrap.info    { background: linear-gradient(135deg, #5B8CFF, #6ea5ff); }
 .list-icon-wrap.gray    { background: linear-gradient(135deg, #8091a5, #a1b0c3); }
+.list-icon-wrap.accent  { background: linear-gradient(135deg, #fa9583, #ffb59f); }
+
+/* 客服 button 重置为与 list-item 一致的外观 */
+.list-item-btn {
+  display: flex !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 32rpx !important;
+  box-sizing: border-box !important;
+  line-height: normal;
+  font-size: inherit;
+  font-weight: normal;
+  color: inherit;
+  background: transparent;
+  border-radius: 0;
+  text-align: left;
+}
+.list-item-btn::after {
+  border: none;
+}
 
 .list-item-label {
   font-size: 34rpx;

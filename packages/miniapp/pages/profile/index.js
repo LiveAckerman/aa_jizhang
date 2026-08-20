@@ -30,6 +30,11 @@ Page({
     wx.showToast({ title: '当前版本 v1.0.0', icon: 'none' })
   },
 
+  // 微信客服会话回调（用户在会话内点击卡片消息等场景触发，此处仅留空占位）
+  onContact(e) {
+    // e.detail 含 path / query，可按需处理，暂无需额外逻辑
+  },
+
   logout() {
     wx.showModal({
       title: '提示',
