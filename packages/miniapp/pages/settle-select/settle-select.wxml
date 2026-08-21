@@ -18,7 +18,7 @@
     </view>
   </block>
 
-  <block wx:elif="{{groups.length === 0}}">
+  <block wx:elif="{{rawItems.length === 0}}">
     <view class="empty-state">
       <van-icon name="checked" size="64px" color="#52c41a" />
       <text class="empty-text">没有可结算的账单</text>
@@ -27,14 +27,34 @@
   </block>
 
   <block wx:else>
-    <!-- 全选栏 -->
-    <view class="select-all-bar" bindtap="onToggleAll">
-      <van-icon
-        name="{{allChecked ? 'checked' : 'circle'}}"
-        size="22px"
-        color="{{allChecked ? '#4097a9' : '#c8c9cc'}}"
-      />
-      <text>全选</text>
+    <!-- 工具栏：左侧全选 + 右侧搜索 -->
+    <view class="toolbar">
+      <view class="select-all-bar" bindtap="onToggleAll">
+        <van-icon
+          name="{{allChecked ? 'checked' : 'circle'}}"
+          size="22px"
+          color="{{allChecked ? '#4097a9' : '#c8c9cc'}}"
+        />
+        <text>全选</text>
+      </view>
+      <view class="search-box">
+        <van-icon name="search" size="16px" color="#8091a5" />
+        <input
+          class="search-input"
+          placeholder="搜索分类 / 备注"
+          placeholder-class="search-input-ph"
+          value="{{keyword}}"
+          bindinput="onSearch"
+          confirm-type="search"
+        />
+        <van-icon wx:if="{{keyword}}" name="clear" size="16px" color="#c8c9cc" catchtap="onClearSearch" />
+      </view>
+    </view>
+
+    <!-- 搜索无结果 -->
+    <view wx:if="{{groups.length === 0}}" class="search-empty">
+      <van-icon name="search" size="48px" color="#c8c9cc" />
+      <text class="search-empty-text">没有匹配「{{keyword}}」的账单</text>
     </view>
 
     <!-- 账单分组列表 -->
@@ -70,7 +90,7 @@
   </block>
 
   <!-- 底部确认栏 -->
-  <view wx:if="{{!loading && groups.length > 0}}" class="footer-bar">
+  <view wx:if="{{!loading && rawItems.length > 0}}" class="footer-bar">
     <view class="footer-info">
       <text class="footer-count">已选 {{checkedCount}} 笔</text>
       <text class="footer-amount">¥{{checkedAmountText}}</text>

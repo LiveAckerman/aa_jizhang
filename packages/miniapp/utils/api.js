@@ -82,6 +82,12 @@ const api = {
   confirmMyTransfers: (roundId) =>
     request({ url: `/settlements/rounds/${roundId}/confirm-mine`, method: 'POST' }),
 
+  // 按人结算：待收款/待支付明细
+  settleByPerson: (bookId) => request({ url: `/settlements/by-person?bookId=${bookId}` }),
+  // 按人结算：结清我与某成员之间的全部账单份额
+  settlePersonDebt: (bookId, otherUserId) =>
+    request({ url: '/settlements/settle-person', method: 'POST', data: { bookId, otherUserId } }),
+
   // ===== OCR识别 =====
   ocrRecognizeReceipt: (filePath, bookId) => {
     return new Promise((resolve, reject) => {

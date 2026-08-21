@@ -8,7 +8,9 @@ Page({
     bookName: '账本',
     myUserId: '',
     memberMap: {},        // userId -> nickname
-    groups: [],           // 按日期分组的未结算公账
+    rawItems: [],         // 全部未结算公账（已附展示字段，未分组）
+    groups: [],           // 按日期分组（经关键词过滤后）
+    keyword: '',          // 搜索关键词（分类名 / 备注）
     checkedMap: {},        // txId -> true
     checkedCount: 0,
     checkedAmountText: '0.00',
@@ -50,39 +52,64 @@ Page({
       this._loadedOnce = true
       const memberMap = {}
       ;(book.members || []).forEach((m) => (memberMap[m.userId] = m.nickname))
-      // 只列未结算的公账
+      // 只列未结算的公账，先转成带展示字段的扁平列表
       const list = (txs || []).filter(
         (t) => t.type !== 'private' && !t.settledRoundId,
       )
-      this.setData({
-        memberMap,
-        groups: this.groupByDate(list),
-        loading: false,
+      const rawItems = list.map((t) => {
+        const cat = CATEGORY_MAP[t.category] || CATEGORY_MAP.other
+        return {
+          id: t.id,
+          amount: t.amount,
+          amountText: (t.amount / 100).toFixed(2),
+          spentAt: t.spentAt || '',
+          categoryName: cat.name,
+          categoryIcon: cat.icon,
+          note: t.note || (memberMap[t.payerId] || '成员') + ' 付款',
+        }
       })
+      this.setData({ memberMap, rawItems, loading: false })
+      this.applyFilter()
     } catch (e) {
       wx.showToast({ title: (e && e.message) || '加载失败', icon: 'none' })
       this.setData({ loading: false })
     }
   },
 
-  groupByDate(txs) {
+  // 搜索输入：模糊匹配分类名 + 备注
+  onSearch(e) {
+    this.setData({ keyword: e.detail.value })
+    this.applyFilter()
+  },
+
+  onClearSearch() {
+    this.setData({ keyword: '' })
+    this.applyFilter()
+  },
+
+  // 按关键词过滤 rawItems 并按日期分组；过滤后清理失效的勾选
+  applyFilter() {
+    const kw = (this.data.keyword || '').trim().toLowerCase()
+    const list = kw
+      ? this.data.rawItems.filter(
+          (it) =>
+            (it.categoryName || '').toLowerCase().includes(kw) ||
+            (it.note || '').toLowerCase().includes(kw),
+        )
+      : this.data.rawItems
+
+    // 按日期分组
     const map = {}
-    txs.forEach((t) => {
-      const d = t.spentAt ? t.spentAt.slice(0, 10) : ''
+    list.forEach((it) => {
+      const d = it.spentAt ? it.spentAt.slice(0, 10) : ''
       if (!map[d]) map[d] = []
-      const cat = CATEGORY_MAP[t.category] || CATEGORY_MAP.other
-      map[d].push({
-        id: t.id,
-        amount: t.amount,
-        amountText: (t.amount / 100).toFixed(2),
-        categoryName: cat.name,
-        categoryIcon: cat.icon,
-        note: t.note || (this.data.memberMap[t.payerId] || '成员') + ' 付款',
-      })
+      map[d].push(it)
     })
-    return Object.keys(map)
+    const groups = Object.keys(map)
       .sort((a, b) => (a < b ? 1 : -1))
       .map((date) => ({ date, items: map[date] }))
+
+    this.setData({ groups }, () => this._recalc(this.data.checkedMap))
   },
 
   // 收集所有账单 id（扁平）
@@ -92,24 +119,25 @@ Page({
     return ids
   },
 
-  // 计算选中数量与金额
+  // 计算选中数量与金额：以 rawItems 为准（含被搜索隐藏但仍勾选的项）
   _recalc(checkedMap) {
     let count = 0
     let amount = 0
-    this.data.groups.forEach((g) =>
-      g.items.forEach((it) => {
-        if (checkedMap[it.id]) {
-          count += 1
-          amount += it.amount
-        }
-      }),
-    )
-    const total = this._allIds().length
+    this.data.rawItems.forEach((it) => {
+      if (checkedMap[it.id]) {
+        count += 1
+        amount += it.amount
+      }
+    })
+    // allChecked 只反映「当前可见项是否全选」，方便搜索后对结果集全选
+    const visibleIds = this._allIds()
+    const allVisibleChecked =
+      visibleIds.length > 0 && visibleIds.every((id) => checkedMap[id])
     this.setData({
       checkedMap,
       checkedCount: count,
       checkedAmountText: (amount / 100).toFixed(2),
-      allChecked: total > 0 && count === total,
+      allChecked: allVisibleChecked,
     })
   },
 

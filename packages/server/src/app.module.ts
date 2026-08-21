@@ -19,6 +19,7 @@ import { Transaction } from './transaction/transaction.entity'
 import { TransactionLog } from './transaction/transaction-log.entity'
 import { Settlement } from './settlement/settlement.entity'
 import { SettlementRound } from './settlement/settlement-round.entity'
+import { TxShareSettlement } from './settlement/tx-share-settlement.entity'
 
 @Module({
   imports: [
@@ -37,7 +38,7 @@ import { SettlementRound } from './settlement/settlement-round.entity'
         username: config.get('DB_USERNAME'),
         password: config.get('DB_PASSWORD'),
         database: config.get('DB_DATABASE'),
-        entities: [User, Book, BookMember, BookGroup, Transaction, TransactionLog, Settlement, SettlementRound],
+        entities: [User, Book, BookMember, BookGroup, Transaction, TransactionLog, Settlement, SettlementRound, TxShareSettlement],
         synchronize: true, // 开发环境自动建表；生产环境应关闭并用迁移
         // 断线重连：热重载 / 网络抖动后自动重建连接，避免复用已被服务端关闭的死连接
         keepConnectionAlive: true,

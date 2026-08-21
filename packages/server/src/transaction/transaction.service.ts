@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Transaction } from './transaction.entity'
 import { TransactionLog, FieldChange } from './transaction-log.entity'
+import { TxShareSettlement } from '../settlement/tx-share-settlement.entity'
 import { CreateTransactionDto } from './dto/create-transaction.dto'
 import { UpdateTransactionDto } from './dto/update-transaction.dto'
 import { computeSplits } from './split.util'
@@ -40,6 +41,8 @@ export class TransactionService {
     private readonly txRepo: Repository<Transaction>,
     @InjectRepository(TransactionLog)
     private readonly logRepo: Repository<TransactionLog>,
+    @InjectRepository(TxShareSettlement)
+    private readonly shareRepo: Repository<TxShareSettlement>,
     private readonly bookService: BookService,
   ) {}
 
@@ -353,10 +356,18 @@ export class TransactionService {
     await this.bookService.assertMember(bookId, userId)
     const rows = await this.txRepo.find({ where: { bookId } })
 
+    // 按人结算已结清的份额集合，键 = txId::debtorUserId（这些份额不再计入待收/待付）
+    const shares = await this.shareRepo.find({ where: { bookId } })
+    const settledShare = new Set(
+      shares.map((s) => `${s.transactionId}::${s.debtorUserId}`),
+    )
+
     // sharedTotal：仅累加「当前用户参与」的公账整笔金额（每人看到的公账不同）
     let sharedTotal = 0
     let myShared = 0
     let myPrivate = 0
+    // 未结算公账的净头寸：付款方视角 +（垫付他人份额），参与方视角 -（自己应付份额）
+    let netBalance = 0
 
     for (const t of rows) {
       if (t.type === 'shared') {
@@ -365,6 +376,23 @@ export class TransactionService {
         if (!involved) continue // 未参与的公账不计入该用户的任何统计
         sharedTotal += t.amount
         if (mine) myShared += mine.amount
+
+        // 计入净头寸：排除轮次结算，且按份额排除已按人结清的部分
+        if (!t.settledRoundId && !t.personSettledAt) {
+          if (t.payerId === userId) {
+            // 我垫付：每个「未结清」的他人份额都欠我 → 累加
+            for (const s of t.splits || []) {
+              if (s.userId === userId) continue // 自己那份不算欠款
+              if (settledShare.has(`${t.id}::${s.userId}`)) continue // 已结清
+              netBalance += s.amount
+            }
+          } else if (mine) {
+            // 我是参与人：我这份若未结清 → 我欠付款人
+            if (!settledShare.has(`${t.id}::${userId}`)) {
+              netBalance -= mine.amount
+            }
+          }
+        }
       } else if (t.creatorId === userId) {
         myPrivate += t.amount
       }
@@ -375,6 +403,10 @@ export class TransactionService {
       myShared,
       myPrivate,
       myTotal: myShared + myPrivate,
+      // netBalance > 0 → 待收款；< 0 → 待支付（绝对值）
+      netBalance,
+      pendingReceive: netBalance > 0 ? netBalance : 0,
+      pendingPay: netBalance < 0 ? -netBalance : 0,
     }
   }
 }

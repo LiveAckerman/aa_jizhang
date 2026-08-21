@@ -11,6 +11,7 @@
     "pages/transaction-logs/transaction-logs",
     "pages/settlement/settlement",
     "pages/settle-select/settle-select",
+    "pages/settle-detail/settle-detail",
     "pages/ocr-batch-edit/ocr-batch-edit",
     "pages/invite/invite",
     "pages/join/join",

@@ -84,6 +84,13 @@ export class Transaction {
   @Column({ type: 'uuid', nullable: true })
   settledRoundId: string | null
 
+  /**
+   * 按人结算：当所有非付款人份额都已结清时置为该时刻，表示整笔账单结清。
+   * 与 settledRoundId 独立（一个走轮次结算，一个走按人结算）。
+   */
+  @Column({ type: 'timestamptz', nullable: true })
+  personSettledAt: Date | null
+
   /** 图片凭证 URL 列表（JSON） */
   @Column({ type: 'jsonb', nullable: true })
   images: string[] | null

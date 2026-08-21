@@ -93,6 +93,26 @@
         </view>
       </block>
     </view>
+
+    <!-- 分账关系预览 -->
+    <view wx:if="{{settlePreview.mode}}" class="glass-card section settle-preview">
+      <view class="section-label">分账预览</view>
+      <!-- 付款人视角：别人应还我 -->
+      <block wx:if="{{settlePreview.mode === 'payer'}}">
+        <view wx:if="{{settlePreview.items.length === 0}}" class="settle-preview-empty">仅自己参与，无需分账</view>
+        <view wx:for="{{settlePreview.items}}" wx:key="nickname" class="settle-preview-row">
+          <text class="settle-preview-name">{{item.nickname}}</text>
+          <text class="settle-preview-text">应付给我</text>
+          <text class="settle-preview-amount receive">¥{{item.amountText}}</text>
+        </view>
+      </block>
+      <!-- 参与人视角：我应付给付款人 -->
+      <view wx:elif="{{settlePreview.mode === 'participant'}}" class="settle-preview-row">
+        <text class="settle-preview-text">我应付给</text>
+        <text class="settle-preview-name">{{settlePreview.payerName}}</text>
+        <text class="settle-preview-amount pay">¥{{settlePreview.myPayText}}</text>
+      </view>
+    </view>
   </block>
 
   <!-- 备注 -->

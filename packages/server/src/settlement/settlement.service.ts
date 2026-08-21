@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository, DataSource, IsNull, In } from 'typeorm'
 import { Settlement } from './settlement.entity'
 import { SettlementRound } from './settlement-round.entity'
+import { TxShareSettlement } from './tx-share-settlement.entity'
 import { Transaction } from '../transaction/transaction.entity'
 import { BookService } from '../book/book.service'
 import { CreateSettlementDto } from './dto/create-settlement.dto'
@@ -22,11 +23,248 @@ export class SettlementService {
     private readonly settlementRepo: Repository<Settlement>,
     @InjectRepository(SettlementRound)
     private readonly roundRepo: Repository<SettlementRound>,
+    @InjectRepository(TxShareSettlement)
+    private readonly shareRepo: Repository<TxShareSettlement>,
     @InjectRepository(Transaction)
     private readonly txRepo: Repository<Transaction>,
     private readonly bookService: BookService,
     private readonly dataSource: DataSource,
   ) {}
+
+  /**
+   * 按人结算明细：当前用户与账本内每个人的两两净额 + 构成明细。
+   * 显示按净额抵扣，结清追踪落在账单份额（TxShareSettlement）粒度。
+   */
+  async byPerson(bookId: string, userId: string) {
+    await this.bookService.assertMember(bookId, userId)
+
+    // 1. 未被轮次结算、未整笔按人结清的公账
+    const txs = await this.txRepo.find({
+      where: {
+        bookId,
+        type: 'shared',
+        settledRoundId: IsNull(),
+        personSettledAt: IsNull(),
+      },
+    })
+
+    // 2. 本账本已结清的份额集合，键 = txId::debtorUserId
+    const shares = await this.shareRepo.find({ where: { bookId } })
+    const settledSet = new Set(
+      shares.map((s) => `${s.transactionId}::${s.debtorUserId}`),
+    )
+
+    // 3. 成员映射（头像昵称）
+    const book = await this.bookService.detail(bookId, userId)
+    const memberMap = new Map<string, { nickname: string; avatar: string }>()
+    ;(book.members || []).forEach((m: any) =>
+      memberMap.set(m.userId, {
+        nickname: m.nickname || '成员',
+        avatar: m.avatar || '',
+      }),
+    )
+
+    // 4. 遍历账单，构造与「我」相关的活债务单元
+    //    they_owe：我是付款人、对方欠我；i_owe：对方是付款人、我欠对方
+    type Unit = {
+      otherUserId: string
+      amount: number
+      direction: 'they_owe' | 'i_owe'
+      txId: string
+      note: string
+      category: string
+      spentAt: Date
+    }
+    const units: Unit[] = []
+    for (const t of txs) {
+      const splits = t.splits || []
+      if (t.payerId === userId) {
+        // 我垫付：每个非我参与人欠我，且该份额未结清
+        for (const s of splits) {
+          if (s.userId === userId) continue
+          if (settledSet.has(`${t.id}::${s.userId}`)) continue
+          if (s.amount <= 0) continue
+          units.push({
+            otherUserId: s.userId,
+            amount: s.amount,
+            direction: 'they_owe',
+            txId: t.id,
+            note: t.note,
+            category: t.category,
+            spentAt: t.spentAt,
+          })
+        }
+      } else {
+        // 别人垫付：我若是参与人则欠付款人，且我这份未结清
+        const mine = splits.find((s) => s.userId === userId)
+        if (!mine || mine.amount <= 0) continue
+        if (settledSet.has(`${t.id}::${userId}`)) continue
+        units.push({
+          otherUserId: t.payerId,
+          amount: mine.amount,
+          direction: 'i_owe',
+          txId: t.id,
+          note: t.note,
+          category: t.category,
+          spentAt: t.spentAt,
+        })
+      }
+    }
+
+    // 5. 按对方聚合：净额 = 对方欠我 - 我欠对方
+    const byOther = new Map<string, Unit[]>()
+    units.forEach((u) => {
+      if (!byOther.has(u.otherUserId)) byOther.set(u.otherUserId, [])
+      byOther.get(u.otherUserId)!.push(u)
+    })
+
+    const receivables: any[] = []
+    const payables: any[] = []
+    for (const [otherId, list] of byOther) {
+      const theyOwe = list
+        .filter((u) => u.direction === 'they_owe')
+        .reduce((s, u) => s + u.amount, 0)
+      const iOwe = list
+        .filter((u) => u.direction === 'i_owe')
+        .reduce((s, u) => s + u.amount, 0)
+      const net = theyOwe - iOwe
+      const info = memberMap.get(otherId) || { nickname: '成员', avatar: '' }
+      const details = list
+        .sort((a, b) => +new Date(b.spentAt) - +new Date(a.spentAt))
+        .map((u) => ({
+          txId: u.txId,
+          note: u.note,
+          category: u.category,
+          spentAt: u.spentAt,
+          amount: u.amount,
+          direction: u.direction,
+        }))
+      const entry = {
+        otherUserId: otherId,
+        nickname: info.nickname,
+        avatar: info.avatar,
+        netAmount: Math.abs(net),
+        details,
+      }
+      if (net > 0) receivables.push(entry)
+      else if (net < 0) payables.push(entry)
+      // net === 0：两清，不展示
+    }
+
+    const me = memberMap.get(userId) || { nickname: '我', avatar: '' }
+    return { me: { userId, ...me }, receivables, payables }
+  }
+
+  /**
+   * 按人结算：把「我」与 otherUserId 之间两个方向所有活债务单元一次性结清。
+   * 结清后若某账单所有非付款人份额都已清 → 置 personSettledAt。
+   */
+  async settlePerson(bookId: string, userId: string, otherUserId: string) {
+    await this.bookService.assertMember(bookId, userId)
+    if (!otherUserId || otherUserId === userId) {
+      throw new BadRequestException('结算对象无效')
+    }
+    await this.bookService.assertMember(bookId, otherUserId)
+
+    const txs = await this.txRepo.find({
+      where: {
+        bookId,
+        type: 'shared',
+        settledRoundId: IsNull(),
+        personSettledAt: IsNull(),
+      },
+    })
+    const existing = await this.shareRepo.find({ where: { bookId } })
+    const settledSet = new Set(
+      existing.map((s) => `${s.transactionId}::${s.debtorUserId}`),
+    )
+
+    // 收集我与 otherUserId 之间待结清的份额单元
+    const toCreate: Array<Partial<TxShareSettlement>> = []
+    const affectedTxIds = new Set<string>()
+    for (const t of txs) {
+      const splits = t.splits || []
+      // 方向1：我垫付，otherUserId 欠我
+      if (t.payerId === userId) {
+        const s = splits.find((x) => x.userId === otherUserId)
+        if (s && s.amount > 0 && !settledSet.has(`${t.id}::${otherUserId}`)) {
+          toCreate.push({
+            bookId,
+            transactionId: t.id,
+            debtorUserId: otherUserId,
+            creditorUserId: userId,
+            amount: s.amount,
+            settledBy: userId,
+          })
+          affectedTxIds.add(t.id)
+        }
+      }
+      // 方向2：otherUserId 垫付，我欠 otherUserId
+      if (t.payerId === otherUserId) {
+        const s = splits.find((x) => x.userId === userId)
+        if (s && s.amount > 0 && !settledSet.has(`${t.id}::${userId}`)) {
+          toCreate.push({
+            bookId,
+            transactionId: t.id,
+            debtorUserId: userId,
+            creditorUserId: otherUserId,
+            amount: s.amount,
+            settledBy: userId,
+          })
+          affectedTxIds.add(t.id)
+        }
+      }
+    }
+
+    if (toCreate.length === 0) {
+      throw new BadRequestException('你与该成员之间没有可结算的账单')
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner()
+    try {
+      await queryRunner.connect()
+      await queryRunner.startTransaction()
+
+      await queryRunner.manager.save(
+        toCreate.map((c) => queryRunner.manager.create(TxShareSettlement, c)),
+      )
+
+      // 对受影响账单：若所有非付款人份额都已结清 → 置 personSettledAt
+      const now = new Date()
+      const affected = txs.filter((t) => affectedTxIds.has(t.id))
+      const allShares = existing.concat(
+        toCreate.map((c) => ({
+          transactionId: c.transactionId,
+          debtorUserId: c.debtorUserId,
+        })) as any,
+      )
+      const settledNow = new Set(
+        allShares.map((s: any) => `${s.transactionId}::${s.debtorUserId}`),
+      )
+      for (const t of affected) {
+        const debtors = (t.splits || [])
+          .filter((s) => s.userId !== t.payerId && s.amount > 0)
+          .map((s) => s.userId)
+        const allCleared = debtors.every((d) =>
+          settledNow.has(`${t.id}::${d}`),
+        )
+        if (allCleared) {
+          await queryRunner.manager.update(Transaction, { id: t.id }, {
+            personSettledAt: now,
+          })
+        }
+      }
+
+      await queryRunner.commitTransaction()
+      return { settled: true, count: toCreate.length }
+    } catch (e) {
+      if (queryRunner.isTransactionActive)
+        await queryRunner.rollbackTransaction()
+      throw e
+    } finally {
+      if (!queryRunner.isReleased) await queryRunner.release()
+    }
+  }
 
   /**
    * 计算账本的当前结算方案（实时计算，不持久化）

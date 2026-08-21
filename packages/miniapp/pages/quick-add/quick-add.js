@@ -3,18 +3,18 @@ const api = require('../../utils/api')
 
 Page({
   data: {
-    mode: 'manual',       // manual | ocr
+    mode: 'manual', // manual | ocr
     modeLabel: '手动录入',
     keyword: '',
-    books: [],            // 全部账本
-    filtered: [],         // 搜索过滤后
-    selectedId: '',       // 选中的账本
+    books: [], // 全部账本
+    filtered: [], // 搜索过滤后
+    selectedId: '', // 选中的账本
     loading: true,
   },
 
   onLoad(query) {
     const mode = query.mode === 'ocr' ? 'ocr' : 'manual'
-    this.setData({ mode, modeLabel: mode === 'ocr' ? '自动票据识别' : '手动录入' })
+    this.setData({ mode, modeLabel: mode === 'ocr' ? '票据自动识别' : '手动录入' })
     wx.setNavigationBarTitle({ title: '快速记账' })
   },
 
@@ -107,6 +107,6 @@ Page({
 
   onSwitchMode(e) {
     const mode = e.currentTarget.dataset.mode
-    this.setData({ mode, modeLabel: mode === 'ocr' ? '自动票据识别' : '手动录入' })
+    this.setData({ mode, modeLabel: mode === 'ocr' ? '票据自动识别' : '手动录入' })
   },
 })

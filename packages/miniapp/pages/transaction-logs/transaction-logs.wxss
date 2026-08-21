@@ -59,3 +59,29 @@
   margin-left: 16rpx;
   flex-shrink: 0;
 }
+
+/* 骨架屏 */
+.sk-avatar,
+.sk-line {
+  background: #eef0f2;
+  animation: sk-blink 1.2s ease-in-out infinite;
+}
+@keyframes sk-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.sk-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 40rpx;
+  flex-shrink: 0;
+}
+.sk-line {
+  border-radius: 8rpx;
+  height: 24rpx;
+}
+.sk-user { width: 140rpx; height: 28rpx; margin-bottom: 12rpx; }
+.sk-l1 { width: 100%; margin-bottom: 10rpx; }
+.sk-l2 { width: 70%; }
+.sk-date { width: 90rpx; height: 20rpx; }
+.sk-time { width: 70rpx; height: 20rpx; }

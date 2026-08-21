@@ -45,6 +45,36 @@ export class SettlementController {
   }
 
   /**
+   * 按人结算明细（待收款/待支付两两净额 + 构成）
+   * GET /api/settlements/by-person?bookId=xxx
+   */
+  @Get('by-person')
+  async byPerson(
+    @CurrentUser('sub') userId: string,
+    @Query('bookId') bookId: string,
+  ) {
+    const data = await this.settlementService.byPerson(bookId, userId)
+    return { code: 0, message: 'ok', data }
+  }
+
+  /**
+   * 按人结算：结清我与某成员之间的全部账单份额
+   * POST /api/settlements/settle-person
+   */
+  @Post('settle-person')
+  async settlePerson(
+    @CurrentUser('sub') userId: string,
+    @Body() body: { bookId: string; otherUserId: string },
+  ) {
+    const data = await this.settlementService.settlePerson(
+      body.bookId,
+      userId,
+      body.otherUserId,
+    )
+    return { code: 0, message: 'ok', data }
+  }
+
+  /**
    * 部分结算预览
    * POST /api/settlements/preview-partial
    */

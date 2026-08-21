@@ -27,7 +27,7 @@
 .amount-input-block {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   padding: 48rpx 32rpx;
   margin-bottom: 24rpx;
   background: rgba(255, 255, 255, 0.85);
@@ -62,10 +62,11 @@
   font-size: 64rpx;
   font-weight: 700;
   color: var(--text-primary);
-  min-width: 200rpx;
+  flex: 1;
+  min-width: 0;
   height: 80rpx;
   line-height: 80rpx;
-  text-align: center;
+  text-align: left;
 }
 .amount-input-ph {
   font-size: 64rpx;
@@ -364,4 +365,40 @@
 }
 .payer-chip {
   margin: 0;
+}
+
+/* 分账关系预览 */
+.settle-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 12rpx 0;
+  border-bottom: 2rpx solid rgba(128, 145, 165, 0.1);
+}
+.settle-preview-row:last-child {
+  border-bottom: none;
+}
+.settle-preview-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.settle-preview-text {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+}
+.settle-preview-amount {
+  margin-left: auto;
+  font-size: 30rpx;
+  font-weight: 700;
+}
+.settle-preview-amount.receive {
+  color: #52c41a;
+}
+.settle-preview-amount.pay {
+  color: var(--color-accent);
+}
+.settle-preview-empty {
+  font-size: 26rpx;
+  color: var(--text-secondary);
 }

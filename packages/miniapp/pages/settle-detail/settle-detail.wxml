@@ -1,0 +1,116 @@
+<view class="settle-detail-page">
+  <!-- 顶部 tab -->
+  <view class="tab-switch">
+    <view class="tab-item {{tab === 'receive' ? 'active' : ''}}" data-tab="receive" bindtap="onSwitchTab">待收款</view>
+    <view class="tab-item {{tab === 'pay' ? 'active' : ''}}" data-tab="pay" bindtap="onSwitchTab">待支付</view>
+  </view>
+
+  <!-- 骨架屏 -->
+  <block wx:if="{{loading}}">
+    <view class="sk-user"></view>
+    <view class="glass-card sk-card" wx:for="{{[1,2]}}" wx:key="*this">
+      <view class="sk-row">
+        <view class="sk-avatar"></view>
+        <view class="sk-lines">
+          <view class="sk-line sk-name"></view>
+          <view class="sk-line sk-amt"></view>
+        </view>
+        <view class="sk-btn"></view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 内容 -->
+  <block wx:else>
+    <!-- 我的头像昵称 -->
+    <view wx:if="{{me}}" class="me-card">
+      <image class="me-avatar" src="{{me.avatar}}" mode="aspectFill" />
+      <view class="me-info">
+        <text class="me-nickname">{{me.nickname}}</text>
+        <text class="me-sub">{{tab === 'receive' ? '以下成员需向你转账' : '你需向以下成员转账'}}</text>
+      </view>
+    </view>
+
+    <!-- 待收款列表 -->
+    <block wx:if="{{tab === 'receive'}}">
+      <view wx:if="{{receivables.length === 0}}" class="empty-state">
+        <van-icon name="checked" size="64px" color="#52c41a" />
+        <text class="empty-text">没有待收款</text>
+        <text class="empty-sub">当前没有人需要向你转账</text>
+      </view>
+      <view wx:for="{{receivables}}" wx:key="otherUserId" class="glass-card person-card">
+        <view class="person-head">
+          <image class="person-avatar" src="{{item.avatar}}" mode="aspectFill" />
+          <view class="person-info">
+            <text class="person-name">{{item.nickname}}</text>
+            <text class="person-amount receive">需转你 ¥{{item.netAmountText}}</text>
+          </view>
+          <button
+            class="settle-btn"
+            data-id="{{item.otherUserId}}"
+            data-name="{{item.nickname}}"
+            catchtap="onSettle"
+          >已结算</button>
+        </view>
+        <view class="expand-toggle" data-id="{{item.otherUserId}}" bindtap="onToggleExpand">
+          <text>{{expandedMap[item.otherUserId] ? '收起明细' : '展开明细（' + item.details.length + '笔）'}}</text>
+          <van-icon name="{{expandedMap[item.otherUserId] ? 'arrow-up' : 'arrow-down'}}" size="12px" color="#8091a5" />
+        </view>
+        <view wx:if="{{expandedMap[item.otherUserId]}}" class="detail-list">
+          <view wx:for="{{item.details}}" wx:for-item="d" wx:key="txId" class="detail-item">
+            <view class="detail-icon"><van-icon name="{{d.categoryIcon}}" size="18px" color="#4097a9" /></view>
+            <view class="detail-mid">
+              <text class="detail-cat">{{d.categoryName}}</text>
+              <text class="detail-note">{{d.note || d.dateText}}</text>
+            </view>
+            <view class="detail-right">
+              <text class="detail-dir {{d.isTheyOwe ? 'in' : 'out'}}">{{d.isTheyOwe ? '+' : '-'}}¥{{d.amountText}}</text>
+              <text class="detail-date">{{d.dateText}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <!-- 待支付列表 -->
+    <block wx:else>
+      <view wx:if="{{payables.length === 0}}" class="empty-state">
+        <van-icon name="checked" size="64px" color="#52c41a" />
+        <text class="empty-text">没有待支付</text>
+        <text class="empty-sub">你当前不需要向任何人转账</text>
+      </view>
+      <view wx:for="{{payables}}" wx:key="otherUserId" class="glass-card person-card">
+        <view class="person-head">
+          <image class="person-avatar" src="{{item.avatar}}" mode="aspectFill" />
+          <view class="person-info">
+            <text class="person-name">{{item.nickname}}</text>
+            <text class="person-amount pay">需付 ¥{{item.netAmountText}}</text>
+          </view>
+          <button
+            class="settle-btn"
+            data-id="{{item.otherUserId}}"
+            data-name="{{item.nickname}}"
+            catchtap="onSettle"
+          >已结算</button>
+        </view>
+        <view class="expand-toggle" data-id="{{item.otherUserId}}" bindtap="onToggleExpand">
+          <text>{{expandedMap[item.otherUserId] ? '收起明细' : '展开明细（' + item.details.length + '笔）'}}</text>
+          <van-icon name="{{expandedMap[item.otherUserId] ? 'arrow-up' : 'arrow-down'}}" size="12px" color="#8091a5" />
+        </view>
+        <view wx:if="{{expandedMap[item.otherUserId]}}" class="detail-list">
+          <view wx:for="{{item.details}}" wx:for-item="d" wx:key="txId" class="detail-item">
+            <view class="detail-icon"><van-icon name="{{d.categoryIcon}}" size="18px" color="#4097a9" /></view>
+            <view class="detail-mid">
+              <text class="detail-cat">{{d.categoryName}}</text>
+              <text class="detail-note">{{d.note || d.dateText}}</text>
+            </view>
+            <view class="detail-right">
+              <text class="detail-dir {{d.isTheyOwe ? 'in' : 'out'}}">{{d.isTheyOwe ? '+' : '-'}}¥{{d.amountText}}</text>
+              <text class="detail-date">{{d.dateText}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </block>
+  </block>
+</view>

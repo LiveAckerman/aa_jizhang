@@ -1,0 +1,244 @@
+.settle-detail-page {
+  min-height: 100vh;
+  padding: 24rpx 32rpx calc(60rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+/* 顶部 tab */
+.tab-switch {
+  display: flex;
+  background: rgba(64, 151, 169, 0.08);
+  border-radius: 48rpx;
+  padding: 8rpx;
+  margin-bottom: 24rpx;
+}
+.tab-item {
+  flex: 1;
+  height: 72rpx;
+  line-height: 72rpx;
+  text-align: center;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  color: var(--text-secondary);
+}
+.tab-item.active {
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* 我的卡片 */
+.me-card {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx 8rpx 32rpx;
+}
+.me-avatar {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 44rpx;
+  background: #eee;
+}
+.me-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+.me-nickname {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.me-sub {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+/* 通用卡片 */
+.glass-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20rpx);
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(47, 65, 89, 0.05);
+  margin-bottom: 20rpx;
+}
+
+/* 人员卡片 */
+.person-card {
+  padding: 28rpx 28rpx 8rpx;
+}
+.person-head {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+.person-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 36rpx;
+  background: #eee;
+  flex-shrink: 0;
+}
+.person-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+.person-name {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.person-amount {
+  font-size: 26rpx;
+  font-weight: 600;
+}
+.person-amount.receive { color: #52c41a; }
+.person-amount.pay { color: var(--color-accent); }
+
+.settle-btn {
+  height: 64rpx;
+  line-height: 64rpx;
+  padding: 0 28rpx;
+  border-radius: 32rpx;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 26rpx;
+  font-weight: 600;
+  border: none;
+  flex-shrink: 0;
+}
+.settle-btn::after { border: none; }
+
+/* 展开切换 */
+.expand-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  padding: 20rpx 0;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+/* 明细列表 */
+.detail-list {
+  border-top: 2rpx solid rgba(128, 145, 165, 0.1);
+  padding: 8rpx 0 16rpx;
+}
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 16rpx 0;
+}
+.detail-icon {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 16rpx;
+  background: rgba(64, 151, 169, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.detail-mid {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+.detail-cat {
+  font-size: 26rpx;
+  color: var(--text-primary);
+}
+.detail-note {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.detail-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4rpx;
+  flex-shrink: 0;
+}
+.detail-dir {
+  font-size: 26rpx;
+  font-weight: 600;
+}
+.detail-dir.in { color: #52c41a; }
+.detail-dir.out { color: var(--color-accent); }
+.detail-date {
+  font-size: 20rpx;
+  color: var(--text-tertiary);
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 140rpx;
+  gap: 16rpx;
+}
+.empty-text {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 16rpx;
+}
+.empty-sub {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+/* 骨架屏 */
+.sk-user, .sk-avatar, .sk-line, .sk-btn {
+  background: #eef0f2;
+  animation: sk-blink 1.2s ease-in-out infinite;
+}
+@keyframes sk-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.sk-user {
+  width: 60%;
+  height: 88rpx;
+  border-radius: 20rpx;
+  margin: 24rpx 8rpx 32rpx;
+}
+.sk-card { padding: 28rpx; }
+.sk-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+.sk-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 36rpx;
+  flex-shrink: 0;
+}
+.sk-lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+.sk-line { border-radius: 8rpx; }
+.sk-name { width: 160rpx; height: 28rpx; }
+.sk-amt { width: 220rpx; height: 24rpx; }
+.sk-btn {
+  width: 120rpx;
+  height: 64rpx;
+  border-radius: 32rpx;
+  flex-shrink: 0;
+}

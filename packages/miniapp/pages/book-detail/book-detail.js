@@ -11,15 +11,29 @@ Page({
     members: [],
     isOwner: false,
     myUserId: '',
-    summary: { sharedTotal: 0, myShared: 0, myPrivate: 0, myTotal: 0 },
-    summaryText: { sharedTotal: '0.00', myShared: '0.00', myPrivate: '0.00', myTotal: '0.00' },
-    allTxs: [],       // 原始账单列表（未过滤）
-    groups: [],       // 未结算账单按日期分组
-    settledList: [],  // 已结算账单（抽屉全量）
+    summary: {
+      sharedTotal: 0,
+      myShared: 0,
+      myPrivate: 0,
+      myTotal: 0,
+      pendingPay: 0,
+      pendingReceive: 0,
+    },
+    summaryText: {
+      sharedTotal: '0.00',
+      myShared: '0.00',
+      myPrivate: '0.00',
+      myTotal: '0.00',
+      pendingPay: '0.00',
+      pendingReceive: '0.00',
+    },
+    allTxs: [], // 原始账单列表（未过滤）
+    groups: [], // 未结算账单按日期分组
+    settledList: [], // 已结算账单（抽屉全量）
     settledStack: [], // 已结算堆叠展示（最多5条）
     showSettledDrawer: false,
-    txFilter: 'all',  // 账单筛选：all / shared(公账) / private(私账)
-    filterStat: { count: 0, amountText: '0.00' }, // 当前筛选下的统计
+    txFilter: 'all', // 账单筛选：all / shared(公账) / private(私账)
+    txCounts: { all: 0, shared: 0, private: 0 }, // 各 tab 的账单笔数（角标）
     loading: true,
   },
 
@@ -63,6 +77,8 @@ Page({
           myShared: (summary.myShared / 100).toFixed(2),
           myPrivate: (summary.myPrivate / 100).toFixed(2),
           myTotal: (summary.myTotal / 100).toFixed(2),
+          pendingPay: ((summary.pendingPay || 0) / 100).toFixed(2),
+          pendingReceive: ((summary.pendingReceive || 0) / 100).toFixed(2),
         },
         allTxs: txs || [],
         loading: false,
@@ -81,20 +97,25 @@ Page({
     this.applyTxFilter()
   },
 
-  // 按当前 txFilter 过滤账单，重算分组与统计
+  // 按当前 txFilter 过滤账单，重算分组与各 tab 角标
   applyTxFilter() {
     const filter = this.data.txFilter
-    const list = (this.data.allTxs || []).filter((t) => {
+    const all = this.data.allTxs || []
+    const list = all.filter((t) => {
       if (filter === 'shared') return t.type !== 'private'
       if (filter === 'private') return t.type === 'private'
       return true
     })
-    // 统计：当前筛选下的笔数与总额（含已结算，反映账本全貌）
-    const totalCent = list.reduce((sum, t) => sum + (t.amount || 0), 0)
+
+    // 各 tab 笔数（角标，含已结算，反映账本全貌）
+    const sharedCount = all.filter((t) => t.type !== 'private').length
+    const privateCount = all.filter((t) => t.type === 'private').length
 
     // 拆分：未结算按日期分组正常展示；已结算折叠成堆叠 + 抽屉
-    const unsettled = list.filter((t) => !t.settledRoundId)
-    const settled = list.filter((t) => !!t.settledRoundId)
+    // 已结算 = 轮次结算(settledRoundId) 或 按人整笔结清(personSettledAt)
+    const isSettled = (t) => !!t.settledRoundId || !!t.personSettledAt
+    const unsettled = list.filter((t) => !isSettled(t))
+    const settled = list.filter(isSettled)
 
     const memberMap = {}
     ;(this.data.members || []).forEach((m) => (memberMap[m.userId] = m.nickname))
@@ -105,9 +126,10 @@ Page({
       groups: this.groupByDate(unsettled),
       settledList,
       settledStack: settledList.slice(0, 5),
-      filterStat: {
-        count: list.length,
-        amountText: (totalCent / 100).toFixed(2),
+      txCounts: {
+        all: all.length,
+        shared: sharedCount,
+        private: privateCount,
       },
     })
   },
@@ -123,11 +145,21 @@ Page({
   // 给单条账单附加展示字段（供列表 / 堆叠 / 抽屉复用）
   decorateTx(t, memberMap, myUserId) {
     const cat = CATEGORY_MAP[t.category] || CATEGORY_MAP.other
-    // 计算"我应付"：公账取 splits 中当前用户的份额；私账不显示
-    let myShareText = ''
+    const isMyPayment = t.type !== 'private' && t.payerId === myUserId
+    // 公账才计算我的收付；私账不显示
+    //   我是付款人：别人欠我的 = 总额 - 我自己那份 → 我应收
+    //   我不是付款人：splits 里我的份额 → 我应付
+    let myShareText = '' // 应付金额（元）
+    let myReceiveText = '' // 应收金额（元）
     if (t.type !== 'private') {
       const mine = (t.splits || []).find((s) => s.userId === myUserId)
-      if (mine) myShareText = (mine.amount / 100).toFixed(2)
+      const myShareAmount = mine ? mine.amount : 0
+      if (isMyPayment) {
+        const receive = t.amount - myShareAmount // 别人应还给我的部分
+        if (receive > 0) myReceiveText = (receive / 100).toFixed(2)
+      } else if (mine) {
+        myShareText = (myShareAmount / 100).toFixed(2)
+      }
     }
     return {
       ...t,
@@ -137,7 +169,9 @@ Page({
       payerName: memberMap[t.payerId] || '成员',
       isPrivate: t.type === 'private',
       isSettled: !!t.settledRoundId,
+      isMyPayment,
       myShareText,
+      myReceiveText,
     }
   },
 
@@ -161,7 +195,7 @@ Page({
     wx.navigateTo({ url: `/pages/add-transaction/add-transaction?bookId=${this.data.id}` })
   },
 
-  // 自动票据识别：拍照/相册 → 上传识别 → 跳批量编辑页
+  // 票据自动识别：拍照/相册 → 上传识别 → 跳批量编辑页
   onOcrRecognize() {
     wx.chooseMedia({
       count: 1,
@@ -206,23 +240,40 @@ Page({
     wx.switchTab({ url: '/pages/statistics/statistics' })
   },
 
-  onSettlement() {
+  // 点击待支付/待收款卡片 → 按人结算明细页
+  onOpenSettleDetail(e) {
+    const tab = e.currentTarget.dataset.tab
+    wx.navigateTo({
+      url: `/pages/settle-detail/settle-detail?bookId=${this.data.id}&tab=${tab}`,
+    })
+  },
+
+  // 是否存在可结算账单（未结算的公账）
+  _hasSettleable() {
+    return (this.data.allTxs || []).some((t) => t.type !== 'private' && !t.settledRoundId)
+  },
+
+  // 全部结算：结算当前所有未结算账单
+  onSettleAll() {
+    if (!this._hasSettleable()) {
+      wx.showToast({ title: '没有需要结算的账单', icon: 'none' })
+      return
+    }
     const bookName = encodeURIComponent(this.data.book.name || '账本')
-    wx.showActionSheet({
-      itemList: ['全部结算', '部分结算'],
-      success: (res) => {
-        if (res.tapIndex === 0) {
-          // 全部结算：结算当前所有未结算账单
-          wx.navigateTo({
-            url: `/pages/settlement/settlement?bookId=${this.data.id}&bookName=${bookName}&mode=all`,
-          })
-        } else if (res.tapIndex === 1) {
-          // 部分结算：进勾选页
-          wx.navigateTo({
-            url: `/pages/settle-select/settle-select?bookId=${this.data.id}&bookName=${bookName}`,
-          })
-        }
-      },
+    wx.navigateTo({
+      url: `/pages/settlement/settlement?bookId=${this.data.id}&bookName=${bookName}&mode=all`,
+    })
+  },
+
+  // 部分结算：进勾选页
+  onSettlePartial() {
+    if (!this._hasSettleable()) {
+      wx.showToast({ title: '没有需要结算的账单', icon: 'none' })
+      return
+    }
+    const bookName = encodeURIComponent(this.data.book.name || '账本')
+    wx.navigateTo({
+      url: `/pages/settle-select/settle-select?bookId=${this.data.id}&bookName=${bookName}`,
     })
   },
 

@@ -59,6 +59,9 @@ Component({
     currencySymbol: '¥',
     currencyIndex: 0,
     convertedText: '',
+
+    // 分账关系预览：付款人视角(别人给我) / 参与人视角(我给付款人)
+    settlePreview: { mode: '', payerName: '', myPayText: '', items: [] },
   },
 
   lifetimes: {
@@ -81,6 +84,10 @@ Component({
         this._participantsTouched = false
         this.initForm()
       }
+    },
+    // 影响分账关系的字段变化时，重算预览
+    'type, amount, payerId, participantIds, splitMethod, splitDetails, currency'() {
+      this.computeSettlePreview()
     },
   },
 
@@ -347,6 +354,99 @@ Component({
     // ---- 对外：读取金额 ----
     getAmount() {
       return this.data.amount
+    },
+
+    // 计算每个参与人应承担的份额（分），返回 { userId: cents }
+    perShareMap(amountCent) {
+      const ids = this.data.participantIds || []
+      const n = ids.length
+      const map = {}
+      if (n === 0 || amountCent <= 0) return map
+      const method = this.data.splitMethod
+      const details = this.data.splitDetails || []
+
+      if (method === 'fixed' && details.length > 0) {
+        details.forEach((d) => (map[d.userId] = d.amount || 0))
+        return map
+      }
+      if ((method === 'ratio' || method === 'shares') && details.length > 0) {
+        const totalWeight = details.reduce((s, d) => s + (d.weight || 0), 0)
+        if (totalWeight > 0) {
+          let allocated = 0
+          details.forEach((d, i) => {
+            let share
+            if (i === details.length - 1) share = amountCent - allocated
+            else {
+              share = Math.round((amountCent * (d.weight || 0)) / totalWeight)
+              allocated += share
+            }
+            map[d.userId] = share
+          })
+          return map
+        }
+      }
+      // 默认（average 或无明细）：均摊，余数分给前几位
+      const base = Math.floor(amountCent / n)
+      let rem = amountCent - base * n
+      ids.forEach((id) => {
+        const extra = rem > 0 ? 1 : 0
+        rem -= extra
+        map[id] = base + extra
+      })
+      return map
+    },
+
+    // 计算分账关系预览
+    computeSettlePreview() {
+      const empty = { mode: '', payerName: '', myPayText: '', items: [] }
+      if (this.data.type !== 'shared') {
+        this.setData({ settlePreview: empty })
+        return
+      }
+      const yuan = parseFloat(this.data.amount)
+      const ids = this.data.participantIds || []
+      if (!yuan || yuan <= 0 || ids.length === 0) {
+        this.setData({ settlePreview: empty })
+        return
+      }
+      const currency = this.data.currency || 'CNY'
+      const rateObj = (this.properties.rates || []).find((r) => r.code === currency)
+      const rate = rateObj ? rateObj.rate : 1
+      const amountCent = currency === 'CNY' ? Math.round(yuan * 100) : Math.round(yuan * 100 * rate)
+
+      const myUserId = this.properties.myUserId
+      const payerId = this.data.payerId
+      const members = this.properties.members || []
+      const nameOf = (uid) => {
+        const m = members.find((x) => x.userId === uid)
+        return m ? m.nickname : '成员'
+      }
+      const shareMap = this.perShareMap(amountCent)
+
+      if (payerId === myUserId) {
+        // 付款人视角：其他参与人各自应还给我的份额
+        const items = ids
+          .filter((uid) => uid !== myUserId)
+          .map((uid) => ({
+            nickname: nameOf(uid),
+            amountText: ((shareMap[uid] || 0) / 100).toFixed(2),
+          }))
+          .filter((it) => Number(it.amountText) > 0)
+        this.setData({ settlePreview: { mode: 'payer', payerName: '', myPayText: '', items } })
+      } else if (ids.indexOf(myUserId) !== -1) {
+        // 参与人视角：我应付给付款人的份额
+        const myShare = (shareMap[myUserId] || 0) / 100
+        this.setData({
+          settlePreview: {
+            mode: 'participant',
+            payerName: nameOf(payerId),
+            myPayText: myShare.toFixed(2),
+            items: [],
+          },
+        })
+      } else {
+        this.setData({ settlePreview: empty })
+      }
     },
 
     // ---- 对外：组装 + 校验后端 payload ----

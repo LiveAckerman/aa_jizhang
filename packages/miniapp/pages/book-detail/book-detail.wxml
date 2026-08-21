@@ -59,17 +59,22 @@
               <van-icon name="plus" size="18px" color="#4097a9" />
             </view>
           </view>
-          <book-menu book="{{book}}" is-owner="{{isOwner}}" light="{{true}}" bind:action="onBookAction" />
+          <view class="header-actions">
+            <book-menu book="{{book}}" is-owner="{{isOwner}}" light="{{true}}" bind:action="onBookAction" />
+            <button class="header-share-btn" open-type="share">
+              <van-icon name="share-o" size="18px" color="#fff" />
+            </button>
+          </view>
         </view>
         <view class="amount-block">
-          <text class="amount-label">公账支出</text>
+          <text class="amount-label">公账合计</text>
           <text class="amount-value">¥{{summaryText.sharedTotal}}</text>
           <text class="amount-sub">我的支出 ¥{{summaryText.myTotal}}（公账 {{summaryText.myShared}} + 私账 {{summaryText.myPrivate}}）</text>
         </view>
       </view>
     </view>
 
-    <!-- 主操作：手动录入 + 自动票据识别 -->
+    <!-- 主操作：手动录入 + 票据自动识别 -->
     <view class="record-actions">
       <button class="record-btn manual" bindtap="onAddTransaction">
         <van-icon name="edit" size="18px" color="#fff" />
@@ -77,8 +82,37 @@
       </button>
       <button class="record-btn ocr" bindtap="onOcrRecognize">
         <van-icon name="scan" size="18px" color="#4097a9" />
-        <text>自动票据识别</text>
+        <text>票据自动识别</text>
       </button>
+    </view>
+
+    <!-- 待支付 / 待收款 统计卡片（点击进按人结算明细） -->
+    <view class="settle-stat-card">
+      <view class="settle-stat-item pay" data-tab="pay" bindtap="onOpenSettleDetail">
+        <view class="settle-stat-icon pay">
+          <van-icon name="cart-o" size="20px" color="#fa9583" />
+        </view>
+        <view class="settle-stat-text">
+          <text class="settle-stat-label">待支付</text>
+          <view class="settle-stat-amount">
+            <text class="settle-stat-symbol">¥</text>
+            <text class="settle-stat-num">{{summaryText.pendingPay}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="settle-stat-divider"></view>
+      <view class="settle-stat-item receive" data-tab="receive" bindtap="onOpenSettleDetail">
+        <view class="settle-stat-icon receive">
+          <van-icon name="balance-o" size="20px" color="#4097a9" />
+        </view>
+        <view class="settle-stat-text">
+          <text class="settle-stat-label">待收款</text>
+          <view class="settle-stat-amount">
+            <text class="settle-stat-symbol">¥</text>
+            <text class="settle-stat-num">{{summaryText.pendingReceive}}</text>
+          </view>
+        </view>
+      </view>
     </view>
 
     <!-- 次要操作 -->
@@ -87,31 +121,36 @@
         <van-icon name="friends-o" size="24px" color="#4097a9" />
         <text>邀请</text>
       </view>
-      <view class="quick-item" bindtap="onSettlement">
+      <view class="quick-item" bindtap="onSettlePartial">
         <van-icon name="balance-o" size="24px" color="#4097a9" />
-        <text>结算</text>
+        <text>部分结算</text>
+      </view>
+      <view class="quick-item" bindtap="onSettleAll">
+        <van-icon name="completed" size="24px" color="#4097a9" />
+        <text>全部结算</text>
       </view>
       <view class="quick-item" bindtap="onStatistics">
         <van-icon name="chart-trending-o" size="24px" color="#4097a9" />
         <text>统计</text>
       </view>
-      <button class="quick-item share-btn" open-type="share">
-        <van-icon name="share-o" size="24px" color="#4097a9" />
-        <text>分享</text>
-      </button>
     </view>
 
     <!-- 账单筛选 tab：全部 / 公账 / 私账 -->
     <view class="tx-filter">
-      <view class="tx-filter-tab {{txFilter === 'all' ? 'active' : ''}}" data-val="all" bindtap="onPickTxFilter">全部</view>
-      <view class="tx-filter-tab {{txFilter === 'shared' ? 'active' : ''}}" data-val="shared" bindtap="onPickTxFilter">公账</view>
-      <view class="tx-filter-tab {{txFilter === 'private' ? 'active' : ''}}" data-val="private" bindtap="onPickTxFilter">私账</view>
-    </view>
-
-    <!-- 筛选统计条 -->
-    <view class="tx-filter-stat">
-      <text class="stat-label">{{txFilter === 'shared' ? '公账' : txFilter === 'private' ? '私账' : '全部'}}共 {{filterStat.count}} 笔</text>
-      <text class="stat-amount">合计 ¥{{filterStat.amountText}}</text>
+      <view class="tx-filter-tab {{txFilter === 'all' ? 'active' : ''}}" data-val="all" bindtap="onPickTxFilter">
+        <text>全部</text>
+        <!-- 角标暂时隐藏，后续可能恢复
+        <text wx:if="{{txCounts.all > 0}}" class="tx-filter-badge">{{txCounts.all}}</text>
+        -->
+      </view>
+      <view class="tx-filter-tab {{txFilter === 'shared' ? 'active' : ''}}" data-val="shared" bindtap="onPickTxFilter">
+        <text>公账</text>
+        <!-- <text wx:if="{{txCounts.shared > 0}}" class="tx-filter-badge">{{txCounts.shared}}</text> -->
+      </view>
+      <view class="tx-filter-tab {{txFilter === 'private' ? 'active' : ''}}" data-val="private" bindtap="onPickTxFilter">
+        <text>私账</text>
+        <!-- <text wx:if="{{txCounts.private > 0}}" class="tx-filter-badge">{{txCounts.private}}</text> -->
+      </view>
     </view>
 
     <!-- 空流水 -->
@@ -129,7 +168,7 @@
             wx:for="{{item.items}}"
             wx:for-item="tx"
             wx:key="id"
-            class="tx-item {{tx.isPrivate ? 'private' : ''}}"
+            class="tx-item {{tx.isPrivate ? 'private' : ''}} {{tx.isMyPayment ? 'my-payment' : ''}}"
             data-id="{{tx.id}}"
             bindtap="onTapTransaction"
           >
@@ -140,9 +179,12 @@
               <view class="tx-title-row">
                 <text class="tx-cat">{{tx.categoryName}}</text>
                 <van-icon wx:if="{{tx.isPrivate}}" name="lock" size="13px" color="#8091a5" />
-                <text class="tx-note">{{tx.note || tx.payerName + ' 付款'}}</text>
               </view>
-              <text wx:if="{{tx.myShareText}}" class="tx-myshare">我应付 ¥{{tx.myShareText}}</text>
+              <text class="tx-note">{{tx.note || tx.payerName + ' 付款'}}</text>
+              <!-- 我应收/我应付暂时隐藏，后续可能恢复
+              <text wx:if="{{tx.myReceiveText}}" class="tx-myshare receive">我应收 ¥{{tx.myReceiveText}}</text>
+              <text wx:elif="{{tx.myShareText}}" class="tx-myshare">我应付 ¥{{tx.myShareText}}</text>
+              -->
             </view>
             <text class="tx-amount">¥{{tx.amountText}}</text>
           </view>
@@ -159,7 +201,7 @@
           wx:for-item="tx"
           class="glass-card tx-list settled-card {{index === 0 ? 'first' : ''}}"
         >
-          <view class="tx-item">
+          <view class="tx-item {{tx.isMyPayment ? 'my-payment' : ''}}">
             <view class="tx-icon">
               <van-icon name="{{tx.categoryIcon}}" size="22px" color="#4097a9" />
             </view>
@@ -167,9 +209,12 @@
               <view class="tx-title-row">
                 <text class="tx-cat">{{tx.categoryName}}</text>
                 <text class="tx-settled-tag">已结算</text>
-                <text class="tx-note">{{tx.note || tx.payerName + ' 付款'}}</text>
               </view>
-              <text wx:if="{{tx.myShareText}}" class="tx-myshare">我应付 ¥{{tx.myShareText}}</text>
+              <text class="tx-note">{{tx.note || tx.payerName + ' 付款'}}</text>
+              <!-- 我应收/我应付暂时隐藏，后续可能恢复
+              <text wx:if="{{tx.myReceiveText}}" class="tx-myshare receive">我应收 ¥{{tx.myReceiveText}}</text>
+              <text wx:elif="{{tx.myShareText}}" class="tx-myshare">我应付 ¥{{tx.myShareText}}</text>
+              -->
             </view>
             <text class="tx-amount">¥{{tx.amountText}}</text>
           </view>
@@ -199,7 +244,7 @@
           wx:for="{{settledList}}"
           wx:key="id"
           wx:for-item="tx"
-          class="tx-item {{tx.isPrivate ? 'private' : ''}}"
+          class="tx-item {{tx.isPrivate ? 'private' : ''}} {{tx.isMyPayment ? 'my-payment' : ''}}"
           data-id="{{tx.id}}"
           bindtap="onTapTransaction"
         >
@@ -211,9 +256,12 @@
               <text class="tx-cat">{{tx.categoryName}}</text>
               <van-icon wx:if="{{tx.isPrivate}}" name="lock" size="13px" color="#8091a5" />
               <text class="tx-settled-tag">已结算</text>
-              <text class="tx-note">{{tx.note || tx.payerName + ' 付款'}}</text>
             </view>
-            <text wx:if="{{tx.myShareText}}" class="tx-myshare">我应付 ¥{{tx.myShareText}}</text>
+            <text class="tx-note">{{tx.note || tx.payerName + ' 付款'}}</text>
+            <!-- 我应收/我应付暂时隐藏，后续可能恢复
+            <text wx:if="{{tx.myReceiveText}}" class="tx-myshare receive">我应收 ¥{{tx.myReceiveText}}</text>
+            <text wx:elif="{{tx.myShareText}}" class="tx-myshare">我应付 ¥{{tx.myShareText}}</text>
+            -->
           </view>
           <text class="tx-amount">¥{{tx.amountText}}</text>
         </view>

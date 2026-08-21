@@ -44,7 +44,7 @@ Component({
     /** 快速记账：选录入方式 → 跳账本选择中转页 */
     onFab() {
       wx.showActionSheet({
-        itemList: ['手动录入', '自动票据识别'],
+        itemList: ['手动录入', '票据自动识别'],
         success: (res) => {
           const mode = res.tapIndex === 0 ? 'manual' : 'ocr'
           wx.navigateTo({ url: `/pages/quick-add/quick-add?mode=${mode}` })

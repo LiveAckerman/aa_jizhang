@@ -1,4 +1,20 @@
 <view class="logs-page">
+  <!-- 骨架屏 -->
+  <block wx:if="{{loading}}">
+    <view class="glass-card log-item" wx:for="{{[1,2,3,4]}}" wx:key="*this">
+      <view class="sk-avatar"></view>
+      <view class="log-body">
+        <view class="sk-line sk-user"></view>
+        <view class="sk-line sk-l1"></view>
+        <view class="sk-line sk-l2"></view>
+      </view>
+      <view class="log-time">
+        <view class="sk-line sk-date"></view>
+        <view class="sk-line sk-time"></view>
+      </view>
+    </view>
+  </block>
+
   <view wx:if="{{!loading && logs.length === 0}}" class="logs-empty">
     <text>暂无修改记录</text>
   </view>

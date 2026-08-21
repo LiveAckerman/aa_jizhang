@@ -7,7 +7,7 @@
     </view>
     <view class="mode-tab {{mode === 'ocr' ? 'active' : ''}}" data-mode="ocr" bindtap="onSwitchMode">
       <van-icon name="scan" size="18px" />
-      <text>自动票据识别</text>
+      <text>票据自动识别</text>
     </view>
   </view>
 
