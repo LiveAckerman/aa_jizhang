@@ -1,0 +1,123 @@
+.settle-rounds-page {
+  min-height: 100vh;
+  padding: 24rpx 32rpx calc(60rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+/* 玻璃卡片风格 */
+.glass-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(47, 65, 89, 0.05);
+  margin-bottom: 20rpx;
+  padding: 28rpx;
+}
+
+/* 轮次卡片 */
+.round-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+.round-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+.round-tags {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+.tag {
+  font-size: 20rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 16rpx;
+  line-height: 1.4;
+}
+.tag-all {
+  background: rgba(64, 151, 169, 0.1);
+  color: #4097a9;
+}
+.tag-partial {
+  background: rgba(128, 145, 165, 0.12);
+  color: #8091a5;
+}
+.tag-active {
+  background: rgba(250, 149, 131, 0.12);
+  color: #fa9583;
+}
+.tag-completed {
+  background: rgba(82, 196, 26, 0.12);
+  color: #52c41a;
+}
+
+.round-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 16rpx;
+}
+.round-count {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+}
+.round-amount {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.round-time {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+}
+
+/* 空状态 */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 200rpx;
+  gap: 24rpx;
+}
+.empty-text {
+  font-size: 28rpx;
+  color: #8091a5;
+}
+
+/* 骨架屏 */
+@keyframes sk-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.sk {
+  background: #eef0f2;
+  animation: sk-blink 1.2s ease-in-out infinite;
+}
+.sk-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+.sk-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+.sk-line {
+  border-radius: 8rpx;
+  height: 28rpx;
+}
+.sk-tags { width: 240rpx; height: 32rpx; }
+.sk-amt { width: 180rpx; }
+.sk-time { width: 200rpx; height: 22rpx; }
+.sk-arrow {
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 8rpx;
+}

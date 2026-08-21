@@ -9,7 +9,8 @@ Page({
     books: [],
     active: [],
     archived: [],
-    archivedStack: [],   // 最多5条，用于堆叠展示
+    archivedStack: [],   // 最多3张真实卡片，用于堆叠展示
+    archivedGhost: 0,    // 底部空卡片数量，暗示还有更多
     groups: [],           // 分组列表（首项固定为「全部」）
     activeGroupId: 'all', // 当前选中的分组 id：'all' / '' (默认) / <groupId>
     ownerFilter: 'all',   // 归属筛选：'all' / 'owned'(我创建的) / 'joined'(我加入的)
@@ -264,14 +265,16 @@ Page({
       else active.push(item)
     })
 
-    // 已归档堆叠：最新的5条，倒序排列（最新的在最上层）
-    const archivedStack = archived.slice(0, 5)
+    // 已归档堆叠：最多显示 3 张真实卡片；超过时底部垫空卡片暗示"还有更多"
+    const STACK_MAX = 3
+    const archivedStack = archived.slice(0, STACK_MAX)
+    const archivedGhost = Math.min(Math.max(archived.length - STACK_MAX, 0), 2)
 
     // 有账本但被搜索/归属/分组筛选过滤到空
     const hasFilter =
       kw.length > 0 || this.data.ownerFilter !== 'all' || this.data.activeGroupId !== 'all'
     const filteredEmpty = hasFilter && active.length === 0 && archived.length === 0
-    this.setData({ active, archived, archivedStack, filteredEmpty })
+    this.setData({ active, archived, archivedStack, archivedGhost, filteredEmpty })
   },
 
   // 基于归属筛选后的账本重算各分组计数，写回 groups 的 bookCount

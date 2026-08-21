@@ -30,10 +30,14 @@ Page({
     allTxs: [], // 原始账单列表（未过滤）
     groups: [], // 未结算账单按日期分组
     settledList: [], // 已结算账单（抽屉全量）
-    settledStack: [], // 已结算堆叠展示（最多5条）
+    settledStack: [], // 已结算堆叠展示（最多3张真实卡片）
+    settledGhost: 0,  // 底部空卡片数量，暗示还有更多
     showSettledDrawer: false,
     txFilter: 'all', // 账单筛选：all / shared(公账) / private(私账)
     txCounts: { all: 0, shared: 0, private: 0 }, // 各 tab 的账单笔数（角标）
+    settling: false,          // 全部结算提交中
+    showRoundDrawer: false,   // 进行中轮次弹窗
+    activeRounds: [],         // 进行中轮次列表（弹窗用）
     loading: true,
   },
 
@@ -122,10 +126,17 @@ Page({
     const myUserId = this.data.myUserId
     const settledList = settled.map((t) => this.decorateTx(t, memberMap, myUserId))
 
+    // 堆叠最多显示 3 张真实卡片；超过时底部垫空卡片暗示"还有更多"
+    const STACK_MAX = 3
+    const settledStack = settledList.slice(0, STACK_MAX)
+    // 空卡片数量：还剩几张就垫几张，最多 2 张（够表达"下面还压着更多"即可）
+    const settledGhost = Math.min(Math.max(settledList.length - STACK_MAX, 0), 2)
+
     this.setData({
       groups: this.groupByDate(unsettled),
       settledList,
-      settledStack: settledList.slice(0, 5),
+      settledStack,
+      settledGhost,
       txCounts: {
         all: all.length,
         shared: sharedCount,
@@ -253,29 +264,115 @@ Page({
     return (this.data.allTxs || []).some((t) => t.type !== 'private' && !t.settledRoundId)
   },
 
-  // 全部结算：结算当前所有未结算账单
-  onSettleAll() {
-    if (!this._hasSettleable()) {
-      wx.showToast({ title: '没有需要结算的账单', icon: 'none' })
-      return
+  // 全部结算：把当前与我相关的未入轮次账单锁进新轮次 → 进该轮次的按人结算页
+  async onSettleAll() {
+    if (this.data.settling) return
+    this.setData({ settling: true })
+    wx.showLoading({ title: '生成结算...', mask: true })
+    try {
+      const res = await api.settle({ bookId: this.data.id, type: 'all' })
+      wx.hideLoading()
+      this.setData({ settling: false })
+      const roundId = res && res.round && res.round.id
+      wx.navigateTo({
+        url: `/pages/settle-detail/settle-detail?bookId=${this.data.id}&roundId=${roundId}`,
+      })
+    } catch (e) {
+      wx.hideLoading()
+      this.setData({ settling: false })
+      wx.showToast({ title: (e && e.message) || '没有可结算的账单', icon: 'none' })
     }
-    const bookName = encodeURIComponent(this.data.book.name || '账本')
-    wx.navigateTo({
-      url: `/pages/settlement/settlement?bookId=${this.data.id}&bookName=${bookName}&mode=all`,
-    })
   },
 
-  // 部分结算：进勾选页
-  onSettlePartial() {
-    if (!this._hasSettleable()) {
-      wx.showToast({ title: '没有需要结算的账单', icon: 'none' })
-      return
+  // 部分结算：先查进行中轮次，有则弹窗让用户选择
+  async onSettlePartial() {
+    let rounds = []
+    try {
+      rounds = await api.activeRounds(this.data.id)
+    } catch (e) {}
+    if (rounds && rounds.length > 0) {
+      this.setData({ activeRounds: this._decorateRounds(rounds), showRoundDrawer: true })
+    } else {
+      this._gotoSettleSelect()
     }
+  },
+
+  // 进部分结算选账单页
+  _gotoSettleSelect() {
     const bookName = encodeURIComponent(this.data.book.name || '账本')
     wx.navigateTo({
       url: `/pages/settle-select/settle-select?bookId=${this.data.id}&bookName=${bookName}`,
     })
   },
+
+  // 轮次弹窗：附加展示字段
+  _decorateRounds(rounds) {
+    return rounds.map((r) => ({
+      id: r.id,
+      typeText: r.type === 'all' ? '全部结算' : '部分结算',
+      txCount: r.txCount,
+      amountText: ((r.totalAmount || 0) / 100).toFixed(2),
+      dateText: r.createdAt ? String(r.createdAt).slice(0, 10) : '',
+    }))
+  },
+
+  // 弹窗：关闭
+  onCloseRoundDrawer() {
+    this.setData({ showRoundDrawer: false })
+  },
+
+  // 弹窗：直接开启新一轮部分结算
+  onStartNewRound() {
+    this.setData({ showRoundDrawer: false })
+    this._gotoSettleSelect()
+  },
+
+  // 弹窗：点某进行中轮次 → 进该轮次结算页
+  onTapRound(e) {
+    const roundId = e.currentTarget.dataset.id
+    this.setData({ showRoundDrawer: false })
+    wx.navigateTo({
+      url: `/pages/settle-detail/settle-detail?bookId=${this.data.id}&roundId=${roundId}`,
+    })
+  },
+
+  // 弹窗：删除进行中轮次（释放账单）
+  onDeleteRound(e) {
+    const roundId = e.currentTarget.dataset.id
+    wx.showModal({
+      title: '删除结算轮次',
+      content: '删除后本轮账单将被释放，可重新参与结算。确认删除？',
+      confirmColor: '#fa9583',
+      success: async (res) => {
+        if (!res.confirm) return
+        wx.showLoading({ title: '删除中...', mask: true })
+        try {
+          await api.revertSettlementRound(roundId)
+          wx.hideLoading()
+          wx.showToast({ title: '已删除', icon: 'success' })
+          // 刷新弹窗内轮次列表
+          const rounds = await api.activeRounds(this.data.id)
+          if (rounds && rounds.length > 0) {
+            this.setData({ activeRounds: this._decorateRounds(rounds) })
+          } else {
+            this.setData({ showRoundDrawer: false })
+          }
+          this.loadAll()
+        } catch (err) {
+          wx.hideLoading()
+          wx.showToast({ title: (err && err.message) || '删除失败', icon: 'none' })
+        }
+      },
+    })
+  },
+
+  // 结算记录入口
+  onOpenSettleRounds() {
+    wx.navigateTo({ url: `/pages/settle-rounds/settle-rounds?bookId=${this.data.id}` })
+  },
+
+  // 阻止弹窗面板点击冒泡到遮罩
+  stopPropagation() {},
 
   // book-menu 组件抛出的操作事件
   onBookAction(e) {

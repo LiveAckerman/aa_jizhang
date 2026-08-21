@@ -133,6 +133,45 @@ export class TransactionService {
     })
   }
 
+  /**
+   * 可部分结算的公账：与当前用户相关、未轮次结算、且仍存在跟当前用户相关的未结清份额。
+   * 用于 settle-select 页，过滤掉「我这边已按人结清」的账单。
+   *   - 我是付款人：还有其他参与人的份额未结清（别人还欠我）
+   *   - 我是参与人：我自己那份未结清（我还欠付款人）
+   */
+  async settleableByBook(bookId: string, userId: string) {
+    await this.bookService.assertMember(bookId, userId)
+    const rows = await this.txRepo.find({
+      where: { bookId },
+      order: { spentAt: 'DESC', createdAt: 'DESC' },
+    })
+
+    // 按人结算已结清份额集合，键 = txId::debtorUserId
+    const shares = await this.shareRepo.find({ where: { bookId } })
+    const settledShare = new Set(
+      shares.map((s) => `${s.transactionId}::${s.debtorUserId}`),
+    )
+
+    return rows.filter((t) => {
+      if (t.type !== 'shared') return false
+      if (t.settledRoundId || t.personSettledAt) return false
+      const splits = t.splits || []
+      if (t.payerId === userId) {
+        // 我垫付：存在任一他人份额未结清 → 仍需结算
+        return splits.some(
+          (s) =>
+            s.userId !== userId &&
+            s.amount > 0 &&
+            !settledShare.has(`${t.id}::${s.userId}`),
+        )
+      }
+      // 我是参与人：我这份未结清 → 仍需结算
+      const mine = splits.find((s) => s.userId === userId)
+      if (!mine || mine.amount <= 0) return false
+      return !settledShare.has(`${t.id}::${userId}`)
+    })
+  }
+
   async detail(id: string, userId: string) {
     const tx = await this.txRepo.findOne({ where: { id } })
     if (!tx) throw new NotFoundException('账单不存在')

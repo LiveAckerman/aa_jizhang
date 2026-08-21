@@ -50,6 +50,16 @@ export class TransactionController {
     return { code: 0, message: 'ok', data }
   }
 
+  /** 可部分结算的公账（与我相关、仍有未结清份额） */
+  @Get('settleable')
+  async settleable(
+    @CurrentUser('sub') userId: string,
+    @Query('bookId') bookId: string,
+  ) {
+    const data = await this.txService.settleableByBook(bookId, userId)
+    return { code: 0, message: 'ok', data }
+  }
+
   /** 账单修改记录 */
   @Get(':id/logs')
   async logs(@CurrentUser('sub') userId: string, @Param('id') id: string) {

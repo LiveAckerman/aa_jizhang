@@ -465,6 +465,23 @@ page {
   padding-right: 0;
 }
 
+/* 空卡片：真实卡片正下方，只露出"下一张卡片的底部圆角边"，逐层等距收窄居中，形成一沓卡片的厚度感 */
+.archived-ghost {
+  height: 16rpx;
+  margin: 0 auto;
+  border: 2rpx solid rgba(128, 145, 165, 0.1);
+  border-top: none;
+  border-radius: 0 0 32rpx 32rpx;
+}
+.archived-ghost-0 {
+  width: 92%;
+  background: #f5f7f9;
+}
+.archived-ghost-1 {
+  width: 84%;
+  background: #eef1f4;
+}
+
 /* 第二行：人数 · 日期 · 支出 */
 .archived-card-meta {
   margin-top: 8rpx;

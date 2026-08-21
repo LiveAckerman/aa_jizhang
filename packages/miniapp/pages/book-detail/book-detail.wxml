@@ -99,6 +99,7 @@
             <text class="settle-stat-num">{{summaryText.pendingPay}}</text>
           </view>
         </view>
+        <van-icon class="settle-stat-arrow" name="arrow" size="14px" color="#c4c4c4" />
       </view>
       <view class="settle-stat-divider"></view>
       <view class="settle-stat-item receive" data-tab="receive" bindtap="onOpenSettleDetail">
@@ -112,6 +113,7 @@
             <text class="settle-stat-num">{{summaryText.pendingReceive}}</text>
           </view>
         </view>
+        <van-icon class="settle-stat-arrow" name="arrow" size="14px" color="#c4c4c4" />
       </view>
     </view>
 
@@ -129,10 +131,16 @@
         <van-icon name="completed" size="24px" color="#4097a9" />
         <text>全部结算</text>
       </view>
+      <view class="quick-item" bindtap="onOpenSettleRounds">
+        <van-icon name="notes-o" size="24px" color="#4097a9" />
+        <text>结算记录</text>
+      </view>
+      <!-- 统计暂时隐藏，后续可能放出来
       <view class="quick-item" bindtap="onStatistics">
         <van-icon name="chart-trending-o" size="24px" color="#4097a9" />
         <text>统计</text>
       </view>
+      -->
     </view>
 
     <!-- 账单筛选 tab：全部 / 公账 / 私账 -->
@@ -194,6 +202,8 @@
 
     <!-- 已结算账单堆叠（复用 tx-item 完整样式，负 margin 层叠） -->
     <block wx:if="{{settledStack.length > 0}}">
+      <!-- 简单横线分隔符 -->
+      <view class="settled-divider"></view>
       <view class="settled-stack" bindtap="onOpenSettledDrawer">
         <view
           wx:for="{{settledStack}}"
@@ -219,6 +229,13 @@
             <text class="tx-amount">¥{{tx.amountText}}</text>
           </view>
         </view>
+        <!-- 空卡片：垫在真实卡片下方，只露出一条边，暗示还有更多 -->
+        <view
+          wx:for="{{settledGhost}}"
+          wx:key="*this"
+          wx:for-item="g"
+          class="settled-ghost settled-ghost-{{index}}"
+        ></view>
       </view>
       <!-- 点击提示 -->
       <view class="settled-hint" bindtap="onOpenSettledDrawer">
@@ -267,5 +284,31 @@
         </view>
       </view>
     </scroll-view>
+  </view>
+</view>
+
+<!-- 进行中轮次弹窗（部分结算前） -->
+<view wx:if="{{showRoundDrawer}}" class="round-mask" catchtap="onCloseRoundDrawer">
+  <view class="round-panel" catchtap="stopPropagation">
+    <view class="round-panel-header">
+      <text class="round-panel-title">有进行中的结算</text>
+      <van-icon name="cross" size="18px" color="#8091a5" catchtap="onCloseRoundDrawer" />
+    </view>
+    <text class="round-panel-sub">可继续处理，或直接开启新一轮结算</text>
+    <view class="round-list">
+      <view wx:for="{{activeRounds}}" wx:key="id" class="round-item">
+        <view class="round-item-main" data-id="{{item.id}}" catchtap="onTapRound">
+          <view class="round-item-top">
+            <text class="round-item-type">{{item.typeText}}</text>
+            <text class="round-item-badge">进行中</text>
+          </view>
+          <text class="round-item-meta">{{item.txCount}} 笔 · ¥{{item.amountText}} · {{item.dateText}}</text>
+        </view>
+        <view class="round-item-del" data-id="{{item.id}}" catchtap="onDeleteRound">
+          <van-icon name="delete-o" size="18px" color="#fa9583" />
+        </view>
+      </view>
+    </view>
+    <button class="round-new-btn" catchtap="onStartNewRound">开启新一轮部分结算</button>
   </view>
 </view>

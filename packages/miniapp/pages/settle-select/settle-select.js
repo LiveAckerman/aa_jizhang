@@ -47,15 +47,13 @@ Page({
     try {
       const [book, txs] = await Promise.all([
         api.bookDetail(this.data.bookId),
-        api.listTransactions(this.data.bookId),
+        // 后端已过滤：仅与当前用户相关、仍有未结清份额的公账
+        api.settleableTransactions(this.data.bookId),
       ])
       this._loadedOnce = true
       const memberMap = {}
       ;(book.members || []).forEach((m) => (memberMap[m.userId] = m.nickname))
-      // 只列未结算的公账，先转成带展示字段的扁平列表
-      const list = (txs || []).filter(
-        (t) => t.type !== 'private' && !t.settledRoundId,
-      )
+      const list = txs || []
       const rawItems = list.map((t) => {
         const cat = CATEGORY_MAP[t.category] || CATEGORY_MAP.other
         return {
@@ -159,27 +157,28 @@ Page({
     }
   },
 
-  // 预览结算：拿勾选的账单算方案，跳结算页确认
+  // 前去结算：选中账单建 partial 轮次 → 进按人结算明细页（轮次模式）
   async onPreview() {
     const txIds = Object.keys(this.data.checkedMap)
     if (txIds.length === 0) {
       wx.showToast({ title: '请至少选择一笔账单', icon: 'none' })
       return
     }
+    if (this.data.submitting) return
     this.setData({ submitting: true })
-    wx.showLoading({ title: '计算中...', mask: true })
+    wx.showLoading({ title: '生成结算...', mask: true })
     try {
-      const preview = await api.previewPartialSettlement(this.data.bookId, txIds)
+      const res = await api.settle({ bookId: this.data.bookId, type: 'partial', txIds })
       wx.hideLoading()
-      // 结算页用 mode=partial，带上 txIds（经 storage 传，避免 URL 过长）
-      wx.setStorageSync('partialSettleData', { txIds, preview })
-      wx.navigateTo({
-        url: `/pages/settlement/settlement?bookId=${this.data.bookId}&bookName=${encodeURIComponent(this.data.bookName)}&mode=partial`,
+      const roundId = res && res.round && res.round.id
+      // redirectTo：结算轮次已建，选账单页无需保留在栈里
+      wx.redirectTo({
+        url: `/pages/settle-detail/settle-detail?bookId=${this.data.bookId}&roundId=${roundId}`,
       })
       this.setData({ submitting: false })
     } catch (e) {
       wx.hideLoading()
-      wx.showToast({ title: (e && e.message) || '计算失败', icon: 'none' })
+      wx.showToast({ title: (e && e.message) || '结算失败', icon: 'none' })
       this.setData({ submitting: false })
     }
   },

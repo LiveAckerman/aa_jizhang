@@ -52,8 +52,13 @@ export class SettlementController {
   async byPerson(
     @CurrentUser('sub') userId: string,
     @Query('bookId') bookId: string,
+    @Query('roundId') roundId?: string,
   ) {
-    const data = await this.settlementService.byPerson(bookId, userId)
+    const data = await this.settlementService.byPerson(
+      bookId,
+      userId,
+      roundId || undefined,
+    )
     return { code: 0, message: 'ok', data }
   }
 
@@ -64,13 +69,45 @@ export class SettlementController {
   @Post('settle-person')
   async settlePerson(
     @CurrentUser('sub') userId: string,
-    @Body() body: { bookId: string; otherUserId: string },
+    @Body() body: { bookId: string; otherUserId: string; roundId?: string },
   ) {
     const data = await this.settlementService.settlePerson(
       body.bookId,
       userId,
       body.otherUserId,
+      body.roundId || undefined,
     )
+    return { code: 0, message: 'ok', data }
+  }
+
+  /**
+   * 撤回按人结算：删除我与某成员在该范围（轮次/全部）的份额结清记录
+   * POST /api/settlements/revert-person
+   */
+  @Post('revert-person')
+  async revertPerson(
+    @CurrentUser('sub') userId: string,
+    @Body() body: { bookId: string; otherUserId: string; roundId?: string },
+  ) {
+    const data = await this.settlementService.revertPerson(
+      body.bookId,
+      userId,
+      body.otherUserId,
+      body.roundId || undefined,
+    )
+    return { code: 0, message: 'ok', data }
+  }
+
+  /**
+   * 账本所有进行中轮次（部分结算前弹窗）
+   * GET /api/settlements/active-rounds?bookId=xxx
+   */
+  @Get('active-rounds')
+  async activeRounds(
+    @CurrentUser('sub') userId: string,
+    @Query('bookId') bookId: string,
+  ) {
+    const data = await this.settlementService.getActiveRounds(bookId, userId)
     return { code: 0, message: 'ok', data }
   }
 

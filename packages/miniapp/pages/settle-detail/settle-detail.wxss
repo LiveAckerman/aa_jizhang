@@ -55,6 +55,63 @@
   color: var(--text-secondary);
 }
 
+/* 全部 tab：section 分隔标题 */
+.section-header-bar {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  padding: 8rpx 8rpx 20rpx;
+  margin-top: 12rpx;
+}
+.section-header-title {
+  font-size: 28rpx;
+  font-weight: 700;
+}
+.section-header-title.pay { color: #fa9583; }
+.section-header-title.receive { color: #4097a9; }
+
+/* 全部 tab：子卡片 */
+.all-section {
+  padding: 24rpx 28rpx;
+}
+.all-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+}
+.all-section-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+}
+.all-section-count {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+}
+.all-person-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 16rpx 0;
+  border-bottom: 2rpx solid rgba(128, 145, 165, 0.08);
+}
+.all-person-row:last-child { border-bottom: none; }
+.all-person-row .person-name { flex: 1; min-width: 0; }
+.all-person-row .person-amount { font-size: 28rpx; font-weight: 700; }
+.all-empty {
+  padding: 24rpx 0;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--text-tertiary);
+}
+.person-avatar.sm {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 28rpx;
+}
+
 /* 通用卡片 */
 .glass-card {
   background: rgba(255, 255, 255, 0.9);
@@ -112,6 +169,29 @@
   flex-shrink: 0;
 }
 .settle-btn::after { border: none; }
+/* 撤回按钮：描边款 */
+.settle-btn.revert {
+  background: #fff;
+  color: #fa9583;
+  border: 2rpx solid #fa9583;
+}
+
+/* 已结清卡片 */
+.person-card.settled { opacity: 0.92; }
+.person-name-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+.settled-tag {
+  font-size: 20rpx;
+  color: #52c41a;
+  background: rgba(82, 196, 26, 0.12);
+  padding: 2rpx 12rpx;
+  border-radius: 16rpx;
+}
+.settled-amount { color: var(--text-secondary); }
+.section-header-title.settled { color: #52c41a; }
 
 /* 展开切换 */
 .expand-toggle {
@@ -186,7 +266,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 140rpx;
+  justify-content: center;
+  min-height: 500rpx;
   gap: 16rpx;
 }
 .empty-text {

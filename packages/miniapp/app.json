@@ -12,6 +12,7 @@
     "pages/settlement/settlement",
     "pages/settle-select/settle-select",
     "pages/settle-detail/settle-detail",
+    "pages/settle-rounds/settle-rounds",
     "pages/ocr-batch-edit/ocr-batch-edit",
     "pages/invite/invite",
     "pages/join/join",

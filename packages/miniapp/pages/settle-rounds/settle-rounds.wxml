@@ -1,0 +1,45 @@
+<view class="settle-rounds-page">
+
+  <!-- 骨架屏 -->
+  <block wx:if="{{loading}}">
+    <view class="glass-card sk-card" wx:for="{{[1,2,3]}}" wx:key="*this">
+      <view class="sk-body">
+        <view class="sk sk-line sk-tags"></view>
+        <view class="sk sk-line sk-amt"></view>
+        <view class="sk sk-line sk-time"></view>
+      </view>
+      <view class="sk sk-arrow"></view>
+    </view>
+  </block>
+
+  <!-- 空状态 -->
+  <view wx:elif="{{rounds.length === 0}}" class="empty">
+    <van-icon name="balance-o" size="64px" color="#c8c9cc" />
+    <view class="empty-text">暂无结算记录</view>
+  </view>
+
+  <!-- 轮次列表 -->
+  <block wx:else>
+    <view
+      class="glass-card round-card"
+      wx:for="{{rounds}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="onTapRound"
+    >
+      <view class="round-body">
+        <view class="round-tags">
+          <text class="tag {{item.type === 'all' ? 'tag-all' : 'tag-partial'}}">{{item.typeText}}</text>
+          <text class="tag {{item.isCompleted ? 'tag-completed' : 'tag-active'}}">{{item.statusText}}</text>
+        </view>
+        <view class="round-meta">
+          <text class="round-count">{{item.txCount}} 笔账单</text>
+          <text class="round-amount">¥{{item.amountText}}</text>
+        </view>
+        <view class="round-time">{{item.timeText}}</view>
+      </view>
+      <van-icon name="arrow" size="16px" color="#c8c9cc" />
+    </view>
+  </block>
+
+</view>

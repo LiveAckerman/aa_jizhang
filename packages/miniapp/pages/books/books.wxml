@@ -185,6 +185,13 @@
             <text class="archived-meta-text">{{book.memberCount}}人 · {{book.dateText}} · ¥{{book.myTotalText}}</text>
           </view>
         </view>
+        <!-- 空卡片：垫在真实卡片下方，只露出一条边，暗示还有更多 -->
+        <view
+          wx:for="{{archivedGhost}}"
+          wx:key="*this"
+          wx:for-item="g"
+          class="archived-ghost archived-ghost-{{index}}"
+        ></view>
       </view>
       <!-- 点击提示 -->
       <view class="archived-hint" bindtap="onOpenArchivedDrawer">

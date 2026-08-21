@@ -10,7 +10,7 @@ import {
 /**
  * 账单份额级结算记录（按人结算）。
  * 一条 = 某笔公账中「某个欠款人应还给付款人的那一份」已结清。
- * 与轮次结算（SettlementRound / Settlement）独立，追踪粒度更细。
+ * 归属到某个结算轮次（roundId）；全部账单模式（无轮次）下 roundId 为 null。
  */
 @Entity('tx_share_settlements')
 @Unique(['transactionId', 'debtorUserId'])
@@ -44,6 +44,11 @@ export class TxShareSettlement {
   /** 触发本次结算的用户 */
   @Column({ length: 36 })
   settledBy: string
+
+  /** 所属结算轮次（份额结清归属的轮次；全部账单模式为 null） */
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  roundId: string | null
 
   @CreateDateColumn()
   createdAt: Date

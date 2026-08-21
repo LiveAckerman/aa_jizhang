@@ -96,7 +96,7 @@
       <text class="footer-amount">¥{{checkedAmountText}}</text>
     </view>
     <button class="btn-preview" bindtap="onPreview" disabled="{{submitting || checkedCount === 0}}">
-      预览结算
+      前去结算
     </button>
   </view>
 </view>

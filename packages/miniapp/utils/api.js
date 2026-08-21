@@ -35,6 +35,8 @@ const api = {
   createTransaction: (data) => request({ url: '/transactions', method: 'POST', data }),
   listTransactions: (bookId) => request({ url: `/transactions?bookId=${bookId}` }),
   transactionSummary: (bookId) => request({ url: `/transactions/summary?bookId=${bookId}` }),
+  // 可部分结算的公账（与当前用户相关、仍有未结清份额）
+  settleableTransactions: (bookId) => request({ url: `/transactions/settleable?bookId=${bookId}` }),
   transactionDetail: (id) => request({ url: `/transactions/${id}` }),
   updateTransaction: (id, data) => request({ url: `/transactions/${id}`, method: 'PATCH', data }),
   deleteTransaction: (id) => request({ url: `/transactions/${id}`, method: 'DELETE' }),
@@ -82,11 +84,19 @@ const api = {
   confirmMyTransfers: (roundId) =>
     request({ url: `/settlements/rounds/${roundId}/confirm-mine`, method: 'POST' }),
 
-  // 按人结算：待收款/待支付明细
-  settleByPerson: (bookId) => request({ url: `/settlements/by-person?bookId=${bookId}` }),
-  // 按人结算：结清我与某成员之间的全部账单份额
-  settlePersonDebt: (bookId, otherUserId) =>
-    request({ url: '/settlements/settle-person', method: 'POST', data: { bookId, otherUserId } }),
+  // 按人结算：待收款/待支付明细（roundId 可选：轮次模式）
+  settleByPerson: (bookId, roundId) => {
+    const q = roundId ? `?bookId=${bookId}&roundId=${roundId}` : `?bookId=${bookId}`
+    return request({ url: `/settlements/by-person${q}` })
+  },
+  // 按人结算：结清我与某成员之间的全部账单份额（roundId 可选）
+  settlePersonDebt: (bookId, otherUserId, roundId) =>
+    request({ url: '/settlements/settle-person', method: 'POST', data: { bookId, otherUserId, roundId } }),
+  // 撤回按人结算
+  revertPersonDebt: (bookId, otherUserId, roundId) =>
+    request({ url: '/settlements/revert-person', method: 'POST', data: { bookId, otherUserId, roundId } }),
+  // 账本所有进行中轮次
+  activeRounds: (bookId) => request({ url: `/settlements/active-rounds?bookId=${bookId}` }),
 
   // ===== OCR识别 =====
   ocrRecognizeReceipt: (filePath, bookId) => {

@@ -1,8 +1,104 @@
+<!-- 人员卡片模板：含展开明细 + 已结算按钮 -->
+<template name="person-card">
+  <view class="glass-card person-card">
+    <view class="person-head">
+      <image class="person-avatar" src="{{item.avatar}}" mode="aspectFill" />
+      <view class="person-info">
+        <text class="person-name">{{item.nickname}}</text>
+        <text class="person-amount {{kind}}">{{kind === 'receive' ? '需转你' : '需付'}} ¥{{item.netAmountText}}</text>
+      </view>
+      <button class="settle-btn" data-id="{{item.otherUserId}}" data-name="{{item.nickname}}" catchtap="onSettle">已结算</button>
+    </view>
+    <view class="expand-toggle" data-id="{{item.otherUserId}}" bindtap="onToggleExpand">
+      <text>{{expandedMap[item.otherUserId] ? '收起明细' : '展开明细（' + item.details.length + '笔）'}}</text>
+      <van-icon name="{{expandedMap[item.otherUserId] ? 'arrow-up' : 'arrow-down'}}" size="12px" color="#8091a5" />
+    </view>
+    <view wx:if="{{expandedMap[item.otherUserId]}}" class="detail-list">
+      <view wx:for="{{item.details}}" wx:for-item="d" wx:key="txId" class="detail-item">
+        <view class="detail-icon"><van-icon name="{{d.categoryIcon}}" size="18px" color="#4097a9" /></view>
+        <view class="detail-mid">
+          <text class="detail-cat">{{d.categoryName}}</text>
+          <text class="detail-note">{{d.note || d.dateText}}</text>
+        </view>
+        <view class="detail-right">
+          <text class="detail-dir {{d.isTheyOwe ? 'in' : 'out'}}">{{d.isTheyOwe ? '+' : '-'}}¥{{d.amountText}}</text>
+          <text class="detail-date">{{d.dateText}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<!-- 待支付 section -->
+<template name="pay-section">
+  <view wx:if="{{withHeader}}" class="section-header-bar">
+    <van-icon name="cart-o" size="16px" color="#fa9583" />
+    <text class="section-header-title pay">待支付</text>
+  </view>
+  <view wx:if="{{payables.length === 0}}" class="empty-state">
+    <van-icon name="checked" size="48px" color="#52c41a" />
+    <text class="empty-text">{{withHeader ? '暂无待支付' : '没有待支付'}}</text>
+  </view>
+  <view wx:for="{{payables}}" wx:key="otherUserId">
+    <template is="person-card" data="{{item, kind: 'pay', expandedMap}}" />
+  </view>
+</template>
+
+<!-- 待收款 section -->
+<template name="receive-section">
+  <view wx:if="{{withHeader}}" class="section-header-bar">
+    <van-icon name="balance-o" size="16px" color="#4097a9" />
+    <text class="section-header-title receive">待收款</text>
+  </view>
+  <view wx:if="{{receivables.length === 0}}" class="empty-state">
+    <van-icon name="checked" size="48px" color="#52c41a" />
+    <text class="empty-text">{{withHeader ? '暂无待收款' : '没有待收款'}}</text>
+  </view>
+  <view wx:for="{{receivables}}" wx:key="otherUserId">
+    <template is="person-card" data="{{item, kind: 'receive', expandedMap}}" />
+  </view>
+</template>
+
+<!-- 已结清卡片：显示净额 + 撤回按钮 + 可展开明细 -->
+<template name="settled-card">
+  <view class="glass-card person-card settled">
+    <view class="person-head">
+      <image class="person-avatar" src="{{item.avatar}}" mode="aspectFill" />
+      <view class="person-info">
+        <view class="person-name-row">
+          <text class="person-name">{{item.nickname}}</text>
+          <text class="settled-tag">已结清</text>
+        </view>
+        <text class="person-amount settled-amount">{{item.direction === 'they_owe' ? '已收' : '已付'}} ¥{{item.netAmountText}}</text>
+      </view>
+      <button class="settle-btn revert" data-id="{{item.otherUserId}}" data-name="{{item.nickname}}" catchtap="onRevert">撤回</button>
+    </view>
+    <view class="expand-toggle" data-id="{{item.otherUserId}}" bindtap="onToggleExpand">
+      <text>{{expandedMap[item.otherUserId] ? '收起明细' : '展开明细（' + item.details.length + '笔）'}}</text>
+      <van-icon name="{{expandedMap[item.otherUserId] ? 'arrow-up' : 'arrow-down'}}" size="12px" color="#8091a5" />
+    </view>
+    <view wx:if="{{expandedMap[item.otherUserId]}}" class="detail-list">
+      <view wx:for="{{item.details}}" wx:for-item="d" wx:key="txId" class="detail-item">
+        <view class="detail-icon"><van-icon name="{{d.categoryIcon}}" size="18px" color="#4097a9" /></view>
+        <view class="detail-mid">
+          <text class="detail-cat">{{d.categoryName}}</text>
+          <text class="detail-note">{{d.note || d.dateText}}</text>
+        </view>
+        <view class="detail-right">
+          <text class="detail-dir {{d.isTheyOwe ? 'in' : 'out'}}">{{d.isTheyOwe ? '+' : '-'}}¥{{d.amountText}}</text>
+          <text class="detail-date">{{d.dateText}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
 <view class="settle-detail-page">
-  <!-- 顶部 tab -->
+  <!-- 顶部 tab：全部 / 待支付 / 待收款 -->
   <view class="tab-switch">
-    <view class="tab-item {{tab === 'receive' ? 'active' : ''}}" data-tab="receive" bindtap="onSwitchTab">待收款</view>
+    <view class="tab-item {{tab === 'all' ? 'active' : ''}}" data-tab="all" bindtap="onSwitchTab">全部</view>
     <view class="tab-item {{tab === 'pay' ? 'active' : ''}}" data-tab="pay" bindtap="onSwitchTab">待支付</view>
+    <view class="tab-item {{tab === 'receive' ? 'active' : ''}}" data-tab="receive" bindtap="onSwitchTab">待收款</view>
   </view>
 
   <!-- 骨架屏 -->
@@ -22,94 +118,28 @@
 
   <!-- 内容 -->
   <block wx:else>
-    <!-- 我的头像昵称 -->
-    <view wx:if="{{me}}" class="me-card">
-      <image class="me-avatar" src="{{me.avatar}}" mode="aspectFill" />
-      <view class="me-info">
-        <text class="me-nickname">{{me.nickname}}</text>
-        <text class="me-sub">{{tab === 'receive' ? '以下成员需向你转账' : '你需向以下成员转账'}}</text>
-      </view>
-    </view>
-
-    <!-- 待收款列表 -->
-    <block wx:if="{{tab === 'receive'}}">
-      <view wx:if="{{receivables.length === 0}}" class="empty-state">
-        <van-icon name="checked" size="64px" color="#52c41a" />
-        <text class="empty-text">没有待收款</text>
-        <text class="empty-sub">当前没有人需要向你转账</text>
-      </view>
-      <view wx:for="{{receivables}}" wx:key="otherUserId" class="glass-card person-card">
-        <view class="person-head">
-          <image class="person-avatar" src="{{item.avatar}}" mode="aspectFill" />
-          <view class="person-info">
-            <text class="person-name">{{item.nickname}}</text>
-            <text class="person-amount receive">需转你 ¥{{item.netAmountText}}</text>
-          </view>
-          <button
-            class="settle-btn"
-            data-id="{{item.otherUserId}}"
-            data-name="{{item.nickname}}"
-            catchtap="onSettle"
-          >已结算</button>
-        </view>
-        <view class="expand-toggle" data-id="{{item.otherUserId}}" bindtap="onToggleExpand">
-          <text>{{expandedMap[item.otherUserId] ? '收起明细' : '展开明细（' + item.details.length + '笔）'}}</text>
-          <van-icon name="{{expandedMap[item.otherUserId] ? 'arrow-up' : 'arrow-down'}}" size="12px" color="#8091a5" />
-        </view>
-        <view wx:if="{{expandedMap[item.otherUserId]}}" class="detail-list">
-          <view wx:for="{{item.details}}" wx:for-item="d" wx:key="txId" class="detail-item">
-            <view class="detail-icon"><van-icon name="{{d.categoryIcon}}" size="18px" color="#4097a9" /></view>
-            <view class="detail-mid">
-              <text class="detail-cat">{{d.categoryName}}</text>
-              <text class="detail-note">{{d.note || d.dateText}}</text>
-            </view>
-            <view class="detail-right">
-              <text class="detail-dir {{d.isTheyOwe ? 'in' : 'out'}}">{{d.isTheyOwe ? '+' : '-'}}¥{{d.amountText}}</text>
-              <text class="detail-date">{{d.dateText}}</text>
-            </view>
-          </view>
-        </view>
-      </view>
+    <!-- 全部 tab：按 sectionOrder 动态排序（有数据的排前面） -->
+    <block wx:if="{{tab === 'all'}}">
+      <block wx:for="{{sectionOrder}}" wx:key="*this" wx:for-item="sec">
+        <template wx:if="{{sec === 'pay'}}" is="pay-section" data="{{payables, expandedMap, withHeader: true}}" />
+        <template wx:else is="receive-section" data="{{receivables, expandedMap, withHeader: true}}" />
+      </block>
     </block>
 
-    <!-- 待支付列表 -->
-    <block wx:else>
-      <view wx:if="{{payables.length === 0}}" class="empty-state">
-        <van-icon name="checked" size="64px" color="#52c41a" />
-        <text class="empty-text">没有待支付</text>
-        <text class="empty-sub">你当前不需要向任何人转账</text>
+    <!-- 待支付 tab -->
+    <template wx:elif="{{tab === 'pay'}}" is="pay-section" data="{{payables, expandedMap, withHeader: false}}" />
+
+    <!-- 待收款 tab -->
+    <template wx:else is="receive-section" data="{{receivables, expandedMap, withHeader: false}}" />
+
+    <!-- 已结清（所有 tab 都展示，可撤回） -->
+    <block wx:if="{{settledList.length > 0}}">
+      <view class="section-header-bar">
+        <van-icon name="passed" size="16px" color="#52c41a" />
+        <text class="section-header-title settled">已结清</text>
       </view>
-      <view wx:for="{{payables}}" wx:key="otherUserId" class="glass-card person-card">
-        <view class="person-head">
-          <image class="person-avatar" src="{{item.avatar}}" mode="aspectFill" />
-          <view class="person-info">
-            <text class="person-name">{{item.nickname}}</text>
-            <text class="person-amount pay">需付 ¥{{item.netAmountText}}</text>
-          </view>
-          <button
-            class="settle-btn"
-            data-id="{{item.otherUserId}}"
-            data-name="{{item.nickname}}"
-            catchtap="onSettle"
-          >已结算</button>
-        </view>
-        <view class="expand-toggle" data-id="{{item.otherUserId}}" bindtap="onToggleExpand">
-          <text>{{expandedMap[item.otherUserId] ? '收起明细' : '展开明细（' + item.details.length + '笔）'}}</text>
-          <van-icon name="{{expandedMap[item.otherUserId] ? 'arrow-up' : 'arrow-down'}}" size="12px" color="#8091a5" />
-        </view>
-        <view wx:if="{{expandedMap[item.otherUserId]}}" class="detail-list">
-          <view wx:for="{{item.details}}" wx:for-item="d" wx:key="txId" class="detail-item">
-            <view class="detail-icon"><van-icon name="{{d.categoryIcon}}" size="18px" color="#4097a9" /></view>
-            <view class="detail-mid">
-              <text class="detail-cat">{{d.categoryName}}</text>
-              <text class="detail-note">{{d.note || d.dateText}}</text>
-            </view>
-            <view class="detail-right">
-              <text class="detail-dir {{d.isTheyOwe ? 'in' : 'out'}}">{{d.isTheyOwe ? '+' : '-'}}¥{{d.amountText}}</text>
-              <text class="detail-date">{{d.dateText}}</text>
-            </view>
-          </view>
-        </view>
+      <view wx:for="{{settledList}}" wx:key="otherUserId">
+        <template is="settled-card" data="{{item, expandedMap}}" />
       </view>
     </block>
   </block>

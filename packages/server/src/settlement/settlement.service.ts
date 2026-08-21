@@ -34,22 +34,25 @@ export class SettlementService {
   /**
    * 按人结算明细：当前用户与账本内每个人的两两净额 + 构成明细。
    * 显示按净额抵扣，结清追踪落在账单份额（TxShareSettlement）粒度。
+   * @param roundId 轮次模式：只算该轮账单，份额结清归属该轮；为空则全部账单模式。
    */
-  async byPerson(bookId: string, userId: string) {
+  async byPerson(bookId: string, userId: string, roundId?: string) {
     await this.bookService.assertMember(bookId, userId)
 
-    // 1. 未被轮次结算、未整笔按人结清的公账
-    const txs = await this.txRepo.find({
-      where: {
-        bookId,
-        type: 'shared',
-        settledRoundId: IsNull(),
-        personSettledAt: IsNull(),
-      },
-    })
+    // 1. 账单范围：轮次模式取该轮账单；全部模式取未入轮次且未整笔结清的账单
+    const txWhere: any = { bookId, type: 'shared' }
+    if (roundId) {
+      txWhere.settledRoundId = roundId
+    } else {
+      txWhere.settledRoundId = IsNull()
+      txWhere.personSettledAt = IsNull()
+    }
+    const txs = await this.txRepo.find({ where: txWhere })
 
-    // 2. 本账本已结清的份额集合，键 = txId::debtorUserId
-    const shares = await this.shareRepo.find({ where: { bookId } })
+    // 2. 该范围内已结清的份额集合（按 roundId 过滤），键 = txId::debtorUserId
+    const shareWhere: any = { bookId }
+    shareWhere.roundId = roundId ? roundId : IsNull()
+    const shares = await this.shareRepo.find({ where: shareWhere })
     const settledSet = new Set(
       shares.map((s) => `${s.transactionId}::${s.debtorUserId}`),
     )
@@ -63,8 +66,10 @@ export class SettlementService {
         avatar: m.avatar || '',
       }),
     )
+    const nameOf = (uid: string) =>
+      memberMap.get(uid) || { nickname: '成员', avatar: '' }
 
-    // 4. 遍历账单，构造与「我」相关的活债务单元
+    // 4. 遍历账单，构造与「我」相关的债务单元（含已结清标记）
     //    they_owe：我是付款人、对方欠我；i_owe：对方是付款人、我欠对方
     type Unit = {
       otherUserId: string
@@ -74,16 +79,14 @@ export class SettlementService {
       note: string
       category: string
       spentAt: Date
+      settled: boolean
     }
     const units: Unit[] = []
     for (const t of txs) {
       const splits = t.splits || []
       if (t.payerId === userId) {
-        // 我垫付：每个非我参与人欠我，且该份额未结清
         for (const s of splits) {
-          if (s.userId === userId) continue
-          if (settledSet.has(`${t.id}::${s.userId}`)) continue
-          if (s.amount <= 0) continue
+          if (s.userId === userId || s.amount <= 0) continue
           units.push({
             otherUserId: s.userId,
             amount: s.amount,
@@ -92,13 +95,12 @@ export class SettlementService {
             note: t.note,
             category: t.category,
             spentAt: t.spentAt,
+            settled: settledSet.has(`${t.id}::${s.userId}`),
           })
         }
       } else {
-        // 别人垫付：我若是参与人则欠付款人，且我这份未结清
         const mine = splits.find((s) => s.userId === userId)
         if (!mine || mine.amount <= 0) continue
-        if (settledSet.has(`${t.id}::${userId}`)) continue
         units.push({
           otherUserId: t.payerId,
           amount: mine.amount,
@@ -107,29 +109,25 @@ export class SettlementService {
           note: t.note,
           category: t.category,
           spentAt: t.spentAt,
+          settled: settledSet.has(`${t.id}::${userId}`),
         })
       }
     }
 
-    // 5. 按对方聚合：净额 = 对方欠我 - 我欠对方
+    // 5. 按对方聚合。区分「未结清净额」与「已结清对」
     const byOther = new Map<string, Unit[]>()
     units.forEach((u) => {
       if (!byOther.has(u.otherUserId)) byOther.set(u.otherUserId, [])
       byOther.get(u.otherUserId)!.push(u)
     })
 
-    const receivables: any[] = []
-    const payables: any[] = []
-    for (const [otherId, list] of byOther) {
-      const theyOwe = list
-        .filter((u) => u.direction === 'they_owe')
-        .reduce((s, u) => s + u.amount, 0)
-      const iOwe = list
-        .filter((u) => u.direction === 'i_owe')
-        .reduce((s, u) => s + u.amount, 0)
-      const net = theyOwe - iOwe
-      const info = memberMap.get(otherId) || { nickname: '成员', avatar: '' }
-      const details = list
+    const receivables: any[] = [] // 未结清：对方需转我
+    const payables: any[] = []    // 未结清：我需转对方
+    const settledList: any[] = [] // 已结清对（可撤回）
+
+    const buildDetails = (list: Unit[]) =>
+      list
+        .slice()
         .sort((a, b) => +new Date(b.spentAt) - +new Date(a.spentAt))
         .map((u) => ({
           txId: u.txId,
@@ -139,42 +137,91 @@ export class SettlementService {
           amount: u.amount,
           direction: u.direction,
         }))
-      const entry = {
-        otherUserId: otherId,
-        nickname: info.nickname,
-        avatar: info.avatar,
-        netAmount: Math.abs(net),
-        details,
+
+    for (const [otherId, list] of byOther) {
+      const info = nameOf(otherId)
+      const activeUnits = list.filter((u) => !u.settled)
+      const settledUnits = list.filter((u) => u.settled)
+
+      // 未结清部分：两两净额
+      if (activeUnits.length > 0) {
+        const theyOwe = activeUnits
+          .filter((u) => u.direction === 'they_owe')
+          .reduce((s, u) => s + u.amount, 0)
+        const iOwe = activeUnits
+          .filter((u) => u.direction === 'i_owe')
+          .reduce((s, u) => s + u.amount, 0)
+        const net = theyOwe - iOwe
+        const entry = {
+          otherUserId: otherId,
+          nickname: info.nickname,
+          avatar: info.avatar,
+          netAmount: Math.abs(net),
+          details: buildDetails(activeUnits),
+        }
+        if (net > 0) receivables.push(entry)
+        else if (net < 0) payables.push(entry)
       }
-      if (net > 0) receivables.push(entry)
-      else if (net < 0) payables.push(entry)
-      // net === 0：两清，不展示
+
+      // 已结清部分：净额 + 明细（供撤回）
+      if (settledUnits.length > 0) {
+        const theyOwe = settledUnits
+          .filter((u) => u.direction === 'they_owe')
+          .reduce((s, u) => s + u.amount, 0)
+        const iOwe = settledUnits
+          .filter((u) => u.direction === 'i_owe')
+          .reduce((s, u) => s + u.amount, 0)
+        const net = theyOwe - iOwe
+        settledList.push({
+          otherUserId: otherId,
+          nickname: info.nickname,
+          avatar: info.avatar,
+          netAmount: Math.abs(net),
+          direction: net >= 0 ? 'they_owe' : 'i_owe', // they_owe=对方付我
+          details: buildDetails(settledUnits),
+        })
+      }
     }
 
-    const me = memberMap.get(userId) || { nickname: '我', avatar: '' }
-    return { me: { userId, ...me }, receivables, payables }
+    const me = nameOf(userId)
+    return {
+      me: { userId, ...me },
+      receivables,
+      payables,
+      settledList,
+      roundId: roundId || null,
+    }
   }
 
   /**
    * 按人结算：把「我」与 otherUserId 之间两个方向所有活债务单元一次性结清。
    * 结清后若某账单所有非付款人份额都已清 → 置 personSettledAt。
    */
-  async settlePerson(bookId: string, userId: string, otherUserId: string) {
+  async settlePerson(
+    bookId: string,
+    userId: string,
+    otherUserId: string,
+    roundId?: string,
+  ) {
     await this.bookService.assertMember(bookId, userId)
     if (!otherUserId || otherUserId === userId) {
       throw new BadRequestException('结算对象无效')
     }
     await this.bookService.assertMember(bookId, otherUserId)
 
-    const txs = await this.txRepo.find({
-      where: {
-        bookId,
-        type: 'shared',
-        settledRoundId: IsNull(),
-        personSettledAt: IsNull(),
-      },
-    })
-    const existing = await this.shareRepo.find({ where: { bookId } })
+    // 账单范围：轮次模式取该轮账单，全部模式取未入轮次账单
+    const txWhere: any = { bookId, type: 'shared' }
+    if (roundId) {
+      txWhere.settledRoundId = roundId
+    } else {
+      txWhere.settledRoundId = IsNull()
+      txWhere.personSettledAt = IsNull()
+    }
+    const txs = await this.txRepo.find({ where: txWhere })
+
+    const shareWhere: any = { bookId }
+    shareWhere.roundId = roundId ? roundId : IsNull()
+    const existing = await this.shareRepo.find({ where: shareWhere })
     const settledSet = new Set(
       existing.map((s) => `${s.transactionId}::${s.debtorUserId}`),
     )
@@ -195,6 +242,7 @@ export class SettlementService {
             creditorUserId: userId,
             amount: s.amount,
             settledBy: userId,
+            roundId: roundId || null,
           })
           affectedTxIds.add(t.id)
         }
@@ -210,6 +258,7 @@ export class SettlementService {
             creditorUserId: otherUserId,
             amount: s.amount,
             settledBy: userId,
+            roundId: roundId || null,
           })
           affectedTxIds.add(t.id)
         }
@@ -229,34 +278,94 @@ export class SettlementService {
         toCreate.map((c) => queryRunner.manager.create(TxShareSettlement, c)),
       )
 
-      // 对受影响账单：若所有非付款人份额都已结清 → 置 personSettledAt
-      const now = new Date()
-      const affected = txs.filter((t) => affectedTxIds.has(t.id))
-      const allShares = existing.concat(
-        toCreate.map((c) => ({
-          transactionId: c.transactionId,
-          debtorUserId: c.debtorUserId,
-        })) as any,
-      )
-      const settledNow = new Set(
-        allShares.map((s: any) => `${s.transactionId}::${s.debtorUserId}`),
-      )
-      for (const t of affected) {
-        const debtors = (t.splits || [])
-          .filter((s) => s.userId !== t.payerId && s.amount > 0)
-          .map((s) => s.userId)
-        const allCleared = debtors.every((d) =>
-          settledNow.has(`${t.id}::${d}`),
+      // 全部账单模式：某账单所有非付款人份额都结清 → 置 personSettledAt
+      // 轮次模式：账单已被 settledRoundId 锁定，无需该标记
+      if (!roundId) {
+        const now = new Date()
+        const affected = txs.filter((t) => affectedTxIds.has(t.id))
+        const allShares = existing.concat(
+          toCreate.map((c) => ({
+            transactionId: c.transactionId,
+            debtorUserId: c.debtorUserId,
+          })) as any,
         )
-        if (allCleared) {
-          await queryRunner.manager.update(Transaction, { id: t.id }, {
-            personSettledAt: now,
-          })
+        const settledNow = new Set(
+          allShares.map((s: any) => `${s.transactionId}::${s.debtorUserId}`),
+        )
+        for (const t of affected) {
+          const debtors = (t.splits || [])
+            .filter((s) => s.userId !== t.payerId && s.amount > 0)
+            .map((s) => s.userId)
+          const allCleared = debtors.every((d) =>
+            settledNow.has(`${t.id}::${d}`),
+          )
+          if (allCleared) {
+            await queryRunner.manager.update(Transaction, { id: t.id }, {
+              personSettledAt: now,
+            })
+          }
         }
       }
 
       await queryRunner.commitTransaction()
       return { settled: true, count: toCreate.length }
+    } catch (e) {
+      if (queryRunner.isTransactionActive)
+        await queryRunner.rollbackTransaction()
+      throw e
+    } finally {
+      if (!queryRunner.isReleased) await queryRunner.release()
+    }
+  }
+
+  /**
+   * 撤回按人结算：删除「我」与 otherUserId 在该范围（轮次/全部）的份额结清记录，
+   * 恢复为待结算。同时清除相关账单可能已置的 personSettledAt。
+   */
+  async revertPerson(
+    bookId: string,
+    userId: string,
+    otherUserId: string,
+    roundId?: string,
+  ) {
+    await this.bookService.assertMember(bookId, userId)
+    if (!otherUserId || otherUserId === userId) {
+      throw new BadRequestException('撤回对象无效')
+    }
+
+    const shareWhere: any = { bookId }
+    shareWhere.roundId = roundId ? roundId : IsNull()
+    const existing = await this.shareRepo.find({ where: shareWhere })
+    // 与我和对方相关的份额（欠款/收款任一方是我，另一方是对方）
+    const mine = existing.filter(
+      (s) =>
+        (s.debtorUserId === userId && s.creditorUserId === otherUserId) ||
+        (s.debtorUserId === otherUserId && s.creditorUserId === userId),
+    )
+    if (mine.length === 0) {
+      throw new BadRequestException('没有可撤回的结算记录')
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner()
+    try {
+      await queryRunner.connect()
+      await queryRunner.startTransaction()
+      await queryRunner.manager.delete(TxShareSettlement, {
+        id: In(mine.map((s) => s.id)),
+      })
+      // 全部账单模式：撤回后相关账单不再整笔结清，清除 personSettledAt
+      if (!roundId) {
+        const txIds = [...new Set(mine.map((s) => s.transactionId))]
+        if (txIds.length) {
+          await queryRunner.manager.update(
+            Transaction,
+            { id: In(txIds) },
+            { personSettledAt: null },
+          )
+        }
+      }
+      await queryRunner.commitTransaction()
+      return { reverted: true, count: mine.length }
     } catch (e) {
       if (queryRunner.isTransactionActive)
         await queryRunner.rollbackTransaction()
@@ -328,16 +437,17 @@ export class SettlementService {
   /**
    * 执行结算（全部/部分）：事务内锁定账单 + 生成轮次 + 生成已完成结算记录
    */
+  /**
+   * 创建结算轮次（全部/部分）。统一为「轮次容器」：只锁定账单进轮次，
+   * 不再生成最优路径转账记录；轮次内按人两两净额结算（settlePerson 带 roundId）。
+   * - all：锁定「与我相关的未入轮次账单」（我是付款人或参与人）
+   * - partial：锁定 dto.txIds（须未入轮次）
+   * 允许多个轮次并存（账单靠 settledRoundId 唯一归属，天然隔离）。
+   */
   async settle(userId: string, dto: SettleDto) {
     await this.bookService.assertMember(dto.bookId, userId)
     if (dto.type === 'partial' && (!dto.txIds || dto.txIds.length === 0)) {
       throw new BadRequestException('请选择要结算的账单')
-    }
-
-    // 守卫：同一账本只允许一个"进行中"轮次（存在待确认转账的轮次）
-    const activeRound = await this.findActiveRound(dto.bookId)
-    if (activeRound) {
-      throw new BadRequestException('上一次结算还有未确认的转账，请先处理')
     }
 
     const queryRunner = this.dataSource.createQueryRunner()
@@ -345,7 +455,7 @@ export class SettlementService {
       await queryRunner.connect()
       await queryRunner.startTransaction()
 
-      // 1. 事务内加悲观写锁读取候选账单，防止并发结算重复结算同一批账单
+      // 1. 悲观写锁读取候选账单（未入轮次的公账）
       const qb = queryRunner.manager
         .createQueryBuilder(Transaction, 't')
         .setLock('pessimistic_write')
@@ -355,32 +465,40 @@ export class SettlementService {
       if (dto.type === 'partial') {
         qb.andWhere('t.id IN (:...ids)', { ids: dto.txIds })
       }
-      const txs = await qb.getMany()
+      let txs = await qb.getMany()
 
       if (dto.type === 'partial' && txs.length !== dto.txIds!.length) {
         throw new BadRequestException('部分账单已被结算或不存在，请刷新后重试')
+      }
+
+      // 全部结算：仅锁定「与我相关」的账单（我付款 或 我在 splits 里）
+      if (dto.type === 'all') {
+        txs = txs.filter(
+          (t) =>
+            t.payerId === userId ||
+            (t.splits || []).some((s) => s.userId === userId),
+        )
       }
       if (txs.length === 0) {
         throw new BadRequestException('没有可结算的账单')
       }
 
-      // 2. 计算方案
-      const plan = this.computePlanForTxs(txs)
       const txIds = txs.map((t) => t.id)
+      const totalAmount = txs.reduce((sum, t) => sum + (t.amount || 0), 0)
 
-      // 3. 建轮次
+      // 2. 建轮次（transferPlans 存按人净额快照，供列表概览；不走最优路径）
       const round = await queryRunner.manager.save(
         queryRunner.manager.create(SettlementRound, {
           bookId: dto.bookId,
           createdBy: userId,
           type: dto.type,
-          txCount: plan.txCount,
-          totalAmount: plan.totalAmount,
-          transferPlans: plan.transferPlans,
+          txCount: txs.length,
+          totalAmount,
+          transferPlans: null,
         }),
       )
 
-      // 4. 条件更新：只标记仍未结算的账单，校验影响行数防并发
+      // 3. 条件更新：只锁定仍未入轮次的账单，校验影响行数防并发
       const updateRes = await queryRunner.manager.update(
         Transaction,
         { id: In(txIds), settledRoundId: IsNull() },
@@ -390,22 +508,8 @@ export class SettlementService {
         throw new BadRequestException('部分账单已被结算，请刷新后重试')
       }
 
-      // 5. 生成待确认（pending）转账记录 —— 由收/付款方逐笔确认收款
-      const settlements = plan.transferPlans.map((p) =>
-        queryRunner.manager.create(Settlement, {
-          bookId: dto.bookId,
-          fromUserId: p.fromUserId,
-          toUserId: p.toUserId,
-          amount: p.amount,
-          status: 'pending' as const,
-          roundId: round.id,
-          completedAt: null,
-        }),
-      )
-      if (settlements.length) await queryRunner.manager.save(settlements)
-
       await queryRunner.commitTransaction()
-      return { round, settlements }
+      return { round }
     } catch (e) {
       if (queryRunner.isTransactionActive) await queryRunner.rollbackTransaction()
       throw e
@@ -426,11 +530,14 @@ export class SettlementService {
     try {
       await queryRunner.connect()
       await queryRunner.startTransaction()
+      // 释放账单：清空归属
       await queryRunner.manager.update(
         Transaction,
         { settledRoundId: roundId },
         { settledRoundId: null },
       )
+      // 删除本轮的份额结清记录 + 旧的最优路径转账记录（兼容历史数据）
+      await queryRunner.manager.delete(TxShareSettlement, { roundId })
       await queryRunner.manager.delete(Settlement, { roundId })
       await queryRunner.manager.delete(SettlementRound, { id: roundId })
       await queryRunner.commitTransaction()
@@ -444,7 +551,45 @@ export class SettlementService {
   }
 
   /**
-   * 结算轮次列表：每轮附带其转账明细（含昵称由前端 memberMap 补全）
+   * 计算一批轮次的完成状态：轮次内所有账单的所有债务份额都已结清 → completed。
+   * 返回 Map<roundId, 'active' | 'completed'>。
+   */
+  private async computeRoundStatuses(rounds: SettlementRound[]) {
+    const status = new Map<string, 'active' | 'completed'>()
+    if (rounds.length === 0) return status
+    const roundIds = rounds.map((r) => r.id)
+    const txs = await this.txRepo.find({
+      where: { settledRoundId: In(roundIds) },
+    })
+    const shares = await this.shareRepo.find({
+      where: { roundId: In(roundIds) },
+    })
+    const settledSet = new Set(
+      shares.map((s) => `${s.transactionId}::${s.debtorUserId}`),
+    )
+    // 每轮：收集其所有债务份额（非付款人且金额>0），判断是否全在 settledSet
+    for (const r of rounds) {
+      const roundTxs = txs.filter((t) => t.settledRoundId === r.id)
+      let allCleared = true
+      for (const t of roundTxs) {
+        const debtors = (t.splits || []).filter(
+          (s) => s.userId !== t.payerId && s.amount > 0,
+        )
+        for (const d of debtors) {
+          if (!settledSet.has(`${t.id}::${d.userId}`)) {
+            allCleared = false
+            break
+          }
+        }
+        if (!allCleared) break
+      }
+      status.set(r.id, allCleared ? 'completed' : 'active')
+    }
+    return status
+  }
+
+  /**
+   * 结算轮次列表：每轮附带状态（进行中/已完成）+ 概览。
    */
   async listRounds(bookId: string, userId: string) {
     await this.bookService.assertMember(bookId, userId)
@@ -453,13 +598,27 @@ export class SettlementService {
       order: { createdAt: 'DESC' },
     })
     if (rounds.length === 0) return []
-    const settlements = await this.settlementRepo.find({
-      where: { roundId: In(rounds.map((r) => r.id)) },
-    })
+    const statusMap = await this.computeRoundStatuses(rounds)
     return rounds.map((r) => ({
       ...r,
-      settlements: settlements.filter((s) => s.roundId === r.id),
+      status: statusMap.get(r.id) || 'active',
     }))
+  }
+
+  /**
+   * 取账本所有「进行中」轮次（供部分结算前弹窗）。
+   */
+  async getActiveRounds(bookId: string, userId: string) {
+    await this.bookService.assertMember(bookId, userId)
+    const rounds = await this.roundRepo.find({
+      where: { bookId },
+      order: { createdAt: 'DESC' },
+    })
+    if (rounds.length === 0) return []
+    const statusMap = await this.computeRoundStatuses(rounds)
+    return rounds
+      .filter((r) => statusMap.get(r.id) === 'active')
+      .map((r) => ({ ...r, status: 'active' as const }))
   }
 
   /**

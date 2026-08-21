@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "结算记录",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "van-icon": "@vant/weapp/icon/index"
+  }
+}
