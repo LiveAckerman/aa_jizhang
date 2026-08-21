@@ -13,6 +13,7 @@ Page({
     cover: '',
     scenes: SCENES,
     saving: false,
+    loading: false,
   },
 
   onLoad(query) {
@@ -26,6 +27,7 @@ Page({
   },
 
   async loadBook(id) {
+    this.setData({ loading: true })
     try {
       const book = await api.bookDetail(id)
       // scene 不在预设列表里 → 视为自定义场景，回填到自定义输入框
@@ -36,6 +38,7 @@ Page({
           description: book.description || '',
           scene: book.scene,
           cover: book.cover || '',
+          loading: false,
         })
       } else {
         this.setData({
@@ -44,9 +47,13 @@ Page({
           scene: 'custom',
           customName: book.sceneName || book.scene || '',
           cover: book.cover || '',
+          loading: false,
         })
       }
-    } catch (e) {}
+    } catch (e) {
+      this.setData({ loading: false })
+      wx.showToast({ title: '加载失败', icon: 'none' })
+    }
   },
 
   onNameInput(e) {
@@ -66,13 +73,18 @@ Page({
   async onChooseCover() {
     try {
       const res = await wx.chooseMedia({ count: 1, mediaType: ['image'], sourceType: ['camera', 'album'] })
+      if (!res.tempFiles || res.tempFiles.length === 0) return
       const filePath = res.tempFiles[0].tempFilePath
       wx.showLoading({ title: '上传中...', mask: true })
       const url = await this.uploadImage(filePath)
       wx.hideLoading()
       this.setData({ cover: url })
+      wx.showToast({ title: '上传成功', icon: 'success' })
     } catch (e) {
       wx.hideLoading()
+      if (e.errMsg && e.errMsg.includes('cancel')) return // 用户取消选图
+      console.error('选择封面失败', e)
+      wx.showToast({ title: '上传失败', icon: 'none' })
     }
   },
 

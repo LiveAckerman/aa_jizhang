@@ -1,4 +1,24 @@
 <view class="container form-page">
+  <!-- 加载骨架屏 -->
+  <view wx:if="{{loading}}" class="loading-skeleton">
+    <view class="sk-cover"></view>
+    <view class="sk-card">
+      <view class="sk-line sk-line-label"></view>
+      <view class="sk-line sk-line-input"></view>
+    </view>
+    <view class="sk-card">
+      <view class="sk-line sk-line-label"></view>
+      <view class="sk-scene-grid">
+        <view class="sk-scene-item" wx:for="{{[1,2,3,4,5,6]}}" wx:key="*this"></view>
+      </view>
+    </view>
+    <view class="sk-card">
+      <view class="sk-line sk-line-label"></view>
+      <view class="sk-line sk-line-textarea"></view>
+    </view>
+  </view>
+
+  <block wx:else>
   <!-- 封面 -->
   <view class="cover-picker" bindtap="onChooseCover">
     <image wx:if="{{cover}}" class="cover-img" src="{{cover}}" mode="aspectFill" />
@@ -63,4 +83,5 @@
   <button class="btn-primary save-btn" bindtap="onSave" disabled="{{saving}}">
     {{saving ? '保存中...' : (isEdit ? '保存' : '创建账本')}}
   </button>
+  </block>
 </view>
