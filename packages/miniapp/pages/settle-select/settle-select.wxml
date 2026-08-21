@@ -1,6 +1,21 @@
 <view class="select-page">
+  <!-- 骨架屏 -->
   <block wx:if="{{loading}}">
-    <view class="loading-tip">加载中...</view>
+    <view class="sk-all-bar"></view>
+    <view class="sk-group" wx:for="{{[1,2]}}" wx:key="*this">
+      <view class="sk-line sk-date"></view>
+      <view class="glass-card sk-list">
+        <view class="sk-row" wx:for="{{[1,2,3]}}" wx:key="*this" wx:for-item="_">
+          <view class="sk-circle"></view>
+          <view class="sk-icon"></view>
+          <view class="sk-mid">
+            <view class="sk-line sk-cat"></view>
+            <view class="sk-line sk-note"></view>
+          </view>
+          <view class="sk-line sk-amt"></view>
+        </view>
+      </view>
+    </view>
   </block>
 
   <block wx:elif="{{groups.length === 0}}">

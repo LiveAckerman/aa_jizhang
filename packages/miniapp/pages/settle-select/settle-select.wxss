@@ -3,12 +3,59 @@
   padding: 0 32rpx calc(140rpx + env(safe-area-inset-bottom));
 }
 
-.loading-tip {
-  text-align: center;
-  color: var(--text-secondary);
-  font-size: 28rpx;
-  padding-top: 200rpx;
+/* 骨架屏 */
+.sk-line,
+.sk-all-bar,
+.sk-circle,
+.sk-icon {
+  background: #eef0f2;
+  animation: sk-blink 1.2s ease-in-out infinite;
 }
+@keyframes sk-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.sk-all-bar {
+  width: 140rpx;
+  height: 44rpx;
+  border-radius: 10rpx;
+  margin: 24rpx 8rpx;
+}
+.sk-group {
+  margin-bottom: 8rpx;
+}
+.sk-line { border-radius: 8rpx; }
+.sk-date { width: 160rpx; height: 24rpx; margin: 16rpx 0 12rpx 8rpx; }
+.sk-list {
+  padding: 8rpx 0;
+}
+.sk-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx 28rpx;
+}
+.sk-circle {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 22rpx;
+  flex-shrink: 0;
+}
+.sk-icon {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 30rpx;
+  flex-shrink: 0;
+}
+.sk-mid {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+.sk-cat { width: 120rpx; height: 26rpx; }
+.sk-note { width: 220rpx; height: 22rpx; }
+.sk-amt { width: 100rpx; height: 30rpx; flex-shrink: 0; }
 
 /* 空状态 */
 .empty-state {
