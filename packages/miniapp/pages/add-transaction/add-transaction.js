@@ -57,10 +57,12 @@ Page({
       const currency = tx.currency || 'CNY'
       const displayAmount =
         currency === 'CNY' || !tx.originalAmount ? tx.amount / 100 : tx.originalAmount / 100
-      // 非记录人：只读模式（仅可查看，不能修改/删除）
-      const readonly = !!tx.creatorId && tx.creatorId !== this.data.myUserId
+      // 只读模式：非记录人，或账单已进入结算轮次（结算中/已结算，需先撤销结算才能改）
+      const notMine = !!tx.creatorId && tx.creatorId !== this.data.myUserId
+      const inRound = !!tx.settledRoundId
+      const readonly = notMine || inRound
       if (readonly) {
-        this.setData({ readonly: true })
+        this.setData({ readonly: true, readonlyReason: inRound ? 'settled' : 'notMine' })
         wx.setNavigationBarTitle({ title: '账单详情' })
       }
       this.setData({

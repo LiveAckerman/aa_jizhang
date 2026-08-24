@@ -57,4 +57,27 @@ Page({
       url: '/pages/settle-detail/settle-detail?bookId=' + this.data.bookId + '&roundId=' + roundId,
     })
   },
+
+  // 删除轮次（仅进行中可删）：释放本轮账单，可重新参与结算
+  onDeleteRound(e) {
+    const roundId = e.currentTarget.dataset.id
+    wx.showModal({
+      title: '删除结算轮次',
+      content: '删除后本轮账单将被释放，可重新参与结算。确认删除？',
+      confirmColor: '#fa9583',
+      success: async (res) => {
+        if (!res.confirm) return
+        wx.showLoading({ title: '删除中...', mask: true })
+        try {
+          await api.revertSettlementRound(roundId)
+          wx.hideLoading()
+          wx.showToast({ title: '已删除', icon: 'success' })
+          this.loadData()
+        } catch (err) {
+          wx.hideLoading()
+          wx.showToast({ title: (err && err.message) || '删除失败', icon: 'none' })
+        }
+      },
+    })
+  },
 })

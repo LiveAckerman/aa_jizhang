@@ -248,6 +248,32 @@
   margin-top: 10rpx;
 }
 
+/* 快捷操作图标包裹层（用于放角标） */
+.quick-item-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 快捷操作角标：红色圆点，数字居中 */
+.quick-item-badge {
+  position: absolute;
+  top: -6rpx;
+  right: -12rpx;
+  min-width: 32rpx;
+  height: 32rpx;
+  line-height: 32rpx;
+  padding: 0 8rpx;
+  box-sizing: border-box;
+  border-radius: 16rpx;
+  background: #fa9583;
+  color: #fff;
+  font-size: 20rpx;
+  font-weight: 600;
+  text-align: center;
+}
+
 /* button 版快捷项：清掉小程序 button 默认样式，与 view 项对齐 */
 .share-btn {
   border: none;
@@ -371,6 +397,15 @@
   font-size: 18rpx;
   color: #52c41a;
   background: rgba(82, 196, 26, 0.12);
+  padding: 2rpx 12rpx;
+  border-radius: 16rpx;
+}
+
+/* 结算中标签：橙色，区别于绿色「已结算」 */
+.tx-settling-tag {
+  font-size: 18rpx;
+  color: #fa9583;
+  background: rgba(250, 149, 131, 0.14);
   padding: 2rpx 12rpx;
   border-radius: 16rpx;
 }

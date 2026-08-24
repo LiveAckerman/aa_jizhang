@@ -191,7 +191,7 @@ export class TransactionService {
       throw new ForbiddenException('只有记录人可以修改该账单')
     }
     if (tx.settledRoundId != null) {
-      throw new BadRequestException('该账单已结算，请先撤销结算再编辑')
+      throw new BadRequestException('该账单已在结算轮次中，请先删除结算轮次再编辑')
     }
 
     // 用来 diff 的旧值快照

@@ -38,7 +38,16 @@
         </view>
         <view class="round-time">{{item.timeText}}</view>
       </view>
-      <van-icon name="arrow" size="16px" color="#c8c9cc" />
+      <!-- 进行中：显示删除按钮；已完成：显示箭头 -->
+      <view
+        wx:if="{{!item.isCompleted}}"
+        class="round-del"
+        data-id="{{item.id}}"
+        catchtap="onDeleteRound"
+      >
+        <van-icon name="delete-o" size="18px" color="#fa9583" />
+      </view>
+      <van-icon wx:else name="arrow" size="16px" color="#c8c9cc" />
     </view>
   </block>
 

@@ -132,7 +132,10 @@
         <text>全部结算</text>
       </view>
       <view class="quick-item" bindtap="onOpenSettleRounds">
-        <van-icon name="notes-o" size="24px" color="#4097a9" />
+        <view class="quick-item-icon-wrap">
+          <van-icon name="notes-o" size="24px" color="#4097a9" />
+          <view wx:if="{{activeRoundCount > 0}}" class="quick-item-badge">{{activeRoundCount}}</view>
+        </view>
         <text>结算记录</text>
       </view>
       <!-- 统计暂时隐藏，后续可能放出来
@@ -187,6 +190,7 @@
               <view class="tx-title-row">
                 <text class="tx-cat">{{tx.categoryName}}</text>
                 <van-icon wx:if="{{tx.isPrivate}}" name="lock" size="13px" color="#8091a5" />
+                <text wx:if="{{tx.settling}}" class="tx-settling-tag">结算中</text>
               </view>
               <text class="tx-note">{{tx.note || tx.payerName + ' 付款'}}</text>
               <!-- 我应收/我应付暂时隐藏，后续可能恢复

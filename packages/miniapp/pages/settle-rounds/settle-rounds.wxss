@@ -74,6 +74,22 @@
   color: var(--text-secondary);
 }
 
+/* 删除按钮：圆形浅珊瑚底，点击有反馈 */
+.round-del {
+  flex-shrink: 0;
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 32rpx;
+  background: rgba(250, 149, 131, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.round-del:active {
+  background: rgba(250, 149, 131, 0.25);
+}
+
 /* 空状态 */
 .empty {
   display: flex;

@@ -36,7 +36,8 @@
     <!-- 只读提示：非记录人查看他人账单 -->
     <view wx:if="{{readonly}}" class="readonly-tip">
       <van-icon name="eye-o" size="16px" color="#8091a5" />
-      <text>该账单由他人记录，仅记录人可修改</text>
+      <text wx:if="{{readonlyReason === 'settled'}}">该账单已在结算中，需先删除结算轮次才能修改</text>
+      <text wx:else>该账单由他人记录，仅记录人可修改</text>
     </view>
 
     <!-- 只读时用遮罩层拦截表单交互 -->

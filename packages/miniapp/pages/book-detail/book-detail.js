@@ -38,6 +38,8 @@ Page({
     settling: false,          // 全部结算提交中
     showRoundDrawer: false,   // 进行中轮次弹窗
     activeRounds: [],         // 进行中轮次列表（弹窗用）
+    activeRoundCount: 0,      // 进行中轮次数量（结算记录入口角标）
+    activeRoundIds: [],       // 进行中轮次 id 集合（区分结算中/已结算）
     loading: true,
   },
 
@@ -63,10 +65,11 @@ Page({
       this.setData({ loading: true })
     }
     try {
-      const [book, txs, summary] = await Promise.all([
+      const [book, txs, summary, activeRounds] = await Promise.all([
         api.bookDetail(this.data.id),
         api.listTransactions(this.data.id),
         api.transactionSummary(this.data.id),
+        api.activeRounds(this.data.id).catch(() => []),
       ])
       const myUserId = this.data.myUserId
       wx.setNavigationBarTitle({ title: book.name })
@@ -85,10 +88,14 @@ Page({
           pendingReceive: ((summary.pendingReceive || 0) / 100).toFixed(2),
         },
         allTxs: txs || [],
-        loading: false,
+        activeRoundCount: (activeRounds || []).length,
+        // 进行中轮次 id 集合：账单归属这些轮次即"结算中"，否则（轮次已完成）为"已结算"
+        activeRoundIds: (activeRounds || []).map((r) => r.id),
       })
       this.applyTxFilter()
     } catch (e) {
+      wx.showToast({ title: (e && e.message) || '加载失败', icon: 'none' })
+    } finally {
       this.setData({ loading: false })
     }
   },
@@ -115,10 +122,17 @@ Page({
     const sharedCount = all.filter((t) => t.type !== 'private').length
     const privateCount = all.filter((t) => t.type === 'private').length
 
-    // 拆分：未结算按日期分组正常展示；已结算折叠成堆叠 + 抽屉
-    // 已结算 = 轮次结算(settledRoundId) 或 按人整笔结清(personSettledAt)
-    const isSettled = (t) => !!t.settledRoundId || !!t.personSettledAt
-    const unsettled = list.filter((t) => !isSettled(t))
+    // 三态拆分：
+    //   已结算：整笔按人结清(personSettledAt) 或 所属轮次已完成 → 折叠成堆叠+抽屉
+    //   结算中：归属某个「进行中」轮次(settledRoundId 在 activeRoundIds 内) → 留在列表、标记、不可再选/改
+    //   未结算：其余 → 正常展示，可参与结算
+    const activeSet = new Set(this.data.activeRoundIds || [])
+    const isSettling = (t) => !!t.settledRoundId && activeSet.has(t.settledRoundId)
+    const isSettled = (t) =>
+      !!t.personSettledAt || (!!t.settledRoundId && !activeSet.has(t.settledRoundId))
+
+    // 未结算 + 结算中 都留在主列表；已结算折叠
+    const inList = list.filter((t) => !isSettled(t))
     const settled = list.filter(isSettled)
 
     const memberMap = {}
@@ -133,7 +147,7 @@ Page({
     const settledGhost = Math.min(Math.max(settledList.length - STACK_MAX, 0), 2)
 
     this.setData({
-      groups: this.groupByDate(unsettled),
+      groups: this.groupByDate(inList),
       settledList,
       settledStack,
       settledGhost,
@@ -172,6 +186,8 @@ Page({
         myShareText = (myShareAmount / 100).toFixed(2)
       }
     }
+    const activeSet = new Set(this.data.activeRoundIds || [])
+    const settling = !!t.settledRoundId && activeSet.has(t.settledRoundId)
     return {
       ...t,
       amountText: (t.amount / 100).toFixed(2),
@@ -180,6 +196,7 @@ Page({
       payerName: memberMap[t.payerId] || '成员',
       isPrivate: t.type === 'private',
       isSettled: !!t.settledRoundId,
+      settling, // 结算中（归属进行中轮次）：列表内展示、不可选/改
       isMyPayment,
       myShareText,
       myReceiveText,
