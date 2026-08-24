@@ -274,7 +274,7 @@ export class SettlementService {
       await queryRunner.connect()
       await queryRunner.startTransaction()
 
-      await queryRunner.manager.save(
+      const created = await queryRunner.manager.save(
         toCreate.map((c) => queryRunner.manager.create(TxShareSettlement, c)),
       )
 
@@ -509,7 +509,13 @@ export class SettlementService {
       }
 
       await queryRunner.commitTransaction()
-      return { round }
+
+      // 返回轮次详情
+      const roundWithDetails = await this.roundRepo.findOne({
+        where: { id: round.id },
+      })
+
+      return { round: roundWithDetails }
     } catch (e) {
       if (queryRunner.isTransactionActive) await queryRunner.rollbackTransaction()
       throw e

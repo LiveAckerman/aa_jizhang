@@ -171,6 +171,11 @@ Page({
       const res = await api.settle({ bookId: this.data.bookId, type: 'partial', txIds })
       wx.hideLoading()
       const roundId = res && res.round && res.round.id
+      if (!roundId) {
+        this.setData({ submitting: false })
+        wx.showToast({ title: '结算创建异常，请重试', icon: 'none' })
+        return
+      }
       // redirectTo：结算轮次已建，选账单页无需保留在栈里
       wx.redirectTo({
         url: `/pages/settle-detail/settle-detail?bookId=${this.data.bookId}&roundId=${roundId}`,

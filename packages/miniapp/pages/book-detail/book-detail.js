@@ -291,6 +291,10 @@ Page({
       wx.hideLoading()
       this.setData({ settling: false })
       const roundId = res && res.round && res.round.id
+      if (!roundId) {
+        wx.showToast({ title: '结算创建异常，请重试', icon: 'none' })
+        return
+      }
       wx.navigateTo({
         url: `/pages/settle-detail/settle-detail?bookId=${this.data.id}&roundId=${roundId}`,
       })
