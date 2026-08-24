@@ -39,7 +39,9 @@ import { TxShareSettlement } from './settlement/tx-share-settlement.entity'
         password: config.get('DB_PASSWORD'),
         database: config.get('DB_DATABASE'),
         entities: [User, Book, BookMember, BookGroup, Transaction, TransactionLog, Settlement, SettlementRound, TxShareSettlement],
-        synchronize: true, // 开发环境自动建表；生产环境应关闭并用迁移
+        // 自动同步表结构：默认关闭（生产安全）。本地开发需自动建表时在 .env 设 DB_SYNCHRONIZE=true。
+        // 生产改表走 migration（见 data-source.ts + pnpm migration:*），避免误删列/丢数据。
+        synchronize: config.get('DB_SYNCHRONIZE') === 'true',
         // 断线重连：热重载 / 网络抖动后自动重建连接，避免复用已被服务端关闭的死连接
         keepConnectionAlive: true,
         // node-postgres 连接池参数（远程库长连接必配）

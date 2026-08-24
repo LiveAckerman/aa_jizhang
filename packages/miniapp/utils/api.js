@@ -52,37 +52,14 @@ const api = {
     return request({ url: `/stats/overview${q}` })
   },
 
-  // ===== 结算 =====
-  calculateSettlement: (bookId) => request({ url: `/settlements/calculate?bookId=${bookId}` }),
-  createSettlement: (data) => request({ url: '/settlements', method: 'POST', data }),
-  batchCreateSettlement: (data) => request({ url: '/settlements/batch', method: 'POST', data }),
-  listSettlements: (bookId) => request({ url: `/settlements?bookId=${bookId}` }),
-  completeSettlement: (id) => request({ url: `/settlements/${id}/complete`, method: 'PATCH' }),
-  deleteSettlement: (id) => request({ url: `/settlements/${id}`, method: 'DELETE' }),
-  // 撤回单条已完成结算
-  revertSettlement: (id) => request({ url: `/settlements/${id}/revert`, method: 'PATCH' }),
-  // 按成员撤回已完成结算（targetUserId 为空则撤回全部）
-  revertSettlementByUser: (bookId, targetUserId) =>
-    request({ url: '/settlements/revert-by-user', method: 'POST', data: { bookId, targetUserId } }),
-  // 多次结算：执行结算（全部/部分）
+  // ===== 结算（轮次容器 + 按人两两净额）=====
+  // 执行结算（全部/部分）：建轮次并锁定账单
   settle: (data) => request({ url: '/settlements/settle', method: 'POST', data }),
-  // 部分结算预览
-  previewPartialSettlement: (bookId, txIds) =>
-    request({ url: '/settlements/preview-partial', method: 'POST', data: { bookId, txIds } }),
-  // 结算轮次列表
+  // 结算轮次列表（带 active/completed 状态）
   listSettlementRounds: (bookId) => request({ url: `/settlements/rounds?bookId=${bookId}` }),
-  // 撤销某一轮结算
+  // 删除某一轮结算（释放该轮账单）
   revertSettlementRound: (roundId) =>
     request({ url: `/settlements/rounds/${roundId}/revert`, method: 'POST' }),
-  // 取账本进行中的轮次（存在待确认转账）
-  getActiveRound: (bookId) => request({ url: `/settlements/active-round?bookId=${bookId}` }),
-  // 确认单笔转账收款
-  confirmTransfer: (id) => request({ url: `/settlements/transfers/${id}/confirm`, method: 'POST' }),
-  // 撤销单笔已确认转账
-  revertTransfer: (id) => request({ url: `/settlements/transfers/${id}/revert`, method: 'POST' }),
-  // 一键确认本轮与我相关的待确认转账
-  confirmMyTransfers: (roundId) =>
-    request({ url: `/settlements/rounds/${roundId}/confirm-mine`, method: 'POST' }),
 
   // 按人结算：待收款/待支付明细（roundId 可选：轮次模式）
   settleByPerson: (bookId, roundId) => {

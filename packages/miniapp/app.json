@@ -9,7 +9,6 @@
     "pages/quick-add/quick-add",
     "pages/profile-edit/profile-edit",
     "pages/transaction-logs/transaction-logs",
-    "pages/settlement/settlement",
     "pages/settle-select/settle-select",
     "pages/settle-detail/settle-detail",
     "pages/settle-rounds/settle-rounds",
