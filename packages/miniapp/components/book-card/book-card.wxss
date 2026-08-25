@@ -43,7 +43,11 @@
   padding: 28rpx;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
+}
+
+.bc-bottom {
+  margin-top: auto;
 }
 
 /* ---- 顶部 ---- */
@@ -126,6 +130,7 @@
 .bc-bottom {
   display: flex;
   flex-direction: column;
+  margin-top: auto;
 }
 
 .bc-name-row {
