@@ -223,6 +223,8 @@ Page({
         mySharedText: (myShared / 100).toFixed(2),
         myPrivateText: (myPrivate / 100).toFixed(2),
         bookTotalText: ((b.bookTotal || 0) / 100).toFixed(2),
+        // 归一化 memberAvatars → members[{avatar}]，与 detail 保持字段一致，供 book-card 使用
+        members: (b.memberAvatars || []).map((av) => ({ avatar: av })),
       }
       if (b.archived) archived.push(item)
       else active.push(item)
