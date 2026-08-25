@@ -1,8 +1,8 @@
 {
   "pages": [
+    "pages/books/books",
     "pages/login/login",
     "pages/edit-nickname/index",
-    "pages/books/books",
     "pages/book-form/book-form",
     "pages/book-detail/book-detail",
     "pages/add-transaction/add-transaction",
@@ -51,10 +51,11 @@
   "componentFramework": "glass-easel",
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents",
-  "requiredPrivateInfos": ["getLocation", "chooseLocation"],
+  "requiredPrivateInfos": ["chooseLocation"],
   "permission": {
     "scope.userLocation": {
       "desc": "用于记录消费发生的地点，便于账单管理"
     }
-  }
+  },
+  "__usePrivacyCheck__": true
 }

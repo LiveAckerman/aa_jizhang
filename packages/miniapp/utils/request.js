@@ -33,9 +33,10 @@ function request({ url, method = 'GET', data = {}, header = {} }) {
             reject(body)
           }
         } else if (statusCode === 401) {
-          // 登录态失效
+          // 登录态失效：清除并回首页游客态（不强制停留登录页），
+          // 再次触发需要账号的动作时会引导登录
           getApp().clearLoginState()
-          wx.reLaunch({ url: '/pages/login/login' })
+          wx.reLaunch({ url: '/pages/books/books' })
           reject(res)
         } else {
           wx.showToast({ title: `请求错误 ${statusCode}`, icon: 'none' })

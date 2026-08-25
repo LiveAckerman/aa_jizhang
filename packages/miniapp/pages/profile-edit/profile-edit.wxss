@@ -4,21 +4,37 @@
   padding-bottom: 60rpx;
 }
 
-/* 微信 chooseAvatar button 需重置默认样式 */
+/* 微信 chooseAvatar button 需重置默认样式（含 min-width / display）*/
 .avatar-btn {
   padding: 0;
+  margin: 64rpx auto 20rpx;
   background: transparent;
   line-height: normal;
+  min-height: 0;
+  font-size: inherit;
+  color: inherit;
+  display: block;
+  width: 200rpx;
+  height: 200rpx;
 }
 .avatar-btn::after { border: none; }
+/* 覆盖 avatar-section 的 margin，避免与 avatar-btn 的 margin 叠加 */
+.avatar-btn.avatar-section { margin: 64rpx auto 20rpx; }
 
 .list-item-btn {
   width: 100%;
   padding: 20rpx 32rpx;
+  margin: 0;
   background: transparent;
   line-height: normal;
   border-radius: 0;
   text-align: left;
+  min-height: 96rpx;
+  font-size: inherit;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 .list-item-btn::after { border: none; }
 

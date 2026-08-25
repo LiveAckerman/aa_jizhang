@@ -1,9 +1,11 @@
 const app = getApp()
 const { setTabBarSelected } = require('../../utils/tabbar')
+const { requireLogin } = require('../../utils/auth')
 
 Page({
   data: {
     user: null,
+    isGuest: false, // 未登录游客态：展示登录引导，隐藏账号相关操作
   },
 
   onShow() {
@@ -14,11 +16,22 @@ Page({
   },
 
   loadUserInfo() {
-    this.setData({ user: app.globalData.user || {} })
+    // 微信审核要求：未登录也可进入「我的」页浏览，不强制跳转登录。
+    if (!app.isLoggedIn()) {
+      this.setData({ isGuest: true, user: {} })
+      return
+    }
+    this.setData({ isGuest: false, user: app.globalData.user || {} })
+  },
+
+  // 游客态「去登录」按钮
+  onGuestLogin() {
+    requireLogin()
   },
 
   // 进入二级页：个人资料编辑
   goEdit() {
+    if (!requireLogin()) return
     wx.navigateTo({ url: '/pages/profile-edit/profile-edit' })
   },
 
@@ -42,7 +55,8 @@ Page({
       success: (res) => {
         if (res.confirm) {
           app.clearLoginState()
-          wx.reLaunch({ url: '/pages/login/login' })
+          // 退出后回到首页游客态（不再强制停留登录页）
+          wx.reLaunch({ url: '/pages/books/books' })
         }
       },
     })

@@ -3,6 +3,7 @@
   "enablePullDownRefresh": true,
   "usingComponents": {
     "van-icon": "@vant/weapp/icon/index",
-    "book-menu": "/components/book-menu/book-menu"
+    "book-menu": "/components/book-menu/book-menu",
+    "card-stack": "/components/card-stack/card-stack"
   }
 }

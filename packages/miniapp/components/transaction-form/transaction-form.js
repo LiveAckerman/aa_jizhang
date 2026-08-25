@@ -202,22 +202,33 @@ Component({
 
     // ---- 位置 ----
     onChooseLocation() {
-      wx.chooseLocation({
-        success: (res) => {
-          if (!res.name && !res.address) return
-          this.setData({
-            location: { name: res.name, address: res.address, latitude: res.latitude, longitude: res.longitude },
-          })
-        },
-        fail: (err) => {
-          if (err && /auth deny|authorize/.test(err.errMsg || '')) {
-            wx.showModal({
-              title: '需要位置权限', content: '请在设置中允许获取位置信息', confirmText: '去设置',
-              success: (r) => { if (r.confirm) wx.openSetting() },
+      const doChoose = () => {
+        wx.chooseLocation({
+          success: (res) => {
+            if (!res.name && !res.address) return
+            this.setData({
+              location: { name: res.name, address: res.address, latitude: res.latitude, longitude: res.longitude },
             })
-          }
-        },
-      })
+          },
+          fail: (err) => {
+            console.log('chooseLocation fail:', err)
+            const msg = err.errMsg || ''
+            if (msg.includes('cancel')) return
+            wx.showToast({ title: '选择位置失败', icon: 'none' })
+          },
+        })
+      }
+      // 先走隐私授权（未注册自定义弹窗时微信会弹官方默认弹窗）；低版本基础库无此 API 则直接调用
+      if (wx.requirePrivacyAuthorize) {
+        wx.requirePrivacyAuthorize({
+          success: doChoose,
+          fail: () => {
+            wx.showToast({ title: '需要同意隐私协议才能使用该功能', icon: 'none' })
+          },
+        })
+      } else {
+        doChoose()
+      }
     },
     onClearLocation() {
       this.setData({ location: null })

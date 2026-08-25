@@ -45,23 +45,14 @@ export class AuthService {
       openid: user.openid,
     })
 
+    const clientUser = this.userService.toClientUser(user)
+
     return {
       token,
       isNewUser: isNewUser || !user.isProfileComplete,
       // 是否需要弹出头像昵称授权提示（只弹一次，用户处理过即为 false）
       needProfilePrompt: !user.hasPromptedProfile,
-      user: {
-        id: user.id,
-        openid: user.openid,
-        unionid: user.unionid,
-        nickname: user.nickname,
-        avatar: user.avatar,
-        isProfileComplete: user.isProfileComplete,
-        hasUsedWechatAvatar: user.hasUsedWechatAvatar,
-        hasUsedWechatNickname: user.hasUsedWechatNickname,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      },
+      user: clientUser,
     }
   }
 }

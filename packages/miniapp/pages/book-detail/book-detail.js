@@ -29,10 +29,7 @@ Page({
     },
     allTxs: [], // 原始账单列表（未过滤）
     groups: [], // 未结算账单按日期分组
-    settledList: [], // 已结算账单（抽屉全量）
-    settledStack: [], // 已结算堆叠展示（最多3张真实卡片）
-    settledGhost: 0,  // 底部空卡片数量，暗示还有更多
-    showSettledDrawer: false,
+    settledList: [], // 已结算账单（全量，交给 card-stack 组件展示）
     txFilter: 'all', // 账单筛选：all / shared(公账) / private(私账)
     txCounts: { all: 0, shared: 0, private: 0 }, // 各 tab 的账单笔数（角标）
     settling: false,          // 全部结算提交中
@@ -140,17 +137,9 @@ Page({
     const myUserId = this.data.myUserId
     const settledList = settled.map((t) => this.decorateTx(t, memberMap, myUserId))
 
-    // 堆叠最多显示 3 张真实卡片；超过时底部垫空卡片暗示"还有更多"
-    const STACK_MAX = 3
-    const settledStack = settledList.slice(0, STACK_MAX)
-    // 空卡片数量：还剩几张就垫几张，最多 2 张（够表达"下面还压着更多"即可）
-    const settledGhost = Math.min(Math.max(settledList.length - STACK_MAX, 0), 2)
-
     this.setData({
       groups: this.groupByDate(inList),
       settledList,
-      settledStack,
-      settledGhost,
       txCounts: {
         all: all.length,
         shared: sharedCount,
@@ -159,13 +148,6 @@ Page({
     })
   },
 
-  // 打开/关闭已结算抽屉
-  onOpenSettledDrawer() {
-    this.setData({ showSettledDrawer: true })
-  },
-  onCloseSettledDrawer() {
-    this.setData({ showSettledDrawer: false })
-  },
 
   // 给单条账单附加展示字段（供列表 / 堆叠 / 抽屉复用）
   decorateTx(t, memberMap, myUserId) {

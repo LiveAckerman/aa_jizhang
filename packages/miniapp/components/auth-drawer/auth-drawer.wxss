@@ -99,4 +99,19 @@
   height: 96rpx;
   line-height: 96rpx;
   margin-top: 40rpx;
+  background: var(--color-primary) !important;
+  color: #ffffff !important;
+  border-radius: 48rpx !important;
+  font-size: 32rpx;
+  font-weight: 600;
+  border: none;
+}
+
+.confirm-btn::after {
+  border: none;
+}
+
+.confirm-btn[disabled] {
+  background: rgba(128, 145, 165, 0.3) !important;
+  color: rgba(255, 255, 255, 0.6) !important;
 }

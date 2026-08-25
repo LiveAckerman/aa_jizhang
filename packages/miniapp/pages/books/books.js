@@ -3,41 +3,41 @@ const { setTabBarSelected } = require('../../utils/tabbar')
 const { request } = require('../../utils/request')
 const api = require('../../utils/api')
 const { handleBookAction } = require('../../utils/book-actions')
+const { requireLogin } = require('../../utils/auth')
 
 Page({
   data: {
     books: [],
     active: [],
-    archived: [],
-    archivedStack: [],   // 最多3张真实卡片，用于堆叠展示
-    archivedGhost: 0,    // 底部空卡片数量，暗示还有更多
+    archived: [],         // 已结算账本（全量，交给 card-stack 组件展示）
     groups: [],           // 分组列表（首项固定为「全部」）
     activeGroupId: 'all', // 当前选中的分组 id：'all' / '' (默认) / <groupId>
     ownerFilter: 'all',   // 归属筛选：'all' / 'owned'(我创建的) / 'joined'(我加入的)
     keyword: '',          // 搜索关键词
     filteredEmpty: false, // 有数据但搜索结果为空（区别于"账本为零"的空状态）
     loading: true,
-    showArchivedDrawer: false, // 已归档账本抽屉
+    isGuest: false,       // 未登录游客态：展示登录引导空状态，不强制跳转
     showAuthDrawer: false,
     userAvatar: '',
     userNickname: '',
   },
 
   onShow() {
-    if (!app.isLoggedIn()) {
-      wx.reLaunch({ url: '/pages/login/login' })
-      return
-    }
     // 从 book-detail 返回时，导航栏标题仍是账本名，需重置为「账本」
     wx.setNavigationBarTitle({ title: '账本' })
-    // 从抽屉内点进账本详情再返回：抽屉已关，需恢复被隐藏的 tabbar
-    if (this.data.showArchivedDrawer) {
-      this.setData({ showArchivedDrawer: false })
-    }
     setTabBarSelected(this, 0)
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({ hide: false })
     }
+
+    // 微信审核要求：未登录也可进入首页浏览，不强制跳转登录。
+    // 游客态展示「登录后查看你的账本」空状态，点击需要账号的动作时再引导登录。
+    if (!app.isLoggedIn()) {
+      this.setData({ isGuest: true, loading: false, books: [], active: [], archived: [], groups: [] })
+      return
+    }
+
+    this.setData({ isGuest: false })
     this.loadGroups()
     this.loadBooks()
     this.maybeShowAuthDrawer()
@@ -64,6 +64,7 @@ Page({
 
   // 长按分组标签：改名/删除（默认分组只允许「新建同级」）
   onLongPressGroup(e) {
+    if (!requireLogin()) return
     const id = e.currentTarget.dataset.id
     if (id === 'all') return
     const group = this.data.groups.find((g) => g.id === id)
@@ -148,7 +149,8 @@ Page({
 
   maybeShowAuthDrawer() {
     const user = app.globalData.user || {}
-    if (app.globalData.needProfilePrompt && !user.isProfileComplete) {
+    // 只要 isProfileComplete 为 false 就弹抽屉（弹过一次后后端会设为 true，之后不再弹）
+    if (!user.isProfileComplete) {
       this.setData({
         showAuthDrawer: true,
         userAvatar: user.avatar || '',
@@ -157,7 +159,7 @@ Page({
       if (typeof this.getTabBar === 'function' && this.getTabBar()) {
         this.getTabBar().setData({ hide: true })
       }
-      app.globalData.needProfilePrompt = false
+      // 立即调用后端接口标记"已弹过"，后端会设 isProfileComplete = true
       request({ url: '/user/profile-prompt/dismiss', method: 'POST' }).catch(() => {})
     }
   },
@@ -166,9 +168,10 @@ Page({
     const { avatar, nickname } = e.detail
     wx.showLoading({ title: '保存中...', mask: true })
     try {
-      await request({ url: '/user/profile', method: 'PUT', data: { avatar, nickname } })
-      const user = Object.assign({}, app.globalData.user, { avatar, nickname, isProfileComplete: true })
-      app.setLoginState(app.globalData.token, user)
+      // request 已解包后端统一响应，直接返回 data（完整 client user）
+      const updatedUser = await request({ url: '/user/profile', method: 'PUT', data: { avatar, nickname } })
+      // 用后端返回的完整 user 覆盖，确保 isProfileComplete / hasUsedWechatAvatar 等字段一致
+      app.setLoginState(app.globalData.token, updatedUser)
       wx.hideLoading()
       wx.showToast({ title: '已保存', icon: 'success' })
     } catch (err) {
@@ -190,6 +193,10 @@ Page({
   },
 
   onPullDownRefresh() {
+    if (this.data.isGuest) {
+      wx.stopPullDownRefresh()
+      return
+    }
     Promise.all([this.loadGroups(), this.loadBooks()]).finally(() =>
       wx.stopPullDownRefresh(),
     )
@@ -265,16 +272,11 @@ Page({
       else active.push(item)
     })
 
-    // 已归档堆叠：最多显示 3 张真实卡片；超过时底部垫空卡片暗示"还有更多"
-    const STACK_MAX = 3
-    const archivedStack = archived.slice(0, STACK_MAX)
-    const archivedGhost = Math.min(Math.max(archived.length - STACK_MAX, 0), 2)
-
     // 有账本但被搜索/归属/分组筛选过滤到空
     const hasFilter =
       kw.length > 0 || this.data.ownerFilter !== 'all' || this.data.activeGroupId !== 'all'
     const filteredEmpty = hasFilter && active.length === 0 && archived.length === 0
-    this.setData({ active, archived, archivedStack, archivedGhost, filteredEmpty })
+    this.setData({ active, archived, filteredEmpty })
   },
 
   // 基于归属筛选后的账本重算各分组计数，写回 groups 的 bookCount
@@ -301,22 +303,6 @@ Page({
     this.applyFilter()
   },
 
-  // 打开已归档抽屉（同时隐藏 tabbar，避免层级遮挡）
-  onOpenArchivedDrawer() {
-    this.setData({ showArchivedDrawer: true })
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({ hide: true })
-    }
-  },
-
-  // 关闭已归档抽屉（恢复 tabbar）
-  onCloseArchivedDrawer() {
-    this.setData({ showArchivedDrawer: false })
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({ hide: false })
-    }
-  },
-
   // 搜索输入
   onSearch(e) {
     this.setData({ keyword: e.detail.value })
@@ -337,6 +323,7 @@ Page({
   },
 
   onTapCreate() {
+    if (!requireLogin()) return
     wx.showActionSheet({
       itemList: ['创建账本', '加入账本', '新建分组'],
       success: (res) => {
@@ -345,6 +332,11 @@ Page({
         else if (res.tapIndex === 2) this.createGroup()
       },
     })
+  },
+
+  // 游客态空状态里的「去登录」按钮
+  onGuestLogin() {
+    requireLogin()
   },
 
   promptJoin() {
@@ -362,6 +354,7 @@ Page({
   },
 
   onTapBook(e) {
+    if (!requireLogin()) return
     const { id } = e.currentTarget.dataset
     wx.navigateTo({ url: `/pages/book-detail/book-detail?id=${id}` })
   },
@@ -369,15 +362,11 @@ Page({
   // book-menu 组件抛出的操作事件
   onBookAction(e) {
     handleBookAction(e.detail, () => {
-      // 若在已归档抽屉内操作：先关抽屉并恢复 tabbar，避免刷新后抽屉悬空
-      if (this.data.showArchivedDrawer) {
-        this.onCloseArchivedDrawer()
-      }
       this.loadGroups()
       this.loadBooks()
     })
   },
 
-  // 阻止抽屉列表项内 book-menu 点击冒泡到 onTapBook
+  // 阻止列表项内 book-menu 点击冒泡到 onTapBook
   noop() {},
 })

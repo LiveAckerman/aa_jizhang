@@ -20,16 +20,7 @@ export class UserController {
     return {
       code: 0,
       message: 'ok',
-      data: {
-        id: userInfo.id,
-        openid: userInfo.openid,
-        nickname: userInfo.nickname,
-        avatar: userInfo.avatar,
-        hasUsedWechatAvatar: userInfo.hasUsedWechatAvatar,
-        hasUsedWechatNickname: userInfo.hasUsedWechatNickname,
-        createdAt: userInfo.createdAt,
-        updatedAt: userInfo.updatedAt,
-      },
+      data: this.userService.toClientUser(userInfo),
     }
   }
 
@@ -56,16 +47,7 @@ export class UserController {
     return {
       code: 0,
       message: '更新成功',
-      data: {
-        id: updatedUser.id,
-        openid: updatedUser.openid,
-        nickname: updatedUser.nickname,
-        avatar: updatedUser.avatar,
-        hasUsedWechatAvatar: updatedUser.hasUsedWechatAvatar,
-        hasUsedWechatNickname: updatedUser.hasUsedWechatNickname,
-        createdAt: updatedUser.createdAt,
-        updatedAt: updatedUser.updatedAt,
-      },
+      data: this.userService.toClientUser(updatedUser),
     }
   }
 
@@ -82,16 +64,7 @@ export class UserController {
     return {
       code: 0,
       message: '授权成功',
-      data: {
-        id: updatedUser.id,
-        openid: updatedUser.openid,
-        nickname: updatedUser.nickname,
-        avatar: updatedUser.avatar,
-        hasUsedWechatAvatar: updatedUser.hasUsedWechatAvatar,
-        hasUsedWechatNickname: updatedUser.hasUsedWechatNickname,
-        createdAt: updatedUser.createdAt,
-        updatedAt: updatedUser.updatedAt,
-      },
+      data: this.userService.toClientUser(updatedUser),
     }
   }
 }

@@ -13,6 +13,24 @@ export class UserService {
   ) {}
 
   /**
+   * 把 User 实体转换为对外返回的 DTO
+   */
+  toClientUser(user: User) {
+    return {
+      id: user.id,
+      openid: user.openid,
+      unionid: user.unionid,
+      nickname: user.nickname,
+      avatar: user.avatar,
+      isProfileComplete: user.isProfileComplete,
+      hasUsedWechatAvatar: user.hasUsedWechatAvatar,
+      hasUsedWechatNickname: user.hasUsedWechatNickname,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    }
+  }
+
+  /**
    * 根据ID查找用户
    * 注意：id 必须非空。TypeORM 0.3 会把 where 里的 undefined 静默剥掉，
    * findOne({ where: { id: undefined } }) 会退化成「返回表里第一条」，酿成串号事故。
@@ -82,10 +100,12 @@ export class UserService {
   }
 
   /**
-   * 标记已弹过头像昵称授权提示（用户关闭/跳过时调用），之后不再弹
+   * 标记已弹过头像昵称授权提示（用户关闭/跳过时调用），之后不再弹。
+   * 新逻辑：弹过一次后设 isProfileComplete = true，无论用户是否授权。
    */
   async dismissProfilePrompt(userId: string): Promise<User> {
     const user = await this.findById(userId)
+    user.isProfileComplete = true
     user.hasPromptedProfile = true
     await this.userRepo.save(user)
     return user

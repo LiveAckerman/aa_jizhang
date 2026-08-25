@@ -31,13 +31,21 @@ import { TxShareSettlement } from './settlement/tx-share-settlement.entity'
     // 数据库连接（PostgreSQL）
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
+      useFactory: (config: ConfigService) => {
+        // 环境守卫：只有 NODE_ENV=production（线上）才用生产库 aa_jizhang，
+        // 其余一切环境（本地开发/测试）强制走测试库 aa_jizhang_test，
+        // 即使 .env 里误配成生产库名也不会连到生产库，防止本地误改线上数据。
+        const isProd = config.get('NODE_ENV') === 'production'
+        const database = isProd
+          ? config.get('DB_DATABASE') || 'aa_jizhang'
+          : 'aa_jizhang_test'
+        return {
         type: 'postgres',
         host: config.get('DB_HOST'),
         port: config.get<number>('DB_PORT', 5432),
         username: config.get('DB_USERNAME'),
         password: config.get('DB_PASSWORD'),
-        database: config.get('DB_DATABASE'),
+        database,
         entities: [User, Book, BookMember, BookGroup, Transaction, TransactionLog, Settlement, SettlementRound, TxShareSettlement],
         // 自动同步表结构：默认关闭（生产安全）。本地开发需自动建表时在 .env 设 DB_SYNCHRONIZE=true。
         // 生产改表走 migration（见 data-source.ts + pnpm migration:*），避免误删列/丢数据。
@@ -56,7 +64,8 @@ import { TxShareSettlement } from './settlement/tx-share-settlement.entity'
         // 连接被服务端异常关闭时自动重试，避免请求直接 500
         retryAttempts: 5,
         retryDelay: 2000,
-      }),
+        }
+      },
     }),
     AuthModule,
     UserModule,

@@ -9,26 +9,30 @@
 
 // 开发环境后端地址（本地调试时在开发者工具中关闭「校验合法域名」）
 // const DEV_API = 'http://10.0.10.40:9080/api'
-const DEV_API = 'http://192.168.101.5:9080/api'
-// const DEV_API = 'https://aafz.lijiwang.top/api'
+// const DEV_API = 'http://192.168.101.5:9080/api'
+ const DEV_API = 'https://aafz.lijiwang.top/api'
 
 // 生产环境后端地址（需为已备案 HTTPS 域名，并加入小程序 request 合法域名白名单）
 const PROD_API = 'https://aafz.lijiwang.top/api'
 
 // 读取运行环境：develop（开发者工具）/ trial（体验版）/ release（正式版）
+// 兜底一律返回 'release'：取值异常/为空时当成线上，绝不 fallback 到本地 IP，
+// 否则审核环境（拿不到 develop 之外的确定值时）会误连本地 DEV_API 导致
+// request:fail url not in domain list。
 function readEnvVersion() {
   try {
     const accountInfo = wx.getAccountInfoSync ? wx.getAccountInfoSync() : null
     const env = accountInfo && accountInfo.miniProgram && accountInfo.miniProgram.envVersion
-    return env || 'develop'
+    return env || 'release'
   } catch (e) {
-    return 'develop'
+    return 'release'
   }
 }
 
 const envVersion = readEnvVersion()
 
-// 开发环境走本地后端，体验版/正式版走线上
+// 白名单式：只有明确在开发者工具（develop）才用本地后端；
+// 体验版/正式版/审核/任何未知情况一律走线上 HTTPS 域名。
 const API_BASE_URL = envVersion === 'develop' ? DEV_API : PROD_API
 
 module.exports = {

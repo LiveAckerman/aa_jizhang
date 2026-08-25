@@ -65,6 +65,14 @@
     </view>
   </view>
 
+  <!-- 游客态：未登录，引导登录后查看账本（微信审核：先浏览再登录） -->
+  <view wx:elif="{{isGuest}}" class="empty-state">
+    <image class="empty-illustration" src="https://cdn.ljw44.com/assets/illustrations/empty-book.png" mode="aspectFit" />
+    <text class="empty-title">登录后查看你的账本</text>
+    <text class="empty-desc">和朋友一起记账分账，随时查看每笔支出</text>
+    <button class="btn-primary create-btn" bindtap="onGuestLogin">微信登录</button>
+  </view>
+
   <!-- 空状态：真正没有账本 -->
   <view wx:elif="{{books.length === 0}}" class="empty-state">
     <image class="empty-illustration" src="https://cdn.ljw44.com/assets/illustrations/empty-book.png" mode="aspectFit" />
@@ -168,69 +176,46 @@
       </view>
     </block>
 
-    <!-- 已归档：卡片堆叠（复用 book-plain 外观，负 margin 层叠，只露标题行） -->
-    <block wx:if="{{archivedStack.length > 0}}">
-      <view class="archived-stack" bindtap="onOpenArchivedDrawer">
+    <!-- 已结算账本：通用堆叠组件（折叠堆叠 / 展开列表） -->
+    <card-stack
+      wx:if="{{archived.length > 0}}"
+      count="{{archived.length}}"
+      title="已结算账本（{{archived.length}}）"
+      hint-text="{{archived.length}} 个已结算账本，点击展开"
+    >
+      <!-- 折叠态顶部卡片：最新一个已结算账本 -->
+      <view slot="top" class="glass-card book-plain cs-top-book">
+        <view class="book-plain-top">
+          <text class="book-name">{{archived[0].name}}</text>
+          <text class="archived-badge">已结算</text>
+        </view>
+        <view class="archived-card-meta">
+          <text class="archived-meta-text">{{archived[0].memberCount}}人 · {{archived[0].dateText}} · ¥{{archived[0].myTotalText}}</text>
+        </view>
+      </view>
+
+      <!-- 展开态完整列表 -->
+      <view slot="list">
         <view
-          wx:for="{{archivedStack}}"
+          wx:for="{{archived}}"
           wx:key="id"
           wx:for-item="book"
-          class="glass-card book-plain archived-card {{index === 0 ? 'first' : ''}}"
+          class="glass-card drawer-book-item"
+          data-id="{{book.id}}"
+          bindtap="onTapBook"
         >
-          <view class="book-plain-top">
-            <text class="book-name">{{book.name}}</text>
-            <text class="archived-badge">已结算</text>
+          <image wx:if="{{book.hasCover}}" class="drawer-book-cover" src="{{book.coverUrl}}" mode="aspectFill" />
+          <view class="drawer-book-info">
+            <text class="drawer-book-name">{{book.name}}</text>
+            <text class="drawer-book-meta">{{book.memberCount}}人 · {{book.dateText}}</text>
+            <text class="drawer-book-amount">¥{{book.myTotalText}}</text>
           </view>
-          <view class="archived-card-meta">
-            <text class="archived-meta-text">{{book.memberCount}}人 · {{book.dateText}} · ¥{{book.myTotalText}}</text>
+          <view class="drawer-book-menu" catchtap="noop">
+            <book-menu book="{{book}}" is-owner="{{book.isOwner}}" bind:action="onBookAction" />
           </view>
         </view>
-        <!-- 空卡片：垫在真实卡片下方，只露出一条边，暗示还有更多 -->
-        <view
-          wx:for="{{archivedGhost}}"
-          wx:key="*this"
-          wx:for-item="g"
-          class="archived-ghost archived-ghost-{{index}}"
-        ></view>
       </view>
-      <!-- 点击提示 -->
-      <view class="archived-hint" bindtap="onOpenArchivedDrawer">
-        <van-icon name="records" size="14px" color="#8091a5" />
-        <text>{{archived.length}} 个已结算账本</text>
-        <van-icon name="arrow" size="14px" color="#8091a5" />
-      </view>
-    </block>
-  </view>
-</view>
-
-<!-- 已归档账本抽屉 -->
-<view wx:if="{{showArchivedDrawer}}" class="drawer-mask" bindtap="onCloseArchivedDrawer">
-  <view class="drawer-panel" catchtap>
-    <view class="drawer-header">
-      <view class="drawer-handle"></view>
-      <text class="drawer-title">已结算账本（{{archived.length}}）</text>
-      <van-icon name="cross" size="20px" color="#8091a5" bindtap="onCloseArchivedDrawer" />
-    </view>
-    <scroll-view scroll-y class="drawer-scroll">
-      <view
-        wx:for="{{archived}}"
-        wx:key="id"
-        wx:for-item="book"
-        class="glass-card drawer-book-item"
-        data-id="{{book.id}}"
-        bindtap="onTapBook"
-      >
-        <image wx:if="{{book.hasCover}}" class="drawer-book-cover" src="{{book.coverUrl}}" mode="aspectFill" />
-        <view class="drawer-book-info">
-          <text class="drawer-book-name">{{book.name}}</text>
-          <text class="drawer-book-meta">{{book.memberCount}}人 · {{book.dateText}}</text>
-          <text class="drawer-book-amount">¥{{book.myTotalText}}</text>
-        </view>
-        <view class="drawer-book-menu" catchtap="noop">
-          <book-menu book="{{book}}" is-owner="{{book.isOwner}}" bind:action="onBookAction" />
-        </view>
-      </view>
-    </scroll-view>
+    </card-stack>
   </view>
 </view>
 

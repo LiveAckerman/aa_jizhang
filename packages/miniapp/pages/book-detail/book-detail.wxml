@@ -204,63 +204,32 @@
       </view>
     </view>
 
-    <!-- 已结算账单堆叠（复用 tx-item 完整样式，负 margin 层叠） -->
-    <block wx:if="{{settledStack.length > 0}}">
-      <!-- 简单横线分隔符 -->
-      <view class="settled-divider"></view>
-      <view class="settled-stack" bindtap="onOpenSettledDrawer">
-        <view
-          wx:for="{{settledStack}}"
-          wx:key="id"
-          wx:for-item="tx"
-          class="glass-card tx-list settled-card {{index === 0 ? 'first' : ''}}"
-        >
-          <view class="tx-item {{tx.isMyPayment ? 'my-payment' : ''}}">
-            <view class="tx-icon">
-              <van-icon name="{{tx.categoryIcon}}" size="22px" color="#4097a9" />
-            </view>
-            <view class="tx-mid">
-              <view class="tx-title-row">
-                <text class="tx-cat">{{tx.categoryName}}</text>
-                <text class="tx-settled-tag">已结算</text>
-              </view>
-              <text class="tx-note">{{tx.note || tx.payerName + ' 付款'}}</text>
-              <!-- 我应收/我应付暂时隐藏，后续可能恢复
-              <text wx:if="{{tx.myReceiveText}}" class="tx-myshare receive">我应收 ¥{{tx.myReceiveText}}</text>
-              <text wx:elif="{{tx.myShareText}}" class="tx-myshare">我应付 ¥{{tx.myShareText}}</text>
-              -->
-            </view>
-            <text class="tx-amount">¥{{tx.amountText}}</text>
+    <!-- 已结算账单：通用堆叠组件（折叠堆叠 / 展开列表） -->
+    <card-stack
+      wx:if="{{settledList.length > 0}}"
+      count="{{settledList.length}}"
+      title="已结算账单（{{settledList.length}}）"
+      hint-text="共 {{settledList.length}} 笔已结算，点击展开"
+    >
+      <!-- 折叠态顶部卡片：最新一条 -->
+      <view slot="top" class="glass-card tx-list">
+        <view class="tx-item {{settledList[0].isMyPayment ? 'my-payment' : ''}}">
+          <view class="tx-icon">
+            <van-icon name="{{settledList[0].categoryIcon}}" size="22px" color="#4097a9" />
           </view>
+          <view class="tx-mid">
+            <view class="tx-title-row">
+              <text class="tx-cat">{{settledList[0].categoryName}}</text>
+              <text class="tx-settled-tag">已结算</text>
+            </view>
+            <text class="tx-note">{{settledList[0].note || settledList[0].payerName + ' 付款'}}</text>
+          </view>
+          <text class="tx-amount">¥{{settledList[0].amountText}}</text>
         </view>
-        <!-- 空卡片：垫在真实卡片下方，只露出一条边，暗示还有更多 -->
-        <view
-          wx:for="{{settledGhost}}"
-          wx:key="*this"
-          wx:for-item="g"
-          class="settled-ghost settled-ghost-{{index}}"
-        ></view>
       </view>
-      <!-- 点击提示 -->
-      <view class="settled-hint" bindtap="onOpenSettledDrawer">
-        <van-icon name="records" size="14px" color="#8091a5" />
-        <text>{{settledList.length}} 笔已结算账单</text>
-        <van-icon name="arrow" size="14px" color="#8091a5" />
-      </view>
-    </block>
-  </block>
-</view>
 
-<!-- 已结算账单抽屉 -->
-<view wx:if="{{showSettledDrawer}}" class="drawer-mask" bindtap="onCloseSettledDrawer">
-  <view class="drawer-panel" catchtap>
-    <view class="drawer-header">
-      <view class="drawer-handle"></view>
-      <text class="drawer-title">已结算账单（{{settledList.length}}）</text>
-      <van-icon name="cross" size="20px" color="#8091a5" bindtap="onCloseSettledDrawer" />
-    </view>
-    <scroll-view scroll-y class="drawer-scroll">
-      <view class="glass-card tx-list drawer-tx-list">
+      <!-- 展开态完整列表 -->
+      <view slot="list" class="glass-card tx-list">
         <view
           wx:for="{{settledList}}"
           wx:key="id"
@@ -279,16 +248,12 @@
               <text class="tx-settled-tag">已结算</text>
             </view>
             <text class="tx-note">{{tx.note || tx.payerName + ' 付款'}}</text>
-            <!-- 我应收/我应付暂时隐藏，后续可能恢复
-            <text wx:if="{{tx.myReceiveText}}" class="tx-myshare receive">我应收 ¥{{tx.myReceiveText}}</text>
-            <text wx:elif="{{tx.myShareText}}" class="tx-myshare">我应付 ¥{{tx.myShareText}}</text>
-            -->
           </view>
           <text class="tx-amount">¥{{tx.amountText}}</text>
         </view>
       </view>
-    </scroll-view>
-  </view>
+    </card-stack>
+  </block>
 </view>
 
 <!-- 进行中轮次弹窗（部分结算前） -->

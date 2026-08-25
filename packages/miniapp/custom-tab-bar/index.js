@@ -1,4 +1,5 @@
 const app = getApp()
+const { requireLogin } = require('../utils/auth')
 
 Component({
   data: {
@@ -41,8 +42,9 @@ Component({
       })
     },
 
-    /** 快速记账：选录入方式 → 跳账本选择中转页 */
+    /** 快速记账：选录入方式 → 跳账本选择中转页（需登录） */
     onFab() {
+      if (!requireLogin()) return
       wx.showActionSheet({
         itemList: ['手动录入', '票据自动识别'],
         success: (res) => {

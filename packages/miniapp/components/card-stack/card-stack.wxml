@@ -1,0 +1,30 @@
+<view wx:if="{{count > 0}}" class="card-stack">
+  <!-- 分隔线 -->
+  <view class="cs-divider"></view>
+
+  <!-- 折叠态：顶部完整卡片 + 错落影子卡 + 提示条 -->
+  <view wx:if="{{!expanded}}" class="cs-fold" bindtap="onToggle">
+    <view class="cs-cards">
+      <!-- 影子卡：垫在真实卡片下方，逐层缩窄，只露出底边 -->
+      <view wx:if="{{count > 2}}" class="cs-shadow cs-shadow-2"></view>
+      <view wx:if="{{count > 1}}" class="cs-shadow cs-shadow-1"></view>
+      <!-- 顶部真实卡片由父页面通过 slot="top" 填充 -->
+      <view class="cs-top">
+        <slot name="top"></slot>
+      </view>
+    </view>
+    <view class="cs-hint">
+      <van-icon name="records" size="13px" color="#8091a5" />
+      <text>{{hintText}}</text>
+    </view>
+  </view>
+
+  <!-- 展开态：标题栏 + 完整列表 -->
+  <view wx:else class="cs-expanded">
+    <view class="cs-expanded-header" bindtap="onToggle">
+      <text class="cs-expanded-title">{{title}}</text>
+      <van-icon name="arrow-up" size="16px" color="#8091a5" />
+    </view>
+    <slot name="list"></slot>
+  </view>
+</view>

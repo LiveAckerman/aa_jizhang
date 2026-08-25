@@ -26,6 +26,11 @@ App({
     if (token) {
       this.globalData.token = token
       this.globalData.user = user || null
+      // 冷启动时若用户资料未完善，允许首页再次弹出授权抽屉（用户可关闭不强制）
+      // 后端会根据 hasPromptedProfile 决定是否真的需要弹（弹过一次后 dismiss 接口标记为 true）
+      if (user && !user.isProfileComplete) {
+        this.globalData.needProfilePrompt = true
+      }
     }
   },
 

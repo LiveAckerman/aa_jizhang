@@ -1,6 +1,7 @@
 const app = getApp()
 const api = require('../../utils/api')
 const { setTabBarSelected } = require('../../utils/tabbar')
+const { requireLogin } = require('../../utils/auth')
 const echarts = require('../../components/ec-canvas/echarts')
 
 // 分类条形色（跟主色系一致，柔和有层次）
@@ -34,6 +35,7 @@ Page({
     categories: [],
     hasMonthly: false,
     loading: true,
+    isGuest: false, // 未登录游客态：展示登录引导，不强制跳转
     ec: { lazyLoad: true },
     monthly: [],
 
@@ -49,12 +51,16 @@ Page({
   },
 
   onShow() {
-    if (!app.isLoggedIn()) {
-      wx.reLaunch({ url: '/pages/login/login' })
-      return
-    }
     wx.setNavigationBarTitle({ title: '统计' })
     setTabBarSelected(this, 1)
+
+    // 微信审核要求：未登录也可进入统计页浏览，不强制跳转登录。
+    // 游客态展示登录引导空状态，点击「去登录」时才引导登录。
+    if (!app.isLoggedIn()) {
+      this.setData({ isGuest: true, loading: false })
+      return
+    }
+    this.setData({ isGuest: false })
 
     // 从账本详情跳转过来：定位到指定账本（switchTab 无法传参，走全局变量）
     const target = app.globalData.statsTargetBookId
@@ -65,6 +71,11 @@ Page({
 
     this.loadBooks()
     this.load()
+  },
+
+  // 游客态「去登录」按钮
+  onGuestLogin() {
+    requireLogin()
   },
 
   async loadBooks() {
@@ -109,6 +120,8 @@ Page({
   },
 
   async load() {
+    // 游客态防御性守卫：交互控件虽在 wx:else 内不渲染，仍在代码层拦截，避免未登录发起统计请求
+    if (this.data.isGuest) return
     try {
       const data = await api.statsOverview(this.data.range, this.data.scope, this.data.bookId)
       const categories = (data.categories || []).map((c, i) => ({

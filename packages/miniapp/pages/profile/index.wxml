@@ -1,6 +1,16 @@
 <view class="profile-page">
+  <!-- 游客态：未登录，显示 logo + 引导登录（纵向居中，无箭头） -->
+  <view wx:if="{{isGuest}}" class="user-card" bindtap="onGuestLogin">
+    <view class="avatar-section">
+      <image class="avatar" src="https://cdn.ljw44.com/assets/logo/logo-card.png" mode="aspectFill" />
+    </view>
+    <view class="user-info">
+      <text class="nickname">点击登录</text>
+    </view>
+  </view>
+
   <!-- 用户信息卡片 -->
-  <view class="user-card" bindtap="goEdit">
+  <view wx:else class="user-card" bindtap="goEdit">
     <view class="avatar-section">
       <image class="avatar" src="{{user.avatar}}" mode="aspectFill" />
     </view>
@@ -9,8 +19,8 @@
     </view>
   </view>
 
-  <!-- 账号信息 -->
-  <view class="section">
+  <!-- 账号信息（游客态隐藏） -->
+  <view wx:if="{{!isGuest}}" class="section">
     <view class="section-title">账号信息</view>
     <view class="list-container">
       <view class="list-item" bindtap="goEdit">
@@ -69,8 +79,8 @@
     </view>
   </view>
 
-  <!-- 退出登录 -->
-  <view class="logout-section">
+  <!-- 退出登录（游客态隐藏） -->
+  <view wx:if="{{!isGuest}}" class="logout-section">
     <view class="logout-btn" bindtap="logout">
       <text>退出登录</text>
     </view>

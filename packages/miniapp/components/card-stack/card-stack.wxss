@@ -1,0 +1,76 @@
+/* 通用卡片堆叠组件 */
+.cs-divider {
+  height: 2rpx;
+  background: rgba(128, 145, 165, 0.18);
+  margin: 32rpx 8rpx 28rpx;
+}
+
+/* 卡片 + 影子的相对定位容器；底部留出影子错落露出的空间 */
+.cs-cards {
+  position: relative;
+  padding-bottom: 36rpx;
+}
+/* 顶部真实卡片，层级最高 */
+.cs-top {
+  position: relative;
+  z-index: 3;
+}
+/* 顶部卡片内容自带的下外边距归零，避免与影子卡之间出现空隙 */
+.cs-top > view {
+  margin-bottom: 0;
+}
+/* 影子卡：绝对定位在容器底部，逐层缩窄居中、错落露出 */
+.cs-shadow {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 56rpx;
+  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 4rpx 12rpx rgba(47, 65, 89, 0.1);
+}
+/* 第一层影子：略窄，露出真实卡片下方 ~18rpx */
+.cs-shadow-1 {
+  z-index: 2;
+  bottom: 18rpx;
+  width: 93%;
+}
+/* 第二层影子：再窄一档，露在最下方 ~18rpx */
+.cs-shadow-2 {
+  z-index: 1;
+  bottom: 0;
+  width: 86%;
+}
+/* 底部提示条：胶囊按钮样式 */
+.cs-hint {
+  margin-top: 20rpx;
+  padding: 14rpx 24rpx;
+  background: rgba(64, 151, 169, 0.08);
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  font-size: 24rpx;
+  color: var(--color-primary);
+}
+
+/* 展开态：标题栏 + 列表，带淡入下滑动画 */
+.cs-expanded {
+  animation: cs-unfold 0.28s ease;
+}
+@keyframes cs-unfold {
+  from { opacity: 0; transform: translateY(-12rpx); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.cs-expanded-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8rpx 16rpx;
+}
+.cs-expanded-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
