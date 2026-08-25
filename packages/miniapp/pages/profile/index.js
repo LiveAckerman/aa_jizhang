@@ -1,8 +1,10 @@
 const app = getApp()
 const { setTabBarSelected } = require('../../utils/tabbar')
 const { requireLogin } = require('../../utils/auth')
+const authDrawerBehavior = require('../../utils/auth-drawer-behavior')
 
 Page({
+  behaviors: [authDrawerBehavior],
   data: {
     user: null,
     isGuest: false, // 未登录游客态：展示登录引导，隐藏账号相关操作
@@ -13,6 +15,7 @@ Page({
     // 同步自定义 tabBar 选中态（我的 = 2）
     setTabBarSelected(this, 2)
     this.loadUserInfo()
+    this.maybeShowAuthDrawer()
   },
 
   loadUserInfo() {

@@ -2,6 +2,7 @@ const app = getApp()
 const api = require('../../utils/api')
 const { setTabBarSelected } = require('../../utils/tabbar')
 const { requireLogin } = require('../../utils/auth')
+const authDrawerBehavior = require('../../utils/auth-drawer-behavior')
 const echarts = require('../../components/ec-canvas/echarts')
 
 // 分类条形色（跟主色系一致，柔和有层次）
@@ -22,6 +23,7 @@ const RANGE_LABELS = {
 }
 
 Page({
+  behaviors: [authDrawerBehavior],
   data: {
     scope: 'mine',
     scopeLabel: '我的支出',
@@ -71,6 +73,7 @@ Page({
 
     this.loadBooks()
     this.load()
+    this.maybeShowAuthDrawer()
   },
 
   // 游客态「去登录」按钮

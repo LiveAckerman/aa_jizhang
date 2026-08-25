@@ -2,6 +2,7 @@
   "navigationBarTitleText": "我的",
   "backgroundColor": "#F2F2F7",
   "usingComponents": {
-    "van-icon": "@vant/weapp/icon/index"
+    "van-icon": "@vant/weapp/icon/index",
+    "auth-drawer": "/components/auth-drawer/auth-drawer"
   }
 }

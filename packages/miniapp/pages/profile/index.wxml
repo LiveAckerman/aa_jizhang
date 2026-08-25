@@ -86,3 +86,11 @@
     </view>
   </view>
 </view>
+
+<auth-drawer
+  show="{{showAuthDrawer}}"
+  default-avatar="{{userAvatar}}"
+  default-nickname="{{userNickname}}"
+  bind:authorized="onAuthorized"
+  bind:close="onAuthClose"
+/>

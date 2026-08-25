@@ -1,9 +1,10 @@
 const app = getApp()
 const api = require('../../utils/api')
-const { request } = require('../../utils/request')
 const { SCENE_MAP } = require('../../constants/ledger')
+const authDrawerBehavior = require('../../utils/auth-drawer-behavior')
 
 Page({
+  behaviors: [authDrawerBehavior],
   data: {
     code: '',
     info: null,
@@ -11,10 +12,7 @@ Page({
     loading: true,
     joining: false,
     error: '',
-    // 头像/昵称授权抽屉（新用户登录回跳后弹出）
-    showAuthDrawer: false,
-    userAvatar: '',
-    userNickname: '',
+    // showAuthDrawer / userAvatar / userNickname 由 auth-drawer-behavior 提供
   },
 
   onLoad(query) {
@@ -65,41 +63,7 @@ Page({
     }
   },
 
-  // 新注册用户回跳后弹一次授权抽屉（只弹一次，与首页逻辑一致）
-  maybeShowAuthDrawer() {
-    const user = app.globalData.user || {}
-    if (app.globalData.needProfilePrompt && !user.isProfileComplete) {
-      this.setData({
-        showAuthDrawer: true,
-        userAvatar: user.avatar || '',
-        userNickname: user.nickname || '',
-      })
-      app.globalData.needProfilePrompt = false
-      request({ url: '/user/profile-prompt/dismiss', method: 'POST' }).catch(() => {})
-    }
-  },
-
-  // 授权成功：保存头像昵称后关闭抽屉，用户可继续点「加入账本」
-  async onAuthorized(e) {
-    const { avatar, nickname } = e.detail
-    wx.showLoading({ title: '保存中...', mask: true })
-    try {
-      await request({ url: '/user/profile', method: 'PUT', data: { avatar, nickname } })
-      const user = Object.assign({}, app.globalData.user, { avatar, nickname, isProfileComplete: true })
-      app.setLoginState(app.globalData.token, user)
-      wx.hideLoading()
-      wx.showToast({ title: '已保存', icon: 'success' })
-    } catch (err) {
-      wx.hideLoading()
-      wx.showToast({ title: (err && err.message) || '保存失败', icon: 'none' })
-      return // 保存失败不关抽屉，让用户重试
-    }
-    this.setData({ showAuthDrawer: false })
-  },
-
-  onAuthClose() {
-    this.setData({ showAuthDrawer: false })
-  },
+  // maybeShowAuthDrawer / onAuthorized / onAuthClose 由 auth-drawer-behavior 提供
 
   async onJoin() {
     if (this.data.joining) return

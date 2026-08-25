@@ -3,6 +3,7 @@
   "backgroundColor": "#f2f2f7",
   "usingComponents": {
     "van-icon": "@vant/weapp/icon/index",
-    "ec-canvas": "/components/ec-canvas/ec-canvas"
+    "ec-canvas": "/components/ec-canvas/ec-canvas",
+    "auth-drawer": "/components/auth-drawer/auth-drawer"
   }
 }

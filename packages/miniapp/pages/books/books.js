@@ -1,11 +1,12 @@
 const app = getApp()
 const { setTabBarSelected } = require('../../utils/tabbar')
-const { request } = require('../../utils/request')
 const api = require('../../utils/api')
 const { handleBookAction } = require('../../utils/book-actions')
 const { requireLogin } = require('../../utils/auth')
+const authDrawerBehavior = require('../../utils/auth-drawer-behavior')
 
 Page({
+  behaviors: [authDrawerBehavior],
   data: {
     books: [],
     active: [],
@@ -17,9 +18,7 @@ Page({
     filteredEmpty: false, // 有数据但搜索结果为空（区别于"账本为零"的空状态）
     loading: true,
     isGuest: false,       // 未登录游客态：展示登录引导空状态，不强制跳转
-    showAuthDrawer: false,
-    userAvatar: '',
-    userNickname: '',
+    // showAuthDrawer / userAvatar / userNickname 由 auth-drawer-behavior 提供
   },
 
   onShow() {
@@ -147,50 +146,7 @@ Page({
     })
   },
 
-  maybeShowAuthDrawer() {
-    const user = app.globalData.user || {}
-    // 只要 isProfileComplete 为 false 就弹抽屉（弹过一次后后端会设为 true，之后不再弹）
-    if (!user.isProfileComplete) {
-      this.setData({
-        showAuthDrawer: true,
-        userAvatar: user.avatar || '',
-        userNickname: user.nickname || '',
-      })
-      if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-        this.getTabBar().setData({ hide: true })
-      }
-      // 立即调用后端接口标记"已弹过"，后端会设 isProfileComplete = true
-      request({ url: '/user/profile-prompt/dismiss', method: 'POST' }).catch(() => {})
-    }
-  },
-
-  async onAuthorized(e) {
-    const { avatar, nickname } = e.detail
-    wx.showLoading({ title: '保存中...', mask: true })
-    try {
-      // request 已解包后端统一响应，直接返回 data（完整 client user）
-      const updatedUser = await request({ url: '/user/profile', method: 'PUT', data: { avatar, nickname } })
-      // 用后端返回的完整 user 覆盖，确保 isProfileComplete / hasUsedWechatAvatar 等字段一致
-      app.setLoginState(app.globalData.token, updatedUser)
-      wx.hideLoading()
-      wx.showToast({ title: '已保存', icon: 'success' })
-    } catch (err) {
-      wx.hideLoading()
-      wx.showToast({ title: (err && err.message) || '保存失败', icon: 'none' })
-      return
-    }
-    this.setData({ showAuthDrawer: false })
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({ hide: false })
-    }
-  },
-
-  onAuthClose() {
-    this.setData({ showAuthDrawer: false })
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({ hide: false })
-    }
-  },
+  // maybeShowAuthDrawer / onAuthorized / onAuthClose 由 auth-drawer-behavior 提供
 
   onPullDownRefresh() {
     if (this.data.isGuest) {
