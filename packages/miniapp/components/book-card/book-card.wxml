@@ -1,0 +1,45 @@
+<view class="bc-card {{mode === 'detail' ? 'bc-detail' : 'bc-list'}}" bindtap="onCardTap">
+  <image class="bc-cover" src="{{book.coverUrl}}" mode="aspectFill" />
+  <view class="bc-overlay"></view>
+
+  <view class="bc-content">
+    <!-- 顶部：成员头像行 + 右上操作区 -->
+    <view class="bc-top">
+      <view class="bc-members">
+        <image
+          wx:for="{{book.members}}"
+          wx:key="userId"
+          class="bc-avatar"
+          src="{{item.avatar}}"
+          mode="aspectFill"
+          data-userid="{{item.userId}}"
+          bindlongpress="onMemberLongPress"
+        />
+        <!-- 邀请+ 仅 detail -->
+        <view wx:if="{{mode === 'detail'}}" class="bc-invite" catchtap="onInvite">
+          <van-icon name="plus" size="18px" color="#4097a9" />
+        </view>
+      </view>
+
+      <view class="bc-actions" catchtap="noop">
+        <book-menu book="{{book}}" is-owner="{{isOwner}}" light="{{true}}" bind:action="onAction" />
+        <!-- 分享按钮 仅 detail：open-type=share 触发宿主页 onShareAppMessage -->
+        <button wx:if="{{mode === 'detail'}}" class="bc-share-btn" open-type="share">
+          <van-icon name="share-o" size="18px" color="#fff" />
+        </button>
+      </view>
+    </view>
+
+    <!-- 底部：名称 + 金额块 -->
+    <view class="bc-bottom">
+      <view class="bc-name-row">
+        <text class="bc-name">{{book.name}}</text>
+        <text wx:if="{{book.statusBadge}}" class="bc-badge">{{book.statusBadge}}</text>
+        <text wx:elif="{{book.dateText}}" class="bc-date">{{book.dateText}}</text>
+      </view>
+      <text class="bc-amount-label">公账合计</text>
+      <text class="bc-amount-value">¥{{book.bookTotalText}}</text>
+      <text class="bc-amount-sub">我的支出 ¥{{book.myTotalText}}（公账 {{book.mySharedText}} + 私账 {{book.myPrivateText}}）</text>
+    </view>
+  </view>
+</view>

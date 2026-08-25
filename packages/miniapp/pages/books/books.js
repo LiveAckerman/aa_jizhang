@@ -311,11 +311,11 @@ Page({
 
   onTapBook(e) {
     if (!requireLogin()) return
-    const { id } = e.currentTarget.dataset
+    const { id } = e.detail
     wx.navigateTo({ url: `/pages/book-detail/book-detail?id=${id}` })
   },
 
-  // book-menu 组件抛出的操作事件
+  // book-card 组件抛出的操作事件
   onBookAction(e) {
     handleBookAction(e.detail, () => {
       this.loadGroups()

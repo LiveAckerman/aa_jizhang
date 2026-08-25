@@ -4,6 +4,7 @@
   "usingComponents": {
     "van-icon": "@vant/weapp/icon/index",
     "book-menu": "/components/book-menu/book-menu",
+    "book-card": "/components/book-card/book-card",
     "card-stack": "/components/card-stack/card-stack"
   }
 }

@@ -5,6 +5,7 @@
   "enablePullDownRefresh": true,
   "usingComponents": {
     "auth-drawer": "/components/auth-drawer/auth-drawer",
+    "book-card": "/components/book-card/book-card",
     "book-menu": "/components/book-menu/book-menu",
     "card-stack": "/components/card-stack/card-stack",
     "van-icon": "@vant/weapp/icon/index",

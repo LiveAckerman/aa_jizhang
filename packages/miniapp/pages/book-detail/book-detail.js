@@ -69,12 +69,13 @@ Page({
         api.activeRounds(this.data.id).catch(() => []),
       ])
       const myUserId = this.data.myUserId
+      const isOwner = book.ownerId === myUserId
       wx.setNavigationBarTitle({ title: book.name })
       this.setData({
         book,
         coverUrl: book.coverUrl,
         members: book.members || [],
-        isOwner: book.ownerId === myUserId,
+        isOwner,
         summary,
         summaryText: {
           sharedTotal: (summary.sharedTotal / 100).toFixed(2),
@@ -83,6 +84,22 @@ Page({
           myTotal: (summary.myTotal / 100).toFixed(2),
           pendingPay: ((summary.pendingPay || 0) / 100).toFixed(2),
           pendingReceive: ((summary.pendingReceive || 0) / 100).toFixed(2),
+        },
+        // 通用 book-card 归一化数据（detail 头图用）
+        headerCard: {
+          id: book.id,
+          name: book.name,
+          coverUrl: book.coverUrl,
+          ownerId: book.ownerId,
+          archived: book.archived,
+          inviteCode: book.inviteCode,
+          members: (book.members || []).map((m) => ({ avatar: m.avatar, userId: m.userId })),
+          bookTotalText: (summary.sharedTotal / 100).toFixed(2),
+          myTotalText: (summary.myTotal / 100).toFixed(2),
+          mySharedText: (summary.myShared / 100).toFixed(2),
+          myPrivateText: (summary.myPrivate / 100).toFixed(2),
+          hasPrivate: (summary.myPrivate || 0) > 0,
+          dateText: '',
         },
         allTxs: txs || [],
         activeRoundCount: (activeRounds || []).length,
@@ -405,7 +422,7 @@ Page({
 
   // 长按成员头像：移除成员（仅owner可操作）
   onLongPressMember(e) {
-    const { userid } = e.currentTarget.dataset
+    const { userid } = e.detail
     if (!userid) return
     if (!this.data.isOwner) {
       wx.showToast({ title: '仅创建者可移除成员', icon: 'none' })

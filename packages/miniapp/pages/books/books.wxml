@@ -99,81 +99,13 @@
   <view wx:elif="{{active.length > 0 || archived.length > 0}}" class="book-list">
     <!-- 进行中 -->
     <block wx:for="{{active}}" wx:key="id" wx:for-item="book">
-      <!-- 布局1：有自定义封面 → 头图卡片 -->
-      <view wx:if="{{book.hasCover}}" class="glass-card book-item">
-        <view class="book-tap-area" data-id="{{book.id}}" bindtap="onTapBook">
-          <image class="book-cover" src="{{book.coverUrl}}" mode="aspectFill" />
-          <view class="book-body">
-            <view class="book-row">
-              <text class="book-name">{{book.name}}</text>
-              <text class="book-member-count">{{book.memberCount}}人</text>
-            </view>
-            <view class="book-avatars">
-              <image
-                wx:for="{{book.memberAvatars}}"
-                wx:for-item="av"
-                wx:key="*this"
-                class="book-avatar"
-                src="{{av}}"
-                mode="aspectFill"
-              />
-            </view>
-            <view class="book-cover-amount">
-              <view class="amount-inline">
-                <text class="amount-label">支出</text>
-                <text class="book-plain-amount">¥{{book.myTotalText}}</text>
-                <view wx:if="{{book.hasPrivate}}" class="amount-tags">
-                  <text class="amount-tag">公账 ¥{{book.mySharedText}}</text>
-                  <text class="amount-tag private">私账 ¥{{book.myPrivateText}}</text>
-                </view>
-              </view>
-            </view>
-          </view>
-        </view>
-        <view class="book-corner">
-          <book-menu book="{{book}}" is-owner="{{book.isOwner}}" bind:action="onBookAction" />
-        </view>
-      </view>
-
-      <!-- 布局2：无自定义封面 → 简洁白底卡片 -->
-      <view wx:else class="glass-card book-plain">
-        <view class="book-plain-tap" data-id="{{book.id}}" bindtap="onTapBook">
-          <view class="book-plain-top">
-            <text class="book-name">{{book.name}}</text>
-            <text class="book-plain-tag">{{book.memberCount}}人</text>
-          </view>
-          <view class="book-plain-mid">
-            <view class="book-avatars">
-              <image
-                wx:for="{{book.memberAvatars}}"
-                wx:for-item="av"
-                wx:key="*this"
-                class="book-avatar"
-                src="{{av}}"
-                mode="aspectFill"
-              />
-              <view class="book-avatar book-invite-btn">
-                <van-icon name="plus" size="16px" color="#4097a9" />
-              </view>
-            </view>
-            <text class="book-plain-date">{{book.dateText}}</text>
-          </view>
-          <view class="book-plain-bottom">
-            <view class="amount-inline">
-              <text class="amount-label">支出</text>
-              <text class="book-plain-amount">¥{{book.myTotalText}}</text>
-              <view wx:if="{{book.hasPrivate}}" class="amount-tags">
-                <text class="amount-tag">公账 ¥{{book.mySharedText}}</text>
-                <text class="amount-tag private">私账 ¥{{book.myPrivateText}}</text>
-              </view>
-            </view>
-            <text class="book-plain-more">统计 ›</text>
-          </view>
-        </view>
-        <view class="book-corner">
-          <book-menu book="{{book}}" is-owner="{{book.isOwner}}" bind:action="onBookAction" />
-        </view>
-      </view>
+      <book-card
+        mode="list"
+        book="{{book}}"
+        is-owner="{{book.isOwner}}"
+        bind:tap="onTapBook"
+        bind:action="onBookAction"
+      />
     </block>
 
     <!-- 已结算账本：通用堆叠组件（折叠堆叠 / 展开列表） -->

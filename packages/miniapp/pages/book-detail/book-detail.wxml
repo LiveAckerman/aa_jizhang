@@ -40,39 +40,14 @@
   <!-- 真实内容 -->
   <block wx:else>
     <!-- 头部卡片：封面 + 成员 + 金额 -->
-    <view class="header-card">
-      <image class="header-cover" src="{{coverUrl}}" mode="aspectFill" />
-      <view class="header-overlay"></view>
-      <view class="header-content">
-        <view class="header-top">
-          <view class="members-row">
-            <image
-              wx:for="{{members}}"
-              wx:key="userId"
-              class="member-avatar"
-              src="{{item.avatar}}"
-              mode="aspectFill"
-              data-userid="{{item.userId}}"
-              bindlongpress="onLongPressMember"
-            />
-            <view class="member-invite" bindtap="onInvite">
-              <van-icon name="plus" size="18px" color="#4097a9" />
-            </view>
-          </view>
-          <view class="header-actions">
-            <book-menu book="{{book}}" is-owner="{{isOwner}}" light="{{true}}" bind:action="onBookAction" />
-            <button class="header-share-btn" open-type="share">
-              <van-icon name="share-o" size="18px" color="#fff" />
-            </button>
-          </view>
-        </view>
-        <view class="amount-block">
-          <text class="amount-label">公账合计</text>
-          <text class="amount-value">¥{{summaryText.sharedTotal}}</text>
-          <text class="amount-sub">我的支出 ¥{{summaryText.myTotal}}（公账 {{summaryText.myShared}} + 私账 {{summaryText.myPrivate}}）</text>
-        </view>
-      </view>
-    </view>
+    <book-card
+      mode="detail"
+      book="{{headerCard}}"
+      is-owner="{{isOwner}}"
+      bind:action="onBookAction"
+      bind:invite="onInvite"
+      bind:memberlongpress="onLongPressMember"
+    />
 
     <!-- 主操作：手动录入 + 票据自动识别 -->
     <view class="record-actions">
