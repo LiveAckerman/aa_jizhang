@@ -2,7 +2,7 @@
   position: relative;
   border-radius: 32rpx;
   overflow: hidden;
-  box-shadow: 0 16rpx 64rpx rgba(47, 65, 89, 0.10);
+  box-shadow: 0 16rpx 64rpx rgba(47, 65, 89, 0.1);
 }
 
 /* 列表态：卡片间距 + 可点反馈 */
@@ -43,7 +43,7 @@
   padding: 28rpx;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: space-between;
 }
 
 /* ---- 顶部 ---- */
@@ -126,6 +126,9 @@
 .bc-bottom {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
+  min-height: 1rpx;
 }
 
 .bc-name-row {
@@ -165,7 +168,6 @@
   font-weight: 700;
   color: #fff;
   line-height: 1.2;
-  margin-top: auto;
 }
 
 .bc-amount-sub {

@@ -30,15 +30,16 @@
       </view>
     </view>
 
-    <!-- 底部：名称 + 金额块 -->
-    <view class="bc-bottom">
-      <view class="bc-name-row">
+   <view class="bc-name-row">
         <text class="bc-name">{{book.name}}</text>
         <text wx:if="{{book.statusBadge}}" class="bc-badge">{{book.statusBadge}}</text>
         <text wx:elif="{{book.dateText}}" class="bc-date">{{book.dateText}}</text>
       </view>
-      <text class="bc-amount-value">¥{{book.bookTotalText}}</text>
+
+    <!-- 底部：名称 + 金额块 -->
+
+
+        <text class="bc-amount-value">¥{{book.bookTotalText}}</text>
       <text class="bc-amount-sub">我 ¥{{book.myTotalText}}<block wx:if="{{book.hasPrivate}}">（公 {{book.mySharedText}} + 私 {{book.myPrivateText}}）</block></text>
-    </view>
   </view>
 </view>
