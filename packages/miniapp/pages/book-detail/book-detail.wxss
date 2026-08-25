@@ -17,9 +17,9 @@
   width: 100%;
   height: 100%;
   /* 轻度高斯模糊柔化背景(自定义封面 + 系统默认封面统一) */
-  filter: blur(4rpx);
-  /* 放大 1.06 倍盖住模糊后边缘露出的透明/发虚 */
-  transform: scale(1.06);
+  filter: blur(2rpx);
+  /* 放大盖住模糊后边缘露出的透明/发虚 */
+  transform: scale(1.04);
 }
 
 .header-overlay {
