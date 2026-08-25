@@ -46,10 +46,6 @@
   justify-content: flex-start;
 }
 
-.bc-bottom {
-  margin-top: auto;
-}
-
 /* ---- 顶部 ---- */
 .bc-top {
   display: flex;
@@ -130,7 +126,6 @@
 .bc-bottom {
   display: flex;
   flex-direction: column;
-  margin-top: auto;
 }
 
 .bc-name-row {
@@ -170,6 +165,7 @@
   font-weight: 700;
   color: #fff;
   line-height: 1.2;
+  margin-top: auto;
 }
 
 .bc-amount-sub {

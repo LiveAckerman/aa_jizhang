@@ -101,8 +101,8 @@ Page({
           myTotalText: (summary.myTotal / 100).toFixed(2),
           mySharedText: (summary.myShared / 100).toFixed(2),
           myPrivateText: (summary.myPrivate / 100).toFixed(2),
-          hasPrivate: (summary.myPrivate || 0) > 0,
-          dateText: '',
+          hasPrivate: true, // detail 页始终展开公账+私账明细
+          dateText: book.createdAt ? book.createdAt.slice(0, 10) : '',
         },
         allTxs: txs || [],
         activeRoundCount: (activeRounds || []).length,
