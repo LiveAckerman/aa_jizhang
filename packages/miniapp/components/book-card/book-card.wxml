@@ -1,4 +1,4 @@
-<view class="bc-card {{mode === 'detail' ? 'bc-detail' : 'bc-list'}}" bindtap="onCardTap">
+<view class="bc-card {{mode === 'detail' ? 'bc-detail' : 'bc-list'}}" catchtap="onCardTap">
   <image class="bc-cover" src="{{book.coverUrl}}" mode="aspectFill" />
   <view class="bc-overlay"></view>
 
@@ -15,15 +15,14 @@
           data-userid="{{item.userId}}"
           bindlongpress="onMemberLongPress"
         />
-        <!-- 邀请+ 仅 detail -->
-        <view wx:if="{{mode === 'detail'}}" class="bc-invite" catchtap="onInvite">
+        <view class="bc-invite" catchtap="onInvite">
           <van-icon name="plus" size="18px" color="#4097a9" />
         </view>
       </view>
 
       <view class="bc-actions" catchtap="noop">
         <book-menu book="{{book}}" is-owner="{{isOwner}}" light="{{true}}" bind:action="onAction" />
-        <!-- 分享按钮 仅 detail：open-type=share 触发宿主页 onShareAppMessage -->
+        <!-- 分享按钮仅 detail：列表里触发的是 books 全局分享，无法定位具体账本 -->
         <button wx:if="{{mode === 'detail'}}" class="bc-share-btn" open-type="share">
           <van-icon name="share-o" size="18px" color="#fff" />
         </button>

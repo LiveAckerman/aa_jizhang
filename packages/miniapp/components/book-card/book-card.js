@@ -33,9 +33,9 @@ Component({
       this.triggerEvent('action', e.detail)
     },
 
-    // 邀请（仅 detail）
+    // 邀请（列表 / 详情共用；带上 book.id 供页面路由使用）
     onInvite() {
-      this.triggerEvent('invite')
+      this.triggerEvent('invite', { id: this.data.book.id })
     },
 
     // 成员长按移除（仅 detail）

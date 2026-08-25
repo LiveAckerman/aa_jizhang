@@ -314,7 +314,17 @@ Page({
   onTapBook(e) {
     if (!requireLogin()) return
     const { id } = e.detail
+    // 兜底：只有拿到有效 id 才跳转，防止原生 tap 冒泡带来的空 detail 造成 ?id=undefined
+    if (!id) return
     wx.navigateTo({ url: `/pages/book-detail/book-detail?id=${id}` })
+  },
+
+  // book-card 邀请+按钮：跳转到邀请页
+  onInviteBook(e) {
+    if (!requireLogin()) return
+    const { id } = e.detail
+    if (!id) return
+    wx.navigateTo({ url: `/pages/invite/invite?id=${id}` })
   },
 
   // book-card 组件抛出的操作事件

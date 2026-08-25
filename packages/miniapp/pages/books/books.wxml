@@ -104,6 +104,7 @@
         book="{{book}}"
         is-owner="{{book.isOwner}}"
         bind:tap="onTapBook"
+        bind:invite="onInviteBook"
         bind:action="onBookAction"
       />
     </block>
