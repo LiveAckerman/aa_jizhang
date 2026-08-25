@@ -2,7 +2,7 @@
   <!-- 游客态：未登录，显示 logo + 引导登录（纵向居中，无箭头） -->
   <view wx:if="{{isGuest}}" class="user-card" bindtap="onGuestLogin">
     <view class="avatar-section">
-      <image class="avatar" src="https://cdn.ljw44.com/assets/logo/logo-card.png" mode="aspectFill" />
+      <image class="avatar" src="https://cdn.ljw44.com/assets/logo/logo-card.webp" mode="aspectFill" />
     </view>
     <view class="user-info">
       <text class="nickname">点击登录</text>

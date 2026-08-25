@@ -18,11 +18,11 @@ import { UpdateBookDto } from './dto/update-book.dto'
 
 /** 默认场景封面（CDN） */
 const SCENE_COVERS: Record<string, string> = {
-  travel: 'https://cdn.ljw44.com/assets/covers/cover-travel.png',
-  dinner: 'https://cdn.ljw44.com/assets/covers/cover-dinner.png',
-  rent: 'https://cdn.ljw44.com/assets/covers/cover-rent.png',
-  activity: 'https://cdn.ljw44.com/assets/covers/cover-activity.png',
-  custom: 'https://cdn.ljw44.com/assets/covers/cover-custom.png',
+  travel: 'https://cdn.ljw44.com/assets/covers/cover-travel.webp',
+  dinner: 'https://cdn.ljw44.com/assets/covers/cover-dinner.webp',
+  rent: 'https://cdn.ljw44.com/assets/covers/cover-rent.webp',
+  activity: 'https://cdn.ljw44.com/assets/covers/cover-activity.webp',
+  custom: 'https://cdn.ljw44.com/assets/covers/cover-custom.webp',
 }
 
 @Injectable()

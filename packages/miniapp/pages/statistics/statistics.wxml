@@ -5,7 +5,7 @@
 
   <!-- 游客态：未登录，引导登录后查看统计（微信审核：先浏览再登录） -->
   <view wx:if="{{isGuest}}" class="empty-state">
-    <image class="empty-illustration" src="https://cdn.ljw44.com/assets/illustrations/empty-book.png" mode="aspectFit" />
+    <image class="empty-illustration" src="https://cdn.ljw44.com/assets/illustrations/empty-book.webp" mode="aspectFit" />
     <text class="empty-title">登录后查看支出统计</text>
     <text class="empty-desc">记账后即可看到你的分类占比和月度趋势</text>
     <button class="btn-primary create-btn" bindtap="onGuestLogin">微信登录</button>

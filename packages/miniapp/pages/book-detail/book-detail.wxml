@@ -166,7 +166,7 @@
 
     <!-- 空流水 -->
     <view wx:if="{{groups.length === 0}}" class="empty-tx">
-      <image class="empty-tx-img" src="https://cdn.ljw44.com/assets/illustrations/empty-transactions.png" mode="aspectFit" />
+      <image class="empty-tx-img" src="https://cdn.ljw44.com/assets/illustrations/empty-transactions.webp" mode="aspectFit" />
       <text class="empty-tx-text">{{txFilter === 'all' ? '还没有账单，点上方「记一笔」记第一笔' : '该分类下暂无账单'}}</text>
     </view>
 

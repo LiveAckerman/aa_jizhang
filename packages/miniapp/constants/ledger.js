@@ -45,11 +45,11 @@ SCENES.forEach((s) => (SCENE_MAP[s.key] = s))
 
 /** 场景对应的分享卡片图（微信 onShareAppMessage.imageUrl，5:4 会自动裁） */
 const SCENE_SHARE_IMAGES = {
-  travel: 'https://cdn.ljw44.com/images/2026-08/share-travel.png',
-  dinner: 'https://cdn.ljw44.com/images/2026-08/share-dinner.png',
-  rent: 'https://cdn.ljw44.com/images/2026-08/share-rent.png',
-  activity: 'https://cdn.ljw44.com/images/2026-08/share-activity.png',
-  custom: 'https://cdn.ljw44.com/images/2026-08/share-custom.png',
+  travel: 'https://cdn.ljw44.com/images/2026-08/share-travel.webp',
+  dinner: 'https://cdn.ljw44.com/images/2026-08/share-dinner.webp',
+  rent: 'https://cdn.ljw44.com/images/2026-08/share-rent.webp',
+  activity: 'https://cdn.ljw44.com/images/2026-08/share-activity.webp',
+  custom: 'https://cdn.ljw44.com/images/2026-08/share-custom.webp',
 }
 
 /** 按场景取分享图；未匹配则 fallback 到 custom */

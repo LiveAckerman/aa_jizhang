@@ -2,11 +2,11 @@
   <!-- Logo 和标题区域 -->
   <view class="header-section">
     <view class="logo-container">
-      <image class="app-logo" src="https://cdn.ljw44.com/assets/logo/logo-card.png" mode="aspectFit" />
+      <image class="app-logo" src="https://cdn.ljw44.com/assets/logo/logo-card.webp" mode="aspectFit" />
     </view>
     <image
       class="brand-wordmark"
-      src="https://cdn.ljw44.com/images/2026-08/wordmark.png"
+      src="https://cdn.ljw44.com/images/2026-08/wordmark.webp"
       mode="aspectFit"
     />
     <text class="brand-english">一起分账吧</text>
@@ -26,7 +26,7 @@
       disabled="{{logining}}"
     >
       <view wx:if="{{logining}}" class="btn-spinner"></view>
-      <image wx:else class="wechat-icon" src="/assets/wechat-logo.png" mode="aspectFit" />
+      <image wx:else class="wechat-icon" src="/assets/wechat-logo.webp" mode="aspectFit" />
       <text>{{logining ? '登录中...' : '微信一键登录'}}</text>
     </button>
 
