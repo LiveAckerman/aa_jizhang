@@ -49,11 +49,15 @@
 }
 
 .avatar {
-  width: 100%;
-  height: 100%;
-  border-radius: 100rpx;
+  /* 固定尺寸而非 width:100%，避免 button 容器被撑宽时图片跟着变形 */
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 50%;
   border: 4rpx solid #fff;
   box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.12);
+  box-sizing: border-box;
+  /* button 内 image 默认 inline，居中并锁死为块级正方形 */
+  display: block;
 }
 
 .avatar-mask {
