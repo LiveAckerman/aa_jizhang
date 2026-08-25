@@ -138,7 +138,9 @@ page {
   z-index: 0;
 }
 
-.book-body > * {
+.book-body .book-row,
+.book-body .book-avatars,
+.book-body .book-cover-amount {
   position: relative;
   z-index: 1;
 }
