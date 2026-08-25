@@ -2,6 +2,7 @@ const app = getApp()
 const { setTabBarSelected } = require('../../utils/tabbar')
 const { requireLogin } = require('../../utils/auth')
 const authDrawerBehavior = require('../../utils/auth-drawer-behavior')
+const { APP_VERSION } = require('../../config/index')
 
 Page({
   behaviors: [authDrawerBehavior],
@@ -43,7 +44,7 @@ Page({
   },
 
   goToVersion() {
-    wx.showToast({ title: '当前版本 v1.0.0', icon: 'none' })
+    wx.showToast({ title: `当前版本 v${APP_VERSION}`, icon: 'none' })
   },
 
   // 微信客服会话回调（用户在会话内点击卡片消息等场景触发，此处仅留空占位）
