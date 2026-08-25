@@ -4,7 +4,7 @@
   padding-bottom: 60rpx;
 }
 
-/* 微信 chooseAvatar button 需重置默认样式（含 min-width / display）*/
+/* 微信 chooseAvatar button 需重置默认样式（含 min-width / display / box-sizing）*/
 .avatar-btn {
   padding: 0;
   margin: 64rpx auto 20rpx;
@@ -14,8 +14,10 @@
   font-size: inherit;
   color: inherit;
   display: block;
-  width: 200rpx;
+  width: 200rpx !important;  /* !important 覆盖 button 默认宽度 */
   height: 200rpx;
+  box-sizing: border-box;    /* 确保 border 不撑大容器 */
+  overflow: hidden;           /* 裁剪超出圆形的部分 */
 }
 .avatar-btn::after { border: none; }
 /* 覆盖 avatar-section 的 margin，避免与 avatar-btn 的 margin 叠加 */
