@@ -41,8 +41,14 @@ module.exports = Behavior({
       // 关掉会话门闩：本次会话内不再重弹（切 tab / 再次 onShow 均不触发）
       app.globalData.needProfilePrompt = false
       this._toggleTabBar(true)
-      // 立即标记「已弹过」，后端置 isProfileComplete=true，之后登录不再弹
-      request({ url: '/user/profile-prompt/dismiss', method: 'POST' }).catch(() => {})
+      // 立即标记「已弹过」，后端置 isProfileComplete=true，同时更新本地缓存防止刷新后重弹
+      request({ url: '/user/profile-prompt/dismiss', method: 'POST' })
+        .then(() => {
+          // dismiss 成功：更新本地 user.isProfileComplete=true，写入 storage
+          const updatedUser = { ...app.globalData.user, isProfileComplete: true }
+          app.setLoginState(app.globalData.token, updatedUser)
+        })
+        .catch(() => {})
     },
 
     async onAuthorized(e) {
