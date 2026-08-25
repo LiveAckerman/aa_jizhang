@@ -17,7 +17,7 @@
   width: 200rpx !important;  /* !important 覆盖 button 默认宽度 */
   height: 200rpx;
   box-sizing: border-box;    /* 确保 border 不撑大容器 */
-  overflow: hidden;           /* 裁剪超出圆形的部分 */
+  overflow: visible;          /* 保留圆形阴影,不裁剪 */
 }
 .avatar-btn::after { border: none; }
 /* 覆盖 avatar-section 的 margin，避免与 avatar-btn 的 margin 叠加 */
@@ -174,5 +174,8 @@
 .mini-avatar {
   width: 56rpx;
   height: 56rpx;
-  border-radius: 28rpx;
+  border-radius: 50%;
+  display: block;
+  box-sizing: border-box;
+  flex-shrink: 0;  /* 防止在 flex 容器中被压缩 */
 }
