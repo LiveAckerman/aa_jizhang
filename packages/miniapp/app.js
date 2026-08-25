@@ -54,4 +54,25 @@ App({
     wx.removeStorageSync('token')
     wx.removeStorageSync('user')
   },
+
+  /**
+   * 全局分享配置：分享给朋友
+   * 所有页面右上角「转发」按钮自动启用
+   */
+  onShareAppMessage() {
+    return {
+      title: '一起分账吧 - 轻松记账，公平分账',
+      path: '/pages/books/books',
+    }
+  },
+
+  /**
+   * 全局分享配置：分享到朋友圈
+   * 所有页面右上角「分享到朋友圈」按钮自动启用
+   */
+  onShareTimeline() {
+    return {
+      title: '一起分账吧 - 轻松记账，公平分账',
+    }
+  },
 })
