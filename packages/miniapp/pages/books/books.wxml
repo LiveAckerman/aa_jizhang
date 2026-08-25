@@ -44,23 +44,21 @@
     </view>
   </scroll-view>
 
-  <!-- 加载中：骨架屏（3 张卡片） -->
+  <!-- 加载中：骨架屏（3 张卡片），对齐 book-card 封面叠加布局 -->
   <view wx:if="{{loading}}" class="book-list">
-    <view wx:for="{{[1,2,3]}}" wx:key="*this" class="glass-card book-plain skeleton-card">
-      <view class="skeleton-row-1">
-        <van-skeleton title="{{true}}" row="{{0}}" title-width="55%" />
-        <view class="skeleton-tag"></view>
-      </view>
-      <view class="skeleton-row-2">
+    <view wx:for="{{[1,2,3]}}" wx:key="*this" class="skeleton-cover-card">
+      <!-- 顶部：头像堆叠 + 右上占位 -->
+      <view class="skeleton-cover-top">
         <view class="skeleton-avatars">
           <view class="skeleton-avatar" wx:for="{{[1,2,3]}}" wx:key="*this" wx:for-item="_"></view>
         </view>
-        <view class="skeleton-date"></view>
+        <view class="skeleton-menu-btn"></view>
       </view>
-      <view class="skeleton-divider"></view>
-      <view class="skeleton-row-3">
-        <van-skeleton row="{{1}}" row-width="140rpx" />
-        <view class="skeleton-more"></view>
+      <!-- 底部：名称 + 金额占位 -->
+      <view class="skeleton-cover-bottom">
+        <view class="skeleton-cover-name"></view>
+        <view class="skeleton-cover-amount"></view>
+        <view class="skeleton-cover-sub"></view>
       </view>
     </view>
   </view>
