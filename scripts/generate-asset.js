@@ -489,4 +489,4 @@ const PROMPT_TEMPLATES = {
     `clean and minimal, transparent background`,
 }
 
-module.exports = { generateAsset, PROMPT_TEMPLATES }
+module.exports = { generateAsset, PROMPT_TEMPLATES, uploadToR2 }
