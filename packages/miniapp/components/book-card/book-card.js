@@ -14,11 +14,28 @@
  *   bookTotalText, myTotalText, mySharedText, myPrivateText, hasPrivate
  *   dateText, statusBadge(可选)
  */
+const MAX_AVATARS = 3
+
 Component({
   properties: {
     book: { type: Object, value: {} },
     mode: { type: String, value: 'list' }, // 'list' | 'detail'
     isOwner: { type: Boolean, value: false },
+  },
+
+  observers: {
+    'book.members': function (members) {
+      const list = members || []
+      this.setData({
+        displayMembers: list.slice(0, MAX_AVATARS),
+        extraCount: Math.max(0, list.length - MAX_AVATARS),
+      })
+    },
+  },
+
+  data: {
+    displayMembers: [],
+    extraCount: 0,
   },
 
   methods: {

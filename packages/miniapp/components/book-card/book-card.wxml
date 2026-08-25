@@ -7,7 +7,7 @@
     <view class="bc-top">
       <view class="bc-members">
         <image
-          wx:for="{{book.members}}"
+          wx:for="{{displayMembers}}"
           wx:key="userId"
           class="bc-avatar"
           src="{{item.avatar}}"
@@ -15,6 +15,7 @@
           data-userid="{{item.userId}}"
           bindlongpress="onMemberLongPress"
         />
+        <view wx:if="{{extraCount > 0}}" class="bc-extra">+{{extraCount}}</view>
         <view class="bc-invite" catchtap="onInvite">
           <van-icon name="plus" size="18px" color="#4097a9" />
         </view>
@@ -36,9 +37,8 @@
         <text wx:if="{{book.statusBadge}}" class="bc-badge">{{book.statusBadge}}</text>
         <text wx:elif="{{book.dateText}}" class="bc-date">{{book.dateText}}</text>
       </view>
-      <text class="bc-amount-label">公账合计</text>
       <text class="bc-amount-value">¥{{book.bookTotalText}}</text>
-      <text class="bc-amount-sub">我的支出 ¥{{book.myTotalText}}（公账 {{book.mySharedText}} + 私账 {{book.myPrivateText}}）</text>
+      <text class="bc-amount-sub">我 ¥{{book.myTotalText}}<block wx:if="{{book.hasPrivate}}">（公 {{book.mySharedText}} + 私 {{book.myPrivateText}}）</block></text>
     </view>
   </view>
 </view>

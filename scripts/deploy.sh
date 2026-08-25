@@ -3,9 +3,14 @@
 # deploy.sh — 出发AA记账后端一键部署到 103 服务器
 #
 # 用法：
-#   ./scripts/deploy.sh          # 完整部署（push + build + upload + restart）
+#   ./scripts/deploy.sh            # 完整部署（push + build + upload + env + restart）
 #   ./scripts/deploy.sh --no-push  # 跳过 git push（代码已推过）
+#   ./scripts/deploy.sh --no-env   # 跳过 .env.production 同步（只更新代码）
 #   ./scripts/deploy.sh --dry-run  # 只演练，不实际执行
+#
+# 环境变量：
+#   本地开发用 .env（连测试库），生产用 .env.production（连生产库）
+#   两份文件都在 .gitignore 中，不提交。修改生产变量时改 .env.production 即可
 #
 # 前提：
 #   - ~/.ssh/id_ed25519 已配置且可连接 103.65.39.210
@@ -28,9 +33,12 @@ RSYNC="rsync -az --delete -e \"ssh -i $SSH_KEY -o StrictHostKeyChecking=no\""
 SKIP_PUSH=false
 DRY_RUN=false
 
+SKIP_ENV=false
+
 for arg in "$@"; do
   case $arg in
     --no-push)  SKIP_PUSH=true ;;
+    --no-env)   SKIP_ENV=true ;;
     --dry-run)  DRY_RUN=true ;;
     *)          echo "未知参数: $arg"; exit 1 ;;
   esac
@@ -94,6 +102,32 @@ run "rsync -az --delete \
   packages/shared/dist/ \
   ${SERVER_USER}@${SERVER_IP}:${REMOTE_DIR}/packages/shared/dist/"
 ok "shared dist 上传完成"
+
+# ── Step 3.5: 同步生产环境变量 ────────────────────────────────────────────────
+# 说明：本地 .env 是开发库配置，生产走独立的 .env.production 文件
+#      通过 --no-env 可跳过（例如只更新代码、不动配置时）
+if [ "$SKIP_ENV" = false ]; then
+  step "同步 .env.production → 服务器 .env"
+  if [ ! -f .env.production ]; then
+    fail ".env.production 不存在。请先从服务器拉取一份：
+      scp -i $SSH_KEY ${SERVER_USER}@${SERVER_IP}:${REMOTE_DIR}/.env ./.env.production
+    或者使用 --no-env 跳过此步"
+  fi
+  # 安全校验：生产配置不允许出现测试库或非生产标识
+  if grep -qE "^DB_DATABASE=.*_test\b" .env.production; then
+    fail ".env.production 中 DB_DATABASE 疑似指向测试库，拒绝部署"
+  fi
+  if grep -qE "^NODE_ENV=(development|test)" .env.production; then
+    fail ".env.production 中 NODE_ENV 非 production，拒绝部署"
+  fi
+  run "rsync -az \
+    -e \"ssh -i $SSH_KEY -o StrictHostKeyChecking=no\" \
+    .env.production \
+    ${SERVER_USER}@${SERVER_IP}:${REMOTE_DIR}/.env"
+  ok ".env 同步完成"
+else
+  step "跳过 .env 同步（--no-env）"
+fi
 
 # ── Step 4: pm2 重启 ──────────────────────────────────────────────────────────
 step "重启 pm2 进程: $PM2_APP"

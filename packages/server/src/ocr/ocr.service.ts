@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common'
+import { Injectable, BadRequestException, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { UploadService } from '../upload/upload.service'
 import { PaymentRecord, OcrRecognitionResult } from './ocr.types'
@@ -7,8 +7,12 @@ import fetch from 'node-fetch'
 
 @Injectable()
 export class OcrService {
+  private readonly logger = new Logger(OcrService.name)
   private readonly ocrApiUrl: string
   private readonly ocrApiKey: string
+  private readonly aiSummaryBaseUrl: string
+  private readonly aiSummaryApiKey: string
+  private readonly aiSummaryModel: string
 
   constructor(
     private readonly configService: ConfigService,
@@ -20,6 +24,12 @@ export class OcrService {
     this.ocrApiKey =
       this.configService.get<string>('OCR_API_KEY') ||
       'ai-music-utils-api-key'
+    this.aiSummaryBaseUrl =
+      this.configService.get<string>('AI_SUMMARY_BASE_URL') || ''
+    this.aiSummaryApiKey =
+      this.configService.get<string>('AI_SUMMARY_API_KEY') || ''
+    this.aiSummaryModel =
+      this.configService.get<string>('AI_SUMMARY_MODEL') || 'gpt-4o-mini'
   }
 
   /**
@@ -35,14 +45,30 @@ export class OcrService {
       throw new BadRequestException('OCR识别失败')
     }
 
-    // 2. 上传原图到R2
+    // 2. 上传原图到R2（AI/规则解析日志见 parseWithAI）
     const imageUrl = await this.uploadService.uploadToR2(file, 'ocr')
 
-    // 3. 解析文字，提取支付记录
-    const records = this.parsePaymentRecords(
-      ocrResult.fullText,
-      ocrResult.results,
-    )
+    let records: PaymentRecord[] = []
+
+    // 3. 尝试使用 AI 总结服务智能解析
+    if (this.aiSummaryBaseUrl && this.aiSummaryApiKey) {
+      try {
+        records = await this.parseWithAI(ocrResult.fullText)
+      } catch (error: any) {
+        // 失败则降级到原规则解析
+        this.logger.warn(`AI总结失败，降级规则解析: ${error?.message || error}`)
+        records = this.parsePaymentRecords(
+          ocrResult.fullText,
+          ocrResult.results,
+        )
+      }
+    } else {
+      // 未配置 AI 服务，直接使用规则解析
+      records = this.parsePaymentRecords(
+        ocrResult.fullText,
+        ocrResult.results,
+      )
+    }
 
     // 4. 智能匹配分类
     const enrichedRecords = this.enrichRecords(records)
@@ -85,6 +111,113 @@ export class OcrService {
       throw new BadRequestException(
         `OCR识别失败: ${error?.message || '未知错误'}`,
       )
+    }
+  }
+
+  /**
+   * 使用 AI 总结服务解析 OCR 文本
+   */
+  private async parseWithAI(fullText: string): Promise<PaymentRecord[]> {
+    const prompt = `请从以下 OCR 识别的文本中提取支付记录信息。
+
+OCR 文本：
+${fullText}
+
+请分析这段文本，提取其中的支付记录，返回 JSON 数组格式，每条记录包含：
+- merchant: 商户名称（字符串，如果无法识别则为"未知商户"）
+- amount: 金额（整数，单位为分，例如 15.00 元应返回 1500）
+- confidence: 置信度（0-1之间的浮点数）
+- source: 来源（'wechat' | 'alipay' | 'generic'）
+- spentAt: 支付时间（ISO 8601 格式字符串，如果文本中有时间则解析，否则使用当前时间）
+
+注意：
+1. 金额必须转换为分（乘以100）
+2. 如果是账单详情页（包含"支付成功"/"交易成功"等），通常只有一笔记录
+3. 如果是列表页，可能有多笔记录
+4. 排除汇总金额（如"本月支出"、"总计"等）
+5. 只返回 JSON 数组，不要其他解释文字
+
+示例输出：
+[
+  {
+    "merchant": "星巴克",
+    "amount": 4500,
+    "confidence": 0.9,
+    "source": "wechat",
+    "spentAt": "2026-08-25T10:30:00.000Z"
+  }
+]`
+
+    const requestBody = {
+      model: this.aiSummaryModel,
+      messages: [
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      temperature: 0.1,
+    }
+
+    const url = `${this.aiSummaryBaseUrl}/chat/completions`
+    const startedAt = Date.now()
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.aiSummaryApiKey}`,
+        },
+        body: JSON.stringify(requestBody),
+      })
+
+      if (!response.ok) {
+        // 失败详情拼进 error message，由上层统一 warn 一次
+        const errorText = await response.text().catch(() => '')
+        throw new Error(
+          `AI API ${response.status} ${response.statusText} ${errorText.slice(0, 200)}`,
+        )
+      }
+
+      const data = await response.json()
+      const content = data.choices?.[0]?.message?.content || '[]'
+
+      // 提取 JSON 数组（可能被 markdown 代码块包裹）
+      let jsonText = content.trim()
+      const codeBlockMatch = jsonText.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
+      if (codeBlockMatch) {
+        jsonText = codeBlockMatch[1]
+      }
+
+      let records: PaymentRecord[]
+      try {
+        records = JSON.parse(jsonText)
+      } catch {
+        throw new Error(`AI返回内容非JSON: ${jsonText.slice(0, 200)}`)
+      }
+
+      // 验证并标准化数据
+      const normalized = records
+        .filter((r) => r.merchant && r.amount > 0)
+        .map((r) => ({
+          merchant: String(r.merchant).slice(0, 20),
+          amount: Math.round(Number(r.amount)),
+          confidence: Math.max(0, Math.min(1, Number(r.confidence) || 0.85)),
+          source: ['wechat', 'alipay', 'generic'].includes(r.source)
+            ? r.source
+            : 'generic',
+          spentAt: r.spentAt || new Date().toISOString(),
+        }))
+
+      // 成功路径只留一行：条数 + 耗时
+      this.logger.log(
+        `AI解析成功 ${normalized.length}条 +${Date.now() - startedAt}ms`,
+      )
+
+      return normalized
+    } catch (error: any) {
+      throw new Error(`AI 总结失败: ${error?.message || '未知错误'}`)
     }
   }
 

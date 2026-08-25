@@ -67,6 +67,22 @@
   background: #eee;
 }
 
+/* +N 溢出气泡：与头像同尺寸，白底半透明 */
+.bc-extra {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 28rpx;
+  border: 2rpx solid #fff;
+  margin-right: -14rpx;
+  background: rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #4097a9;
+}
+
 .bc-invite {
   width: 56rpx;
   height: 56rpx;
@@ -142,11 +158,6 @@
   font-size: 22rpx;
   color: rgba(255, 255, 255, 0.75);
   flex-shrink: 0;
-}
-
-.bc-amount-label {
-  font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.85);
 }
 
 .bc-amount-value {

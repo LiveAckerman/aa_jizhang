@@ -57,6 +57,9 @@ Page({
   },
 
   async loadAll() {
+    // 守卫：id 未就位（首次 onLoad 前被误调 / 页面栈异常带空参进入）直接跳过，
+    // 避免向后端发 bookId=undefined，导致弹「你不是该账本成员」的假 403
+    if (!this.data.id) return
     // 首次进入没数据 时展示骨架；已经有数据（从子页返回）静默刷新
     if (!this.data.book) {
       this.setData({ loading: true })
