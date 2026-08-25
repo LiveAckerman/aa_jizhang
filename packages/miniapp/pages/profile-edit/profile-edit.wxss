@@ -24,7 +24,7 @@
 .avatar-btn.avatar-section { margin: 64rpx auto 20rpx; }
 
 .list-item-btn {
-  width: 100%;
+  width: 100% !important;  /* !important 覆盖 button 默认宽度 */
   padding: 20rpx 32rpx;
   margin: 0;
   background: transparent;
@@ -37,6 +37,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  box-sizing: border-box;
 }
 .list-item-btn::after { border: none; }
 
