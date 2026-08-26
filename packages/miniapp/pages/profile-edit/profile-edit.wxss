@@ -28,7 +28,7 @@
   padding: 20rpx 32rpx;
   margin: 0;
   background: transparent;
-  line-height: normal;
+  line-height: 1;
   border-radius: 0;
   text-align: left;
   min-height: 96rpx;
@@ -38,6 +38,7 @@
   align-items: center;
   justify-content: space-between;
   box-sizing: border-box;
+  border: none;
 }
 .list-item-btn::after { border: none; }
 
