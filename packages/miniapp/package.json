@@ -4,6 +4,7 @@
   "private": true,
   "description": "一起分账吧 - 微信原生小程序",
   "dependencies": {
+    "@babel/runtime": "^7.24.0",
     "@departure/shared": "workspace:*",
     "@vant/weapp": "^1.11.7"
   }
