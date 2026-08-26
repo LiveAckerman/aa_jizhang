@@ -55,9 +55,13 @@
     </view>
 
     <block wx:if="{{!readonly}}">
-      <button class="btn-primary save-btn" bindtap="onSave" disabled="{{saving}}">
-        {{saving ? '保存中...' : '保存'}}
-      </button>
+      <primary-button
+        class="save-btn"
+        text="保存"
+        loading-text="保存中..."
+        loading="{{saving}}"
+        bind:tap="onSave"
+      />
       <view wx:if="{{isEdit}}" class="delete-link" bindtap="onDelete">删除账单</view>
     </block>
     <view wx:if="{{isEdit}}" class="logs-link" bindtap="onOpenLogs">查看修改记录</view>

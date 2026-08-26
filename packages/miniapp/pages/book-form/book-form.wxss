@@ -110,8 +110,10 @@
 .save-btn {
   width: 100%;
   height: 96rpx;
-  line-height: 96rpx;
   margin-top: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ── 加载骨架屏 ── */

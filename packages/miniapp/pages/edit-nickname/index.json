@@ -2,6 +2,7 @@
   "navigationStyle": "custom",
   "backgroundColor": "#F5F3FF",
   "usingComponents": {
-    "nav-bar": "/components/nav-bar/nav-bar"
+    "nav-bar": "/components/nav-bar/nav-bar",
+    "primary-button": "/components/primary-button/primary-button"
   }
 }

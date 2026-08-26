@@ -148,6 +148,9 @@
   font-size: 30rpx;
   font-weight: 600;
   color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .person-amount {
   font-size: 26rpx;
@@ -157,23 +160,29 @@
 .person-amount.pay { color: var(--color-accent); }
 
 .settle-btn {
-  height: 64rpx;
-  line-height: 64rpx;
-  padding: 0 28rpx;
+  width: 180rpx !important;
+  height: 72rpx;
+  flex-shrink: 0;
+  padding: 0 24rpx;
   border-radius: 32rpx;
-  background: var(--color-primary);
-  color: #fff;
+  background: var(--color-primary) !important;
+  color: #fff !important;
   font-size: 26rpx;
   font-weight: 600;
-  border: none;
+  border: none !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+  line-height: normal;
   flex-shrink: 0;
 }
 .settle-btn::after { border: none; }
 /* 撤回按钮：描边款 */
 .settle-btn.revert {
-  background: #fff;
-  color: #fa9583;
-  border: 2rpx solid #fa9583;
+  background: #fff !important;
+  color: #fa9583 !important;
+  border: 2rpx solid #fa9583 !important;
 }
 
 /* 已结清卡片 */

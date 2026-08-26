@@ -1,0 +1,102 @@
+/* 通用主按钮组件 */
+.pb-btn {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  height: 96rpx;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-radius: 48rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  box-sizing: border-box;
+  transition: opacity 0.2s;
+  line-height: normal;
+}
+
+.pb-btn::after {
+  border: none;
+  background: none;
+}
+
+/* 主按钮：橙色（品牌强调色） */
+.pb-btn--primary {
+  background: #fa9583 !important;
+  color: #ffffff !important;
+  box-shadow: 0 8rpx 24rpx rgba(250, 149, 131, 0.28);
+}
+
+.pb-btn--primary:active {
+  opacity: 0.85;
+  background: #fa9583 !important;
+  color: #ffffff !important;
+}
+
+/* 次按钮：蓝色（品牌主色） */
+.pb-btn--secondary {
+  background: #4097a9 !important;
+  color: #ffffff !important;
+  box-shadow: 0 8rpx 24rpx rgba(64, 151, 169, 0.28);
+}
+
+.pb-btn--secondary:active {
+  opacity: 0.85;
+  background: #4097a9 !important;
+  color: #ffffff !important;
+}
+
+/* 描边按钮：透明底 + 品牌色文字 */
+.pb-btn--outline {
+  background: transparent !important;
+  color: #4097a9 !important;
+  border: 2rpx solid #4097a9 !important;
+}
+
+.pb-btn--outline:active {
+  opacity: 0.7;
+  background: transparent !important;
+  color: #4097a9 !important;
+}
+
+/* 禁用态 */
+.pb-btn--disabled,
+.pb-btn[disabled] {
+  opacity: 0.5 !important;
+}
+
+/* Loading 态 */
+.pb-btn--loading {
+  opacity: 0.85 !important;
+}
+
+/* 文字 */
+.pb-btn__text {
+  line-height: 1;
+}
+
+/* Loading spinner（纯 CSS） */
+.pb-btn__spinner {
+  width: 32rpx;
+  height: 32rpx;
+  margin-right: 12rpx;
+  border: 4rpx solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: pb-spin 0.6s linear infinite;
+}
+
+/* outline 类型的 spinner 用品牌色 */
+.pb-btn--outline .pb-btn__spinner {
+  border: 4rpx solid rgba(64, 151, 169, 0.25);
+  border-top-color: #4097a9;
+}
+
+@keyframes pb-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

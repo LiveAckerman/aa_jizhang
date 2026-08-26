@@ -160,10 +160,10 @@
   line-height: 88rpx;
   padding: 0 64rpx;
   border-radius: 44rpx;
-  background: #4097a9;
-  color: #fff;
+  background: #4097a9 !important;
+  color: #fff !important;
   font-size: 28rpx;
-  border: none;
+  border: none !important;
 }
 .btn-back::after { border: none; }
 

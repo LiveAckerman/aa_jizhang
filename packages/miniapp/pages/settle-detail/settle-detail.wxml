@@ -7,7 +7,10 @@
         <text class="person-name">{{item.nickname}}</text>
         <text class="person-amount {{kind}}">{{kind === 'receive' ? '需转你' : '需付'}} ¥{{item.netAmountText}}</text>
       </view>
-      <button class="settle-btn" data-id="{{item.otherUserId}}" data-name="{{item.nickname}}" catchtap="onSettle">已结算</button>
+      <button class="settle-btn" data-id="{{item.otherUserId}}" data-name="{{item.nickname}}" catchtap="onSettle">
+        <van-icon name="passed" size="14px" color="#fff" />
+        <text>已结算</text>
+      </button>
     </view>
     <view class="expand-toggle" data-id="{{item.otherUserId}}" bindtap="onToggleExpand">
       <text>{{expandedMap[item.otherUserId] ? '收起明细' : '展开明细（' + item.details.length + '笔）'}}</text>

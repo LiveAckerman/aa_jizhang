@@ -474,9 +474,9 @@ page {
   padding: 0 48rpx;
   height: 80rpx;
   line-height: 80rpx;
-  background: transparent;
-  color: var(--color-primary);
-  border: 2rpx solid var(--color-primary);
+  background: transparent !important;
+  color: var(--color-primary) !important;
+  border: 2rpx solid var(--color-primary) !important;
   border-radius: 40rpx;
   font-size: 28rpx;
 }

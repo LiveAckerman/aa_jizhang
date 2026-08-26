@@ -80,7 +80,13 @@
     />
   </view>
 
-  <button class="btn-primary save-btn" bindtap="onSave" disabled="{{saving}}">
+  <button
+    class="btn-primary save-btn {{saving ? 'loading' : ''}}"
+    bindtap="onSave"
+    disabled="{{saving}}"
+    hover-class="none"
+  >
+    <view wx:if="{{saving}}" class="btn-loading-icon"></view>
     {{saving ? '保存中...' : (isEdit ? '保存' : '创建账本')}}
   </button>
   </block>

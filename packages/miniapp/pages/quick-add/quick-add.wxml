@@ -50,7 +50,7 @@
 
   <!-- 底部下一步 -->
   <view class="bottom-bar">
-    <button class="btn-primary next-btn" bindtap="onNext">
+    <button class="btn-primary next-btn" bindtap="onNext" hover-class="none">
       {{mode === 'ocr' ? '选图识别' : '开始记账'}}
     </button>
   </view>

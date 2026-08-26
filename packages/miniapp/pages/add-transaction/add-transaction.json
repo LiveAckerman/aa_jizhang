@@ -2,6 +2,7 @@
   "navigationBarTitleText": "记一笔",
   "usingComponents": {
     "van-icon": "@vant/weapp/icon/index",
-    "transaction-form": "/components/transaction-form/transaction-form"
+    "transaction-form": "/components/transaction-form/transaction-form",
+    "primary-button": "/components/primary-button/primary-button"
   }
 }

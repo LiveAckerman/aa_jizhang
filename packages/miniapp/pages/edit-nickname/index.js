@@ -8,6 +8,7 @@ Page({
     hasUsedWechatNickname: false,
     // 本次输入是否来自微信昵称组件（type="nickname" 有内容即视为微信授权）
     fromWechat: false,
+    saving: false,
   },
 
   onLoad(options) {
@@ -56,6 +57,8 @@ Page({
       return
     }
 
+    if (this.data.saving) return
+    this.setData({ saving: true })
     wx.showLoading({ title: '保存中...', mask: true })
 
     try {
@@ -83,6 +86,7 @@ Page({
       }, 1500)
     } catch (err) {
       wx.hideLoading()
+      this.setData({ saving: false })
       wx.showToast({
         title: err.message || '保存失败',
         icon: 'none'

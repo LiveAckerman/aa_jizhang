@@ -80,7 +80,7 @@
   </view>
 
   <!-- 分享按钮 -->
-  <button class="btn-primary share-wechat-btn" open-type="share">
+  <button class="btn-primary share-wechat-btn" open-type="share" hover-class="none">
     <van-icon name="share-o" size="18px" color="#fff" />
     <text>分享给微信好友</text>
   </button>

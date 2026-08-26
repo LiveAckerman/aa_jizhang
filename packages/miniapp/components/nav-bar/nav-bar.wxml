@@ -5,8 +5,11 @@
   <!-- 状态栏占位 -->
   <view style="height: {{statusBarHeight}}px;"></view>
 
-  <!-- 导航栏内容 -->
-  <view class="nav-bar__content" style="height: {{navBarHeight}}px;">
+  <!-- 导航栏内容：右侧 padding 动态避让微信胶囊按钮 -->
+  <view
+    class="nav-bar__content"
+    style="height: {{navBarHeight}}px; padding-right: {{rightSafeArea}}px;"
+  >
     <!-- 左侧：返回按钮 / 自定义左插槽 -->
     <view class="nav-bar__left">
       <view
@@ -23,7 +26,7 @@
     <!-- 中间：标题 -->
     <view class="nav-bar__title" style="color: {{color}};">{{title}}</view>
 
-    <!-- 右侧：自定义操作插槽 -->
+    <!-- 右侧：自定义操作插槽（位于胶囊左侧） -->
     <view class="nav-bar__right">
       <slot name="right"></slot>
     </view>

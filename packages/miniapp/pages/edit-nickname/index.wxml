@@ -1,7 +1,6 @@
 <view class="edit-nickname-page">
   <nav-bar title="修改昵称" show-back="{{false}}">
     <text slot="left" class="nav-action" bindtap="onCancel">取消</text>
-    <text slot="right" class="nav-action nav-action--primary" bindtap="onSave">保存</text>
   </nav-bar>
 
   <view class="content">
@@ -37,5 +36,13 @@
       <text class="tip-item">• 昵称长度为1-20个字符</text>
       <text class="tip-item">• 昵称将在账本中展示给好友</text>
     </view>
+
+    <primary-button
+      class="save-btn"
+      text="保存"
+      loading-text="保存中..."
+      loading="{{saving}}"
+      bind:tap="onSave"
+    />
   </view>
 </view>

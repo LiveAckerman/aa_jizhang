@@ -67,8 +67,8 @@
   <view wx:elif="{{isGuest}}" class="empty-state">
     <image class="empty-illustration" src="https://cdn.ljw44.com/assets/illustrations/empty-book.webp" mode="aspectFit" />
     <text class="empty-title">登录后查看你的账本</text>
-    <text class="empty-desc">和朋友一起记账分账，随时查看每笔支出</text>
-    <button class="btn-primary create-btn" bindtap="onGuestLogin">微信登录</button>
+    <text class="empty-desc">和朋友一起记账分账,随时查看每笔支出</text>
+    <button class="btn-primary create-btn" bindtap="onGuestLogin" hover-class="none">微信登录</button>
   </view>
 
   <!-- 空状态：真正没有账本 -->
@@ -76,7 +76,7 @@
     <image class="empty-illustration" src="https://cdn.ljw44.com/assets/illustrations/empty-book.webp" mode="aspectFit" />
     <text class="empty-title">还没有账本</text>
     <text class="empty-desc">创建第一个账本，开始和朋友一起记账</text>
-    <button class="btn-primary create-btn" bindtap="onTapCreate">创建账本</button>
+    <button class="btn-primary create-btn" bindtap="onTapCreate" hover-class="none">创建账本</button>
   </view>
 
   <!-- 空状态：有账本但搜索/归属筛选结果为空 -->

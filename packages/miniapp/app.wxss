@@ -35,15 +35,28 @@ page {
   line-height: 1.5;
 }
 
-/* 全局 button 重置：修复真机文字不居中 */
+/* 全局 button 重置：修复真机文字不居中 + 覆盖原生样式 */
 button {
   padding: 0;
-  line-height: inherit;
+  margin: 0;
   box-sizing: border-box;
+  border: none;
 }
 
 button::after {
   border: none;
+  background: none;
+}
+
+/* 覆盖微信默认的 button-hover */
+button.button-hover {
+  opacity: 0.9;
+}
+
+/* 自定义按钮组件外层：默认占满宽度 */
+primary-button {
+  display: block;
+  width: 100%;
 }
 
 /* 磨砂玻璃卡片通用类 */
@@ -56,13 +69,80 @@ button::after {
   box-shadow: 0 16rpx 64rpx rgba(47, 65, 89, 0.08);
 }
 
-/* 主按钮 */
-.btn-primary {
-  background: var(--color-accent);
-  color: #ffffff;
-  border-radius: 48rpx;
-  font-size: 32rpx;
-  font-weight: 600;
+/* 主按钮 - 使用 button 元素选择器提高优先级 */
+button.btn-primary {
+  background-color: #fa9583 !important;
+  background: #fa9583 !important;
+  color: #ffffff !important;
+  border-radius: 48rpx !important;
+  font-size: 32rpx !important;
+  font-weight: 600 !important;
+  border: none !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* 强制覆盖所有可能的状态 */
+button.btn-primary::before,
+button.btn-primary::after {
+  background: transparent !important;
+  border: none !important;
+  display: none !important;
+}
+
+/* 按钮按下态：防止变白 */
+button.btn-primary:active,
+button.btn-primary:hover,
+button.btn-primary:focus {
+  opacity: 0.8 !important;
+  background-color: #fa9583 !important;
+  background: #fa9583 !important;
+  color: #ffffff !important;
+}
+
+/* 按钮禁用态 */
+button.btn-primary:disabled,
+button.btn-primary[disabled],
+button.btn-primary[disabled]:active {
+  opacity: 0.6 !important;
+  background-color: #fa9583 !important;
+  background: #fa9583 !important;
+  color: #ffffff !important;
+}
+
+/* 按钮 loading 状态 */
+button.btn-primary.loading,
+button.btn-primary.loading:active {
+  opacity: 0.8 !important;
+  background-color: #fa9583 !important;
+  background: #fa9583 !important;
+  color: #ffffff !important;
+}
+
+/* 覆盖 button-hover 类（微信默认） */
+button.btn-primary.button-hover {
+  opacity: 0.8 !important;
+  background-color: #fa9583 !important;
+  background: #fa9583 !important;
+  color: #ffffff !important;
+}
+
+/* 按钮内 loading icon */
+.btn-loading-icon {
+  display: inline-block;
+  width: 32rpx;
+  height: 32rpx;
+  margin-right: 12rpx;
+  vertical-align: -6rpx;
+  border: 4rpx solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: btn-rotate 0.6s linear infinite;
+}
+
+@keyframes btn-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* 通用容器 */

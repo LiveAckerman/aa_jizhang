@@ -119,7 +119,7 @@
 
 .list-item {
   min-height: 96rpx;
-  padding: 20rpx 32rpx;
+  padding: 0 32rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;

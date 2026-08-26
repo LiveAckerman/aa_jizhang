@@ -40,6 +40,7 @@ Component({
     statusBarHeight: 0, // 状态栏高度
     navBarHeight: 44, // 导航栏内容高度
     totalHeight: 44, // 总高度 = 状态栏 + 导航栏
+    rightSafeArea: 96, // 右侧胶囊安全区宽度（px），兜底约 96px
   },
 
   lifetimes: {
@@ -55,12 +56,16 @@ Component({
       const statusBarHeight = windowInfo.statusBarHeight || 20
 
       let navBarHeight = 44
+      let rightSafeArea = 96
       try {
-        // 胶囊按钮位置，用于精确对齐导航栏高度
+        // 胶囊按钮位置，用于精确对齐导航栏高度 + 右侧留出安全区
         const menu = wx.getMenuButtonBoundingClientRect()
         if (menu && menu.height) {
           // 导航栏高度 = 胶囊上下间距对称 + 胶囊高度
           navBarHeight = (menu.top - statusBarHeight) * 2 + menu.height
+          // 右侧安全区 = 屏幕宽度 - 胶囊左边缘 + 视觉间距
+          // 使插槽内容始终在胶囊左侧，不会被遮挡
+          rightSafeArea = windowInfo.windowWidth - menu.left + 8
         }
       } catch (e) {
         navBarHeight = 44
@@ -70,6 +75,7 @@ Component({
         statusBarHeight,
         navBarHeight,
         totalHeight: statusBarHeight + navBarHeight,
+        rightSafeArea,
       })
 
       // 通知外部导航栏总高度（页面可据此留白）

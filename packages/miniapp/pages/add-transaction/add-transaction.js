@@ -102,12 +102,15 @@ Page({
     }
     if (this.data.saving) return
     this.setData({ saving: true })
+    wx.showLoading({ title: '保存中...', mask: true })
     try {
       if (this.data.isEdit) await api.updateTransaction(this.data.id, res.payload)
       else await api.createTransaction(res.payload)
+      wx.hideLoading()
       wx.showToast({ title: '已保存', icon: 'success' })
       setTimeout(() => wx.navigateBack(), 600)
     } catch (e) {
+      wx.hideLoading()
       wx.showToast({ title: (e && e.message) || '保存失败', icon: 'none' })
       this.setData({ saving: false })
     }

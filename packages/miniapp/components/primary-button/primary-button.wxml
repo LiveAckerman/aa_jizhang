@@ -1,0 +1,13 @@
+<button
+  class="pb-btn pb-btn--{{type}} {{loading ? 'pb-btn--loading' : ''}} {{disabled ? 'pb-btn--disabled' : ''}}"
+  disabled="{{disabled || loading}}"
+  hover-class="none"
+  open-type="{{openType}}"
+  bindtap="onTap"
+  bindgetuserinfo="onGetUserInfo"
+  bindgetphonenumber="onGetPhoneNumber"
+  bindchooseavatar="onChooseAvatar"
+>
+  <view wx:if="{{loading}}" class="pb-btn__spinner"></view>
+  <text class="pb-btn__text">{{loading ? loadingText : text}}</text>
+</button>

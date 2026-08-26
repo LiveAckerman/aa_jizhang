@@ -125,6 +125,7 @@ Page({
     }
     if (this.data.saving) return
     this.setData({ saving: true })
+    wx.showLoading({ title: '保存中...', mask: true })
     const payload = {
       name,
       scene: this.data.scene,
@@ -135,16 +136,19 @@ Page({
     try {
       if (this.data.isEdit) {
         await api.updateBook(this.data.id, payload)
+        wx.hideLoading()
         wx.showToast({ title: '已保存', icon: 'success' })
         setTimeout(() => wx.navigateBack(), 600)
       } else {
         const book = await api.createBook(payload)
+        wx.hideLoading()
         wx.showToast({ title: '创建成功', icon: 'success' })
         setTimeout(() => {
           wx.redirectTo({ url: `/pages/book-detail/book-detail?id=${book.id}` })
         }, 600)
       }
     } catch (e) {
+      wx.hideLoading()
       wx.showToast({ title: (e && e.message) || '保存失败', icon: 'none' })
     } finally {
       this.setData({ saving: false })

@@ -8,7 +8,6 @@
     "book-card": "/components/book-card/book-card",
     "book-menu": "/components/book-menu/book-menu",
     "card-stack": "/components/card-stack/card-stack",
-    "van-icon": "@vant/weapp/icon/index",
-    "van-skeleton": "@vant/weapp/skeleton/index"
+    "van-icon": "@vant/weapp/icon/index"
   }
 }

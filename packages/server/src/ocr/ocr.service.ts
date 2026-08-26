@@ -45,10 +45,10 @@ export class OcrService {
       throw new BadRequestException('OCR识别失败')
     }
 
-    // 2. 上传原图到R2（AI/规则解析日志见 parseWithAI）
+    // 2. 上传原图到R2
     const imageUrl = await this.uploadService.uploadToR2(file, 'ocr')
 
-    let records: PaymentRecord[] = []
+    let records: PaymentRecord[]
 
     // 3. 尝试使用 AI 总结服务智能解析
     if (this.aiSummaryBaseUrl && this.aiSummaryApiKey) {
@@ -125,17 +125,21 @@ ${fullText}
 
 请分析这段文本，提取其中的支付记录，返回 JSON 数组格式，每条记录包含：
 - merchant: 商户名称（字符串，如果无法识别则为"未知商户"）
-- amount: 金额（整数，单位为分，例如 15.00 元应返回 1500）
+- amount: 金额（整数，单位为分/cents，务必将元转换为分，即乘以100）
 - confidence: 置信度（0-1之间的浮点数）
 - source: 来源（'wechat' | 'alipay' | 'generic'）
 - spentAt: 支付时间（ISO 8601 格式字符串，如果文本中有时间则解析，否则使用当前时间）
 
-注意：
-1. 金额必须转换为分（乘以100）
-2. 如果是账单详情页（包含"支付成功"/"交易成功"等），通常只有一笔记录
-3. 如果是列表页，可能有多笔记录
-4. 排除汇总金额（如"本月支出"、"总计"等）
-5. 只返回 JSON 数组，不要其他解释文字
+金额换算示例（务必遵守）：
+- 文本 "¥15.00" 或 "15.00元" → amount: 1500（不是 15）
+- 文本 "¥100" 或 "100元"     → amount: 10000（不是 100）
+- 文本 "0.5元"                → amount: 50（不是 0.5）
+
+其他注意事项：
+1. 如果是账单详情页（包含"支付成功"/"交易成功"等），通常只有一笔记录
+2. 如果是列表页，可能有多笔记录
+3. 排除汇总金额（如"本月支出"、"总计"等）
+4. 只返回 JSON 数组，不要其他解释文字，不要 markdown 代码块
 
 示例输出：
 [
@@ -170,6 +174,8 @@ ${fullText}
           Authorization: `Bearer ${this.aiSummaryApiKey}`,
         },
         body: JSON.stringify(requestBody),
+        // 30s 超时，避免 AI 服务无响应时阻塞 OCR 接口
+        timeout: 30_000,
       })
 
       if (!response.ok) {
@@ -190,12 +196,16 @@ ${fullText}
         jsonText = codeBlockMatch[1]
       }
 
-      let records: PaymentRecord[]
+      let parsed: unknown
       try {
-        records = JSON.parse(jsonText)
+        parsed = JSON.parse(jsonText)
       } catch {
         throw new Error(`AI返回内容非JSON: ${jsonText.slice(0, 200)}`)
       }
+      if (!Array.isArray(parsed)) {
+        throw new Error(`AI返回不是数组: ${jsonText.slice(0, 200)}`)
+      }
+      const records = parsed as PaymentRecord[]
 
       // 验证并标准化数据
       const normalized = records
@@ -210,6 +220,28 @@ ${fullText}
           spentAt: r.spentAt || new Date().toISOString(),
         }))
 
+      // 金额单位校验：LLM 常忘记「元→分」的换算，直接返回元值
+      // 检测：若 AI 返回值除以100后匹配不上 OCR 文本中的金额、
+      //      但原值恰好匹配得上，则判定单位错误，抛出以触发规则解析降级
+      const ocrAmounts = this.extractAmountsFromText(fullText)
+      if (ocrAmounts.length > 0) {
+        for (const r of normalized) {
+          const yuanFromAI = r.amount / 100
+          const rawAsYuan = r.amount
+          const yuanMatches = ocrAmounts.some(
+            (a) => Math.abs(a - yuanFromAI) < 0.005,
+          )
+          const rawMatches = ocrAmounts.some(
+            (a) => Math.abs(a - rawAsYuan) < 0.005,
+          )
+          if (!yuanMatches && rawMatches) {
+            throw new Error(
+              `AI疑似金额单位错误: 返回${r.amount}(应为分)但匹配到OCR原文中的元值`,
+            )
+          }
+        }
+      }
+
       // 成功路径只留一行：条数 + 耗时
       this.logger.log(
         `AI解析成功 ${normalized.length}条 +${Date.now() - startedAt}ms`,
@@ -219,6 +251,16 @@ ${fullText}
     } catch (error: any) {
       throw new Error(`AI 总结失败: ${error?.message || '未知错误'}`)
     }
+  }
+
+  /**
+   * 从 OCR 文本中提取候选金额（元），用于 AI 返回值的合理性校验
+   */
+  private extractAmountsFromText(text: string): number[] {
+    const matches = text.match(/\d+(?:\.\d{1,2})?/g) || []
+    return matches
+      .map(Number)
+      .filter((n) => Number.isFinite(n) && n > 0 && n < 1_000_000)
   }
 
   /**

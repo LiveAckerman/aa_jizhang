@@ -68,13 +68,16 @@ Page({
   async onJoin() {
     if (this.data.joining) return
     this.setData({ joining: true })
+    wx.showLoading({ title: '加入中...', mask: true })
     try {
       const book = await api.joinBook(this.data.code)
+      wx.hideLoading()
       wx.showToast({ title: '加入成功', icon: 'success' })
       setTimeout(() => {
         wx.redirectTo({ url: `/pages/book-detail/book-detail?id=${book.id}` })
       }, 600)
     } catch (e) {
+      wx.hideLoading()
       wx.showToast({ title: (e && e.message) || '加入失败', icon: 'none' })
       this.setData({ joining: false })
     }

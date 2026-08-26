@@ -75,7 +75,13 @@
 
     <!-- 操作按钮 -->
     <view class="join-actions">
-      <button class="btn-primary join-btn" bindtap="onJoin" disabled="{{joining}}">
+      <button
+        class="btn-primary join-btn {{joining ? 'loading' : ''}}"
+        bindtap="onJoin"
+        disabled="{{joining}}"
+        hover-class="none"
+      >
+        <view wx:if="{{joining}}" class="btn-loading-icon"></view>
         {{joining ? '加入中...' : '加入账本'}}
       </button>
       <text class="join-cancel" bindtap="onCancel">暂不加入</text>

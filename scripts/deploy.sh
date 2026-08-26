@@ -31,9 +31,8 @@ RSYNC="rsync -az --delete -e \"ssh -i $SSH_KEY -o StrictHostKeyChecking=no\""
 
 # ── 参数解析 ──────────────────────────────────────────────────────────────────
 SKIP_PUSH=false
-DRY_RUN=false
-
 SKIP_ENV=false
+DRY_RUN=false
 
 for arg in "$@"; do
   case $arg in
@@ -117,14 +116,16 @@ if [ "$SKIP_ENV" = false ]; then
   if grep -qE "^DB_DATABASE=.*_test\b" .env.production; then
     fail ".env.production 中 DB_DATABASE 疑似指向测试库，拒绝部署"
   fi
-  if grep -qE "^NODE_ENV=(development|test)" .env.production; then
-    fail ".env.production 中 NODE_ENV 非 production，拒绝部署"
+  if ! grep -qE "^NODE_ENV=production[[:space:]]*$" .env.production; then
+    fail ".env.production 中 NODE_ENV 必须严格为 production，拒绝部署"
   fi
+  # 覆盖前先在服务器上备份现有 .env，出问题时可 mv 回滚
+  run "$SSH ${SERVER_USER}@${SERVER_IP} '[ -f ${REMOTE_DIR}/.env ] && cp ${REMOTE_DIR}/.env ${REMOTE_DIR}/.env.bak || true'"
   run "rsync -az \
     -e \"ssh -i $SSH_KEY -o StrictHostKeyChecking=no\" \
     .env.production \
     ${SERVER_USER}@${SERVER_IP}:${REMOTE_DIR}/.env"
-  ok ".env 同步完成"
+  ok ".env 同步完成（旧配置备份为 .env.bak）"
 else
   step "跳过 .env 同步（--no-env）"
 fi
