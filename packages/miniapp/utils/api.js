@@ -76,12 +76,40 @@ const api = {
   activeRounds: (bookId) => request({ url: `/settlements/active-rounds?bookId=${bookId}` }),
 
   // ===== OCR识别 =====
-  ocrRecognizeReceipt: (filePath, bookId) => {
+  ocrRecognizeReceipt: async (filePath, bookId) => {
+    // 1. 大图先压缩（真机拍照几 MB 时上传太慢，叠加后端 OCR + AI 耗时会超过 60s 默认超时）
+    //    阈值 500KB：小于此值直接上传，大于则压到 quality 80
+    let uploadPath = filePath
+    try {
+      const info = await new Promise((resolve, reject) => {
+        wx.getFileSystemManager().getFileInfo({
+          filePath,
+          success: resolve,
+          fail: reject,
+        })
+      })
+      if (info.size > 500 * 1024) {
+        const compressed = await new Promise((resolve, reject) => {
+          wx.compressImage({
+            src: filePath,
+            quality: 80,
+            success: resolve,
+            fail: reject,
+          })
+        })
+        uploadPath = compressed.tempFilePath
+      }
+    } catch (e) {
+      // 压缩失败不阻断，回退到原图直传（旧行为）
+    }
+
+    // 2. 上传，超时给到 2 分钟 + 暴露真实错误信息
     return new Promise((resolve, reject) => {
       wx.uploadFile({
         url: `${getBaseURL()}/ocr/recognize-receipt`,
-        filePath,
+        filePath: uploadPath,
         name: 'file',
+        timeout: 120000,
         header: {
           Authorization: `Bearer ${wx.getStorageSync('token')}`,
         },
@@ -97,7 +125,8 @@ const api = {
             reject(new Error('解析响应失败'))
           }
         },
-        fail: reject,
+        // 把 wx 原生的 errMsg 透出给上层，让 toast 显示真实原因（超时/网络中断等）
+        fail: (err) => reject(new Error(err.errMsg || '上传失败')),
       })
     })
   },
