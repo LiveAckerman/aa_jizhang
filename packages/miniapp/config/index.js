@@ -35,8 +35,23 @@ const envVersion = readEnvVersion()
 // 体验版/正式版/审核/任何未知情况一律走线上 HTTPS 域名。
 const API_BASE_URL = envVersion === 'develop' ? DEV_API : PROD_API
 
+// 读取当前运行的小程序版本号（即提交给微信审核/发布时填的版本号）。
+// 只有 trial（体验版）/ release（正式版）能读到；develop（开发者工具）恒为空，
+// 兜底为 '-dev'，拼成 v-dev，一眼看出是本地开发环境，避免误以为是正式版本号。
+function readAppVersion() {
+  try {
+    const accountInfo = wx.getAccountInfoSync ? wx.getAccountInfoSync() : null
+    const version = accountInfo && accountInfo.miniProgram && accountInfo.miniProgram.version
+    return version || '-dev'
+  } catch (e) {
+    return '-dev'
+  }
+}
+
+const APP_VERSION = readAppVersion()
+
 module.exports = {
   API_BASE_URL,
   envVersion,
-  APP_VERSION: '1.0.0',
+  APP_VERSION,
 }
