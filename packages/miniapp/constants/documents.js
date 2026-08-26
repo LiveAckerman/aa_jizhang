@@ -7,6 +7,8 @@
  * - 更新内容时请同步修改 updatedAt
  */
 
+const { APP_VERSION } = require('../config/index')
+
 const COMMON_STYLE = {
   h: 'font-size:30rpx;font-weight:600;color:#2f4159;margin:32rpx 0 16rpx;',
   p: 'font-size:26rpx;color:#4a5568;line-height:1.8;margin-bottom:16rpx;',
@@ -73,7 +75,7 @@ const about = {
 <p style="${COMMON_STYLE.p}">每一次出发都值得记录。我们希望把记账这件小事变得轻松、透明，让朋友之间明明白白，把心思留给旅途与相聚本身。</p>
 <p style="${COMMON_STYLE.h}">联系我们</p>
 <p style="${COMMON_STYLE.p}">如有任何建议或问题，欢迎通过应用内的意见反馈与我们联系，我们会认真对待每一条声音。</p>
-<p style="${COMMON_STYLE.p}">当前版本：v1.0.0</p>
+<p style="${COMMON_STYLE.p}">当前版本：v${APP_VERSION}</p>
 `.trim(),
 }
 
