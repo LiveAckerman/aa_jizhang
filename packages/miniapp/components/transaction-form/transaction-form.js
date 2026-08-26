@@ -242,7 +242,10 @@ Component({
         const res = await wx.chooseMedia({ count: remain, mediaType: ['image'], sourceType: ['camera', 'album'] })
         wx.showLoading({ title: '上传中...', mask: true })
         const urls = []
-        for (const f of res.tempFiles) urls.push(await this.uploadImage(f.tempFilePath))
+        // 传统 for 循环，避免 for...of 触发增强编译注入 @babel/runtime helper
+        for (let i = 0; i < res.tempFiles.length; i++) {
+          urls.push(await this.uploadImage(res.tempFiles[i].tempFilePath))
+        }
         wx.hideLoading()
         this.setData({ images: this.data.images.concat(urls) })
       } catch (e) { wx.hideLoading() }
@@ -317,24 +320,24 @@ Component({
       const totalCent = Math.round(yuan * 100)
       if (splitDialogMode === 'ratio') {
         let sum = 0
-        for (const it of splitDialogItems) {
-          const v = parseFloat(it.value)
+        for (let i = 0; i < splitDialogItems.length; i++) {
+          const v = parseFloat(splitDialogItems[i].value)
           if (isNaN(v) || v <= 0) { this.setSplitValidation('请输入有效的百分比（大于0）', false); return false }
           sum += v
         }
         if (Math.abs(sum - 100) > 0.01) { this.setSplitValidation(`当前总和：${sum.toFixed(2)}%，需等于100%`, false); return false }
         this.setSplitValidation('✓ 校验通过', true); return true
       } else if (splitDialogMode === 'shares') {
-        for (const it of splitDialogItems) {
-          const v = parseFloat(it.value)
+        for (let i = 0; i < splitDialogItems.length; i++) {
+          const v = parseFloat(splitDialogItems[i].value)
           if (isNaN(v) || v <= 0) { this.setSplitValidation('请输入有效的份数（大于0）', false); return false }
         }
         const totalShares = splitDialogItems.reduce((s, it) => s + parseFloat(it.value || 0), 0)
         this.setSplitValidation(`✓ 每份约 ¥${(totalCent / totalShares / 100).toFixed(2)}`, true); return true
       } else if (splitDialogMode === 'fixed') {
         let sum = 0
-        for (const it of splitDialogItems) {
-          const v = parseFloat(it.value)
+        for (let i = 0; i < splitDialogItems.length; i++) {
+          const v = parseFloat(splitDialogItems[i].value)
           if (isNaN(v) || v < 0) { this.setSplitValidation('请输入有效的金额（≥0）', false); return false }
           sum += v
         }
