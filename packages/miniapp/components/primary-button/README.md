@@ -82,12 +82,12 @@ async onSave() {
 
 ### 6. 自定义外边距等
 
-在页面 wxss 中通过 `custom-class` 添加：
+直接在组件标签上写 `class`（属于父页面作用域，可控制外边距等布局，配合全局 `primary-button { display:block }` 生效）：
 
 ```html
 <primary-button
+  class="my-btn"
   text="保存"
-  custom-class="my-btn"
   bind:tap="onSave"
 />
 ```
@@ -108,7 +108,8 @@ async onSave() {
 | disabled | Boolean | false | 是否禁用 |
 | type | String | 'primary' | 类型：primary / secondary / outline |
 | openType | String | '' | 微信 button 的 open-type |
-| customClass | String | '' | 额外的自定义 class |
+
+> 布局微调（如外边距）直接在标签上写 `class`，见上面「自定义外边距」示例。
 
 ## 事件
 

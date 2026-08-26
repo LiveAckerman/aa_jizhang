@@ -119,13 +119,14 @@ if [ "$SKIP_ENV" = false ]; then
   if ! grep -qE "^NODE_ENV=production[[:space:]]*$" .env.production; then
     fail ".env.production 中 NODE_ENV 必须严格为 production，拒绝部署"
   fi
-  # 覆盖前先在服务器上备份现有 .env，出问题时可 mv 回滚
-  run "$SSH ${SERVER_USER}@${SERVER_IP} '[ -f ${REMOTE_DIR}/.env ] && cp ${REMOTE_DIR}/.env ${REMOTE_DIR}/.env.bak || true'"
+  # 覆盖前先在服务器上备份现有 .env（带时间戳），并只保留最近 3 份，旧的自动清理
+  BACKUP_TS="$(date +%Y%m%d%H%M%S)"
+  run "$SSH ${SERVER_USER}@${SERVER_IP} 'if [ -f ${REMOTE_DIR}/.env ]; then cp ${REMOTE_DIR}/.env ${REMOTE_DIR}/.env.bak.${BACKUP_TS}; ls -1t ${REMOTE_DIR}/.env.bak.* 2>/dev/null | tail -n +4 | xargs -r rm -f; fi'"
   run "rsync -az \
     -e \"ssh -i $SSH_KEY -o StrictHostKeyChecking=no\" \
     .env.production \
     ${SERVER_USER}@${SERVER_IP}:${REMOTE_DIR}/.env"
-  ok ".env 同步完成（旧配置备份为 .env.bak）"
+  ok ".env 同步完成（旧配置备份为 .env.bak.${BACKUP_TS}，最多保留 3 份）"
 else
   step "跳过 .env 同步（--no-env）"
 fi

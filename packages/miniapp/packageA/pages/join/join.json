@@ -1,9 +1,7 @@
 {
-  "navigationBarTitleText": "统计",
-  "backgroundColor": "#f2f2f7",
+  "navigationBarTitleText": "加入账本",
   "usingComponents": {
     "van-icon": "@vant/weapp/icon/index",
-    "ec-canvas": "/packageB/ec-canvas/ec-canvas",
     "auth-drawer": "/components/auth-drawer/auth-drawer",
     "primary-button": "/components/primary-button/primary-button"
   }

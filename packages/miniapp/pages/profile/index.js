@@ -37,11 +37,11 @@ Page({
   // 进入二级页：个人资料编辑
   goEdit() {
     if (!requireLogin()) return
-    wx.navigateTo({ url: '/pages/profile-edit/profile-edit' })
+    wx.navigateTo({ url: '/packageB/pages/profile-edit/profile-edit' })
   },
 
   goToAbout() {
-    wx.navigateTo({ url: '/pages/document/document?type=about' })
+    wx.navigateTo({ url: '/packageB/pages/document/document?type=about' })
   },
 
   goToVersion() {
@@ -65,5 +65,23 @@ Page({
         }
       },
     })
+  },
+
+  // 分享到聊天（落到账本首页，即 App 主入口）
+  onShareAppMessage() {
+    return {
+      title: '一起分账吧 - 多人记账小程序',
+      path: '/pages/books/books',
+      imageUrl: 'https://cdn.ljw44.com/assets/share/share-3.jpg',
+    }
+  },
+
+  // 分享到朋友圈
+  onShareTimeline() {
+    return {
+      title: '一起分账吧 - 多人记账小程序',
+      query: '',
+      imageUrl: 'https://cdn.ljw44.com/assets/share/share-3.jpg',
+    }
   },
 })

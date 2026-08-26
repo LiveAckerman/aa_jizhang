@@ -123,6 +123,20 @@ Component({
         this.setParticipants(this.properties.members.map((m) => m.userId))
       }
 
+      // 回填分账明细：非平分方式（fixed/ratio/shares）需恢复每人金额/权重，
+      // 否则编辑态会因 splitDetails 为空而退回平分。fixed 用 amount(分)，ratio/shares 用 weight。
+      const method = init.splitMethod || 'average'
+      if (method !== 'average' && init.splits && init.splits.length) {
+        const details = init.splits.map((s) =>
+          method === 'fixed'
+            ? { userId: s.userId, amount: s.amount }
+            : { userId: s.userId, weight: s.weight },
+        )
+        this.setData({ splitDetails: details })
+      } else {
+        this.setData({ splitDetails: [] })
+      }
+
       this.updateConverted()
 
       if (this.properties.autofocus) {

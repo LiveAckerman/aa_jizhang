@@ -3,21 +3,33 @@
     "pages/books/books",
     "pages/login/login",
     "pages/edit-nickname/index",
-    "pages/book-form/book-form",
-    "pages/book-detail/book-detail",
-    "pages/add-transaction/add-transaction",
-    "pages/quick-add/quick-add",
-    "pages/profile-edit/profile-edit",
-    "pages/transaction-logs/transaction-logs",
-    "pages/settle-select/settle-select",
-    "pages/settle-detail/settle-detail",
-    "pages/settle-rounds/settle-rounds",
-    "pages/ocr-batch-edit/ocr-batch-edit",
-    "pages/invite/invite",
-    "pages/join/join",
     "pages/statistics/statistics",
-    "pages/profile/index",
-    "pages/document/document"
+    "pages/profile/index"
+  ],
+  "subpackages": [
+    {
+      "root": "packageA",
+      "pages": [
+        "pages/book-form/book-form",
+        "pages/book-detail/book-detail",
+        "pages/add-transaction/add-transaction",
+        "pages/quick-add/quick-add",
+        "pages/transaction-logs/transaction-logs",
+        "pages/settle-select/settle-select",
+        "pages/settle-detail/settle-detail",
+        "pages/settle-rounds/settle-rounds",
+        "pages/ocr-batch-edit/ocr-batch-edit",
+        "pages/invite/invite",
+        "pages/join/join"
+      ]
+    },
+    {
+      "root": "packageB",
+      "pages": [
+        "pages/profile-edit/profile-edit",
+        "pages/document/document"
+      ]
+    }
   ],
   "window": {
     "backgroundTextStyle": "dark",

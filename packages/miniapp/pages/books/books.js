@@ -285,7 +285,7 @@ Page({
     wx.showActionSheet({
       itemList: ['创建账本', '加入账本', '新建分组'],
       success: (res) => {
-        if (res.tapIndex === 0) wx.navigateTo({ url: '/pages/book-form/book-form' })
+        if (res.tapIndex === 0) wx.navigateTo({ url: '/packageA/pages/book-form/book-form' })
         else if (res.tapIndex === 1) this.promptJoin()
         else if (res.tapIndex === 2) this.createGroup()
       },
@@ -306,7 +306,7 @@ Page({
         if (!res.confirm) return
         const code = (res.content || '').trim().toUpperCase()
         if (!code) return
-        wx.navigateTo({ url: `/pages/join/join?code=${code}` })
+        wx.navigateTo({ url: `/packageA/pages/join/join?code=${code}` })
       },
     })
   },
@@ -316,7 +316,7 @@ Page({
     const { id } = e.detail
     // 兜底：只有拿到有效 id 才跳转，防止原生 tap 冒泡带来的空 detail 造成 ?id=undefined
     if (!id) return
-    wx.navigateTo({ url: `/pages/book-detail/book-detail?id=${id}` })
+    wx.navigateTo({ url: `/packageA/pages/book-detail/book-detail?id=${id}` })
   },
 
   // book-card 邀请+按钮：跳转到邀请页
@@ -324,7 +324,7 @@ Page({
     if (!requireLogin()) return
     const { id } = e.detail
     if (!id) return
-    wx.navigateTo({ url: `/pages/invite/invite?id=${id}` })
+    wx.navigateTo({ url: `/packageA/pages/invite/invite?id=${id}` })
   },
 
   // book-card 组件抛出的操作事件
@@ -337,4 +337,22 @@ Page({
 
   // 阻止列表项内 book-menu 点击冒泡到 onTapBook
   noop() {},
+
+  // 分享到聊天
+  onShareAppMessage() {
+    return {
+      title: '一起分账吧 - 多人记账小程序',
+      path: '/pages/books/books',
+      imageUrl: 'https://cdn.ljw44.com/assets/share/share-1.jpg',
+    }
+  },
+
+  // 分享到朋友圈
+  onShareTimeline() {
+    return {
+      title: '一起分账吧 - 多人记账小程序',
+      query: '',
+      imageUrl: 'https://cdn.ljw44.com/assets/share/share-1.jpg',
+    }
+  },
 })

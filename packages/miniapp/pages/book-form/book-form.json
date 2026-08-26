@@ -1,6 +1,0 @@
-{
-  "navigationBarTitleText": "创建账本",
-  "usingComponents": {
-    "van-icon": "@vant/weapp/icon/index"
-  }
-}

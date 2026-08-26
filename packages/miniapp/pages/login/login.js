@@ -89,7 +89,7 @@ Page({
           wx.reLaunch({
             url: '/pages/books/books',
             complete: () => {
-              wx.navigateTo({ url: `/pages/join/join?code=${pendingCode}` })
+              wx.navigateTo({ url: `/packageA/pages/join/join?code=${pendingCode}` })
             },
           })
         } else if (redirect) {

@@ -49,7 +49,7 @@ Component({
         itemList: ['手动录入', '票据自动识别'],
         success: (res) => {
           const mode = res.tapIndex === 0 ? 'manual' : 'ocr'
-          wx.navigateTo({ url: `/pages/quick-add/quick-add?mode=${mode}` })
+          wx.navigateTo({ url: `/packageA/pages/quick-add/quick-add?mode=${mode}` })
         },
       })
     },

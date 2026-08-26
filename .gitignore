@@ -33,3 +33,6 @@ packages/miniapp/miniprogram_npm/
 
 # 生成的临时素材（保留 logo，忽略 mockup 大图可选）
 # static/images/ui-mockups/
+
+# 部署脚本/人工产生的 env 备份（含密钥，禁止入库）
+.env*.bak
