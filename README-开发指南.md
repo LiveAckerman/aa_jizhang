@@ -75,6 +75,23 @@ pnpm run start:dev
 3. 填写 AppID（测试可以选择"不使用AppID"）
 4. 点击「编译」运行
 
+#### ⚠️ 首次启动或换机器后必做：手动拷贝 @babel/runtime
+
+`packages/miniapp` 里用到了对象/数组解构等 ES6+ 语法，微信开发者工具开启"增强编译"后会转译成需要 `@babel/runtime/helpers/*` 的代码。但项目用 pnpm workspace（依赖走 symlink 到 `node_modules/.pnpm/`），微信开发者工具的「工具 → 构建 npm」识别不了 symlink，构建后 `miniprogram_npm/@babel/` 目录为空，运行时会报：
+
+```
+Error: module '@babel/runtime/helpers/arrayWithHoles.js' is not defined
+```
+
+**修复：`pnpm install` 完成后手动拷贝一次即可（`miniprogram_npm` 被 gitignore，不进版本库）**：
+
+```bash
+mkdir -p packages/miniapp/miniprogram_npm/@babel
+cp -RL packages/miniapp/node_modules/@babel/runtime packages/miniapp/miniprogram_npm/@babel/runtime
+```
+
+之后在开发者工具里重新编译即可。以后除非升级 `@babel/runtime` 大版本或换机器，无需重复。
+
 ---
 
 ## 📚 文档索引
