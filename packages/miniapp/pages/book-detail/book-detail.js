@@ -65,12 +65,17 @@ Page({
       this.setData({ loading: true })
     }
     try {
-      const [book, txs, summary, activeRounds] = await Promise.all([
+      // 用索引访问替代数组解构，避免增强编译注入 @babel/runtime helper
+      const results = await Promise.all([
         api.bookDetail(this.data.id),
         api.listTransactions(this.data.id),
         api.transactionSummary(this.data.id),
         api.activeRounds(this.data.id).catch(() => []),
       ])
+      const book = results[0]
+      const txs = results[1]
+      const summary = results[2]
+      const activeRounds = results[3]
       const myUserId = this.data.myUserId
       const isOwner = book.ownerId === myUserId
       wx.setNavigationBarTitle({ title: book.name })

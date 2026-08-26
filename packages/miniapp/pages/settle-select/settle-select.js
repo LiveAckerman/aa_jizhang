@@ -45,11 +45,14 @@ Page({
   async loadData() {
     this.setData({ loading: true })
     try {
-      const [book, txs] = await Promise.all([
+      // 用索引访问替代数组解构，避免增强编译注入 @babel/runtime helper
+      const results = await Promise.all([
         api.bookDetail(this.data.bookId),
         // 后端已过滤：仅与当前用户相关、仍有未结清份额的公账
         api.settleableTransactions(this.data.bookId),
       ])
+      const book = results[0]
+      const txs = results[1]
       this._loadedOnce = true
       const memberMap = {}
       ;(book.members || []).forEach((m) => (memberMap[m.userId] = m.nickname))
