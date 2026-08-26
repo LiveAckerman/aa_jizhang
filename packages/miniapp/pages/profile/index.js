@@ -9,6 +9,7 @@ Page({
   data: {
     user: null,
     isGuest: false, // 未登录游客态：展示登录引导，隐藏账号相关操作
+    appVersion: APP_VERSION,
   },
 
   onShow() {

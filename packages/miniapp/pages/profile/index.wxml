@@ -72,7 +72,7 @@
           <text class="list-item-label">版本信息</text>
         </view>
         <view class="list-item-right">
-          <text class="list-item-value">v1.0.0</text>
+          <text class="list-item-value">v{{appVersion}}</text>
           <van-icon name="arrow" size="14px" color="#c4c4c4" />
         </view>
       </view>
