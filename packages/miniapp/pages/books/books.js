@@ -10,7 +10,7 @@ Page({
   data: {
     books: [],
     active: [],
-    archived: [],         // 已结算账本（全量，交给 card-stack 组件展示）
+    archived: [],         // 已归档账本（全量，交给 card-stack 组件展示）
     groups: [],           // 分组列表（首项固定为「全部」）
     activeGroupId: 'all', // 当前选中的分组 id：'all' / '' (默认) / <groupId>
     ownerFilter: 'all',   // 归属筛选：'all' / 'owned'(我创建的) / 'joined'(我加入的)
@@ -226,8 +226,11 @@ Page({
         // 归一化 memberAvatars → members[{avatar}]，与 detail 保持字段一致，供 book-card 使用
         members: (b.memberAvatars || []).map((av) => ({ avatar: av })),
       }
-      if (b.archived) archived.push(item)
-      else active.push(item)
+      if (b.archived) {
+        archived.push({ ...item, statusBadge: '已归档' })
+      } else {
+        active.push(item)
+      }
     })
 
     // 有账本但被搜索/归属/分组筛选过滤到空

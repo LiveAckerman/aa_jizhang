@@ -46,6 +46,11 @@ export class CreateTransactionDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(16)
+  paymentMethod?: string
+
+  @IsOptional()
+  @IsString()
   @MaxLength(255)
   note?: string
 

@@ -55,10 +55,11 @@ import { TxShareSettlement } from './settlement/tx-share-settlement.entity'
         // node-postgres 连接池参数（远程库长连接必配）
         extra: {
           max: 10, // 池最大连接数
-          // 本地空闲连接 30s 后主动回收，需 < 服务端的 idle 超时，防止拿到已被关闭的死连接
-          idleTimeoutMillis: 30000,
+          // 空闲连接 10s 后主动回收，需远小于服务端/NAT idle 超时，防止拿到死连接
+          idleTimeoutMillis: 10000,
           connectionTimeoutMillis: 10000, // 建连超时
           keepAlive: true, // 开启 TCP keepalive
+          keepAliveInitialDelayMillis: 5000, // 5s 后开始发 keepalive 探测包
           allowExitOnIdle: false,
         },
         // 连接被服务端异常关闭时自动重试，避免请求直接 500

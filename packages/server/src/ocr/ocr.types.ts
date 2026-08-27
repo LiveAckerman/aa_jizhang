@@ -12,7 +12,8 @@ export interface PaymentRecord {
   amount: number // 金额（分）
   confidence: number // 置信度 0-1
   source: 'wechat' | 'alipay' | 'generic' // 来源
-  category?: string // 推测的分类
+  category?: string // 推测的分类（food/transport/... 无法识别为 other）
+  paymentMethod?: string // 支付方式（wechat/alipay/bankcard/cash/other）
   spentAt?: string // 时间
   note?: string // 备注
 }

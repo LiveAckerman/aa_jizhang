@@ -1,4 +1,4 @@
-const { DOCUMENTS } = require('../../../constants/documents')
+const { DOCUMENTS } = require('./documents')
 
 Page({
   data: {

@@ -348,6 +348,7 @@
 }
 
 .tx-item {
+  position: relative;
   display: flex;
   align-items: center;
   padding: 24rpx 0;
@@ -414,22 +415,40 @@
   border-radius: 16rpx;
 }
 
-/* 我付款账单：左侧竖条暂时隐藏，图标底色区分保留 */
+/* 账单卡片：应付/应收左侧竖线（绝对定位，不占布局空间） */
 .tx-item.my-payment {
   position: relative;
-  /* padding-left: 20rpx; */
 }
-/* .tx-item.my-payment::before {
+
+.tx-item.has-receive::before,
+.tx-item.has-pay::before {
   content: '';
   position: absolute;
-  left: 0;
+  left: -15rpx;
   top: 50%;
   transform: translateY(-50%);
   width: 6rpx;
   height: 48rpx;
   border-radius: 4rpx;
-  background: var(--color-primary);
-} */
+}
+/* 应收：蓝绿色竖线 */
+.tx-item.has-receive::before {
+  background: #4097a9;
+}
+/* 应付：橙红色竖线 */
+.tx-item.has-pay::before {
+  background: #fa9c8b;
+}
+
+/* 应收：图标底色统一为蓝绿 */
+.tx-item.has-receive .tx-icon {
+  background: rgba(64, 151, 169, 0.12);
+}
+/* 应付：图标底色统一为橙红 */
+.tx-item.has-pay .tx-icon {
+  background: rgba(250, 156, 139, 0.12);
+}
+
 .tx-item.my-payment .tx-icon {
   background: rgba(64, 151, 169, 0.18);
 }
@@ -448,13 +467,13 @@
 
 .tx-myshare {
   font-size: 22rpx;
-  color: var(--color-primary);
+  color: #fa9c8b;
   margin-top: 6rpx;
 }
 
-/* 我应收：绿色，与应付区分 */
+/* 我应收：主色蓝绿 */
 .tx-myshare.receive {
-  color: #52c41a;
+  color: #4097a9;
   font-weight: 600;
 }
 
@@ -465,13 +484,25 @@
   opacity: 0.7;
 }
 
-.tx-amount {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: var(--color-accent);
+/* 右侧：金额 + 我应收/应付竖排，右对齐 */
+.tx-right {
   flex-shrink: 0;
   margin-left: 16rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
+
+.tx-amount {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.my-payment .tx-amount{
+color: #4097a9;
+}
+
 
 .empty-tx {
   display: flex;

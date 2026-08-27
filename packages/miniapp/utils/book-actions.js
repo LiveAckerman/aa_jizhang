@@ -10,11 +10,11 @@ async function handleBookAction(detail, onDone) {
 
   switch (type) {
     case 'settings':
-      wx.navigateTo({ url: `/pages/book-form/book-form?id=${book.id}` })
+      wx.navigateTo({ url: `/packageA/pages/book-form/book-form?id=${book.id}` })
       break
 
     case 'invite':
-      wx.navigateTo({ url: `/pages/invite/invite?id=${book.id}` })
+      wx.navigateTo({ url: `/packageA/pages/invite/invite?id=${book.id}` })
       break
 
     case 'copy':
@@ -105,7 +105,7 @@ function openCopyDialog(book, onDone) {
             wx.hideLoading()
             wx.showToast({ title: '已复制', icon: 'success' })
             setTimeout(() => {
-              wx.navigateTo({ url: `/pages/book-detail/book-detail?id=${book2.id}` })
+              wx.navigateTo({ url: `/packageA/pages/book-detail/book-detail?id=${book2.id}` })
             }, 500)
             onDone && onDone()
           } catch (e) {

@@ -107,44 +107,36 @@
       />
     </block>
 
-    <!-- 已结算账本：通用堆叠组件（折叠堆叠 / 展开列表） -->
+    <!-- 已归档账本：通用堆叠组件（折叠堆叠 / 展开列表） -->
     <card-stack
       wx:if="{{archived.length > 0}}"
       count="{{archived.length}}"
-      title="已结算账本（{{archived.length}}）"
-      hint-text="{{archived.length}} 个已结算账本，点击展开"
+      title="已归档账本（{{archived.length}}）"
+      hint-text="{{archived.length}} 个已归档账本，点击展开"
     >
-      <!-- 折叠态顶部卡片：最新一个已结算账本 -->
-      <view slot="top" class="glass-card book-plain cs-top-book">
-        <view class="book-plain-top">
-          <text class="book-name">{{archived[0].name}}</text>
-          <text class="archived-badge">已结算</text>
-        </view>
-        <view class="archived-card-meta">
-          <text class="archived-meta-text">{{archived[0].memberCount}}人 · {{archived[0].dateText}} · ¥{{archived[0].myTotalText}}</text>
-        </view>
+      <!-- 折叠态顶部卡片：最新一个已归档账本，复用 book-card -->
+      <!-- 透明遮罩盖住卡片：拦截点击并冒泡给 card-stack 展开，避免 book-card 拦截后进详情 -->
+      <view slot="top" class="archived-top-wrap">
+        <book-card
+          mode="list"
+          book="{{archived[0]}}"
+          is-owner="{{archived[0].isOwner}}"
+          read-only="{{true}}"
+        />
+        <view class="archived-top-mask"></view>
       </view>
 
-      <!-- 展开态完整列表 -->
+      <!-- 展开态完整列表，每条也复用 book-card -->
       <view slot="list">
-        <view
-          wx:for="{{archived}}"
-          wx:key="id"
-          wx:for-item="book"
-          class="glass-card drawer-book-item"
-          data-id="{{book.id}}"
-          bindtap="onTapBook"
-        >
-          <image wx:if="{{book.hasCover}}" class="drawer-book-cover" src="{{book.coverUrl}}" mode="aspectFill" />
-          <view class="drawer-book-info">
-            <text class="drawer-book-name">{{book.name}}</text>
-            <text class="drawer-book-meta">{{book.memberCount}}人 · {{book.dateText}}</text>
-            <text class="drawer-book-amount">¥{{book.myTotalText}}</text>
-          </view>
-          <view class="drawer-book-menu" catchtap="noop">
-            <book-menu book="{{book}}" is-owner="{{book.isOwner}}" bind:action="onBookAction" />
-          </view>
-        </view>
+        <block wx:for="{{archived}}" wx:key="id" wx:for-item="book">
+          <book-card
+            mode="list"
+            book="{{book}}"
+            is-owner="{{book.isOwner}}"
+            read-only="{{true}}"
+            bind:tap="onTapBook"
+          />
+        </block>
       </view>
     </card-stack>
   </view>

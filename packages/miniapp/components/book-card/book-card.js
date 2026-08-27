@@ -21,6 +21,7 @@ Component({
     book: { type: Object, value: {} },
     mode: { type: String, value: 'list' }, // 'list' | 'detail'
     isOwner: { type: Boolean, value: false },
+    readOnly: { type: Boolean, value: false }, // 隐藏所有操作按钮（归档态等只读场景）
   },
 
   observers: {

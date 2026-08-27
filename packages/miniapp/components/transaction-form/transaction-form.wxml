@@ -52,6 +52,25 @@
     </view>
   </view>
 
+  <!-- 支付方式 -->
+  <view class="glass-card section">
+    <view class="section-label">支付方式</view>
+    <view class="cat-grid">
+      <view
+        wx:for="{{paymentMethods}}"
+        wx:key="key"
+        class="cat-item {{paymentMethod === item.key ? 'active' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="onPickPaymentMethod"
+      >
+        <view class="cat-icon">
+          <van-icon name="{{item.icon}}" size="22px" color="{{paymentMethod === item.key ? '#fff' : '#4097a9'}}" />
+        </view>
+        <text class="cat-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+
   <!-- 公账专属 -->
   <block wx:if="{{type === 'shared'}}">
     <view class="glass-card section">

@@ -1,9 +1,9 @@
 const app = getApp()
-const api = require('/utils/api')
-const { setTabBarSelected } = require('/utils/tabbar')
-const { requireLogin } = require('/utils/auth')
-const authDrawerBehavior = require('/utils/auth-drawer-behavior')
-const echarts = require('/components/ec-canvas/echarts')
+const api = require('../../utils/api')
+const { setTabBarSelected } = require('../../utils/tabbar')
+const { requireLogin } = require('../../utils/auth')
+const authDrawerBehavior = require('../../utils/auth-drawer-behavior')
+const echarts = require('../../components/ec-canvas/echarts')
 
 // 分类条形色（跟主色系一致，柔和有层次）
 const CAT_COLORS = ['#4097a9', '#68b7c7', '#8dd3e0', '#f0a58e', '#fa9583', '#c7a8e0', '#a0d8b3', '#f5c67c', '#b0b8c9']

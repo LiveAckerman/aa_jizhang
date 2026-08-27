@@ -16,12 +16,12 @@
           bindlongpress="onMemberLongPress"
         />
         <view wx:if="{{extraCount > 0}}" class="bc-extra">+{{extraCount}}</view>
-        <view class="bc-invite" catchtap="onInvite">
+        <view wx:if="{{!readOnly}}" class="bc-invite" catchtap="onInvite">
           <van-icon name="plus" size="18px" color="#4097a9" />
         </view>
       </view>
 
-      <view class="bc-actions" catchtap="noop">
+      <view class="bc-actions" catchtap="noop" wx:if="{{!readOnly}}">
         <book-menu book="{{book}}" is-owner="{{isOwner}}" light="{{true}}" bind:action="onAction" />
         <!-- 分享按钮仅 detail：列表里触发的是 books 全局分享，无法定位具体账本 -->
         <button wx:if="{{mode === 'detail'}}" class="bc-share-btn" open-type="share">

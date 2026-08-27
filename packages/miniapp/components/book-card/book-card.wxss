@@ -149,12 +149,14 @@
 }
 
 .bc-badge {
-  padding: 4rpx 16rpx;
+  padding: 6rpx 20rpx;
   border-radius: 20rpx;
-  background: rgba(255, 255, 255, 0.22);
+  background: #fa9c8b;
   font-size: 22rpx;
+  font-weight: 600;
   color: #fff;
   flex-shrink: 0;
+  box-shadow: 0 4rpx 12rpx rgba(250, 156, 139, 0.4);
 }
 
 .bc-date {

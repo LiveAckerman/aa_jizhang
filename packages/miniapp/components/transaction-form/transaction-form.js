@@ -1,5 +1,5 @@
 const app = getApp()
-const { CATEGORIES, SPLIT_METHODS } = require('../../constants/ledger')
+const { CATEGORIES, SPLIT_METHODS, PAYMENT_METHODS } = require('../../constants/ledger')
 
 /**
  * 通用记账表单组件
@@ -60,6 +60,9 @@ Component({
     currencyIndex: 0,
     convertedText: '',
 
+    paymentMethods: PAYMENT_METHODS,
+    paymentMethod: 'wechat',
+
     // 分账关系预览：付款人视角(别人给我) / 参与人视角(我给付款人)
     settlePreview: { mode: '', payerName: '', myPayText: '', items: [] },
   },
@@ -106,6 +109,7 @@ Component({
         note: init.note || '',
         images: init.images || [],
         splitMethod: init.splitMethod || 'average',
+        paymentMethod: init.paymentMethod || 'wechat',
         payerId: init.payerId || myUserId,
         currency,
         currencySymbol: this.symbolOf(currency),
@@ -194,6 +198,9 @@ Component({
     },
     onPickCategory(e) {
       this.setData({ category: e.currentTarget.dataset.key })
+    },
+    onPickPaymentMethod(e) {
+      this.setData({ paymentMethod: e.currentTarget.dataset.key })
     },
     onNoteInput(e) {
       this.setData({ note: e.detail.value })
@@ -497,6 +504,7 @@ Component({
         type: this.data.type,
         amount, currency, originalAmount, exchangeRate: rate,
         category: this.data.category,
+        paymentMethod: this.data.paymentMethod || 'wechat',
         note: this.data.note,
         images: this.data.images,
         spentAt: this.data.spentAt,

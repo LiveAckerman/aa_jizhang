@@ -84,19 +84,30 @@ Page({
         mediaType: ['image'],
         sourceType: ['camera', 'album'],
         success: async (res) => {
-          wx.showLoading({ title: '识别中...', mask: true })
+          // 分阶段 loading：OCR 提取 → AI 总结
+          wx.showLoading({ title: '提取文字中...', mask: true })
+          const steps = [
+            { delay: 2500, title: 'AI 总结中...' },
+            { delay: 6000, title: '即将完成...' },
+          ]
+          const timers = steps.map(({ delay, title }) =>
+            setTimeout(() => wx.showLoading({ title, mask: true }), delay),
+          )
+
           try {
             const result = await api.ocrRecognizeReceipt(res.tempFiles[0].tempFilePath, bookId)
+            timers.forEach(clearTimeout)
             wx.hideLoading()
             if (!result.records || result.records.length === 0) {
               wx.showToast({ title: '未识别到账单记录', icon: 'none' })
               return
             }
             wx.redirectTo({
-              url: `/pages/ocr-batch-edit/ocr-batch-edit?bookId=${bookId}`,
+              url: `/packageA/pages/ocr-batch-edit/ocr-batch-edit?bookId=${bookId}`,
               success: (navRes) => navRes.eventChannel.emit('ocrResult', result),
             })
           } catch (e) {
+            timers.forEach(clearTimeout)
             wx.hideLoading()
             wx.showToast({ title: (e && e.message) || '识别失败', icon: 'none' })
           }

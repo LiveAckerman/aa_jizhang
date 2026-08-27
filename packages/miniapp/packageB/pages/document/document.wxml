@@ -1,5 +1,5 @@
 <view class="doc-page">
-  <nav-bar title="{{title}}"></nav-bar>
+  <nav-bar title="{{title}}" background="#ffffff"></nav-bar>
 
   <view class="doc-content">
     <view class="doc-header">

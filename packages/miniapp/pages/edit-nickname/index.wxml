@@ -1,5 +1,5 @@
 <view class="edit-nickname-page">
-  <nav-bar title="修改昵称" show-back="{{false}}">
+  <nav-bar title="修改昵称" show-back="{{false}}" background="#ffffff">
     <text slot="left" class="nav-action" bindtap="onCancel">取消</text>
   </nav-bar>
 

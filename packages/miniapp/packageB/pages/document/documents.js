@@ -7,7 +7,7 @@
  * - 更新内容时请同步修改 updatedAt
  */
 
-const { APP_VERSION } = require('../config/index')
+const { APP_VERSION } = require('../../../config/index')
 
 const COMMON_STYLE = {
   h: 'font-size:30rpx;font-weight:600;color:#2f4159;margin:32rpx 0 16rpx;',

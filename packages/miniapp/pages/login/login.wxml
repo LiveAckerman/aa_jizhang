@@ -38,9 +38,9 @@
         </view>
       </view>
       <text class="agreement-text">我已阅读并同意</text>
-      <navigator url="/pages/document/document?type=terms" class="agreement-link" hover-class="none">《用户协议》</navigator>
+      <navigator url="/packageB/pages/document/document?type=terms" class="agreement-link" hover-class="none">《用户协议》</navigator>
       <text class="agreement-text">和</text>
-      <navigator url="/pages/document/document?type=privacy" class="agreement-link" hover-class="none">《隐私政策》</navigator>
+      <navigator url="/packageB/pages/document/document?type=privacy" class="agreement-link" hover-class="none">《隐私政策》</navigator>
     </view>
   </view>
 </view>

@@ -279,7 +279,7 @@ Page({
   onOpenSettleDetail(e) {
     const tab = e.currentTarget.dataset.tab
     wx.navigateTo({
-      url: `/pages/settle-detail/settle-detail?bookId=${this.data.id}&tab=${tab}`,
+      url: `/packageA/pages/settle-detail/settle-detail?bookId=${this.data.id}&tab=${tab}`,
     })
   },
 
@@ -303,7 +303,7 @@ Page({
         return
       }
       wx.navigateTo({
-        url: `/pages/settle-detail/settle-detail?bookId=${this.data.id}&roundId=${roundId}`,
+        url: `/packageA/pages/settle-detail/settle-detail?bookId=${this.data.id}&roundId=${roundId}`,
       })
     } catch (e) {
       wx.hideLoading()
@@ -360,7 +360,7 @@ Page({
     const roundId = e.currentTarget.dataset.id
     this.setData({ showRoundDrawer: false })
     wx.navigateTo({
-      url: `/pages/settle-detail/settle-detail?bookId=${this.data.id}&roundId=${roundId}`,
+      url: `/packageA/pages/settle-detail/settle-detail?bookId=${this.data.id}&roundId=${roundId}`,
     })
   },
 

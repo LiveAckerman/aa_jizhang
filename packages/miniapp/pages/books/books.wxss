@@ -99,6 +99,10 @@ page {
   flex-direction: column;
 }
 
+.book-list:last-child {
+  margin-bottom: 0 !important;
+}
+
 .book-item {
   margin-bottom: 24rpx;
   overflow: hidden;
@@ -486,7 +490,16 @@ page {
 }
 
 /* ── 已归档卡片堆叠 ── */
-/* ── 已结算账本：card-stack slot 内容样式 ── */
+/* 折叠态顶部卡片：透明遮罩盖住 book-card，
+   使点击落在遮罩上并冒泡给 card-stack 展开，而非进入详情 */
+.archived-top-wrap {
+  position: relative;
+}
+.archived-top-mask {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
 /* 折叠态顶部卡片：清零底边距，紧贴影子卡 */
 .cs-top-book {
   margin-bottom: 0;

@@ -55,41 +55,6 @@ App({
     wx.removeStorageSync('user')
   },
 
-  /**
-   * 全局分享配置：分享给朋友
-   * 所有页面右上角「转发」按钮自动启用
-   */
-  onShareAppMessage() {
-    // 随机选择一张分享封面(准备 3 张 webp 图放到 assets/ 目录)
-    const covers = [
-      '/assets/share-1.webp',
-      '/assets/share-2.webp',
-      '/assets/share-3.webp',
-    ]
-    const randomCover = covers[Math.floor(Math.random() * covers.length)]
-
-    return {
-      title: '一起分账吧 - 轻松记账，公平分账',
-      path: '/pages/books/books',
-      imageUrl: randomCover,
-    }
-  },
-
-  /**
-   * 全局分享配置：分享到朋友圈
-   * 所有页面右上角「分享到朋友圈」按钮自动启用
-   */
-  onShareTimeline() {
-    const covers = [
-      '/assets/share-1.webp',
-      '/assets/share-2.webp',
-      '/assets/share-3.webp',
-    ]
-    const randomCover = covers[Math.floor(Math.random() * covers.length)]
-
-    return {
-      title: '一起分账吧 - 轻松记账，公平分账',
-      imageUrl: randomCover,
-    }
-  },
+  // 注：分享必须在 Page 上声明 onShareAppMessage / onShareTimeline，
+  // App 级声明微信不识别。各页面自行实现。
 })

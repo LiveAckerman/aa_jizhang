@@ -37,6 +37,15 @@ const SPLIT_METHODS = [
   { key: 'fixed', name: '指定金额' },
 ]
 
+// 支付方式
+const PAYMENT_METHODS = [
+  { key: 'wechat', name: '微信', icon: 'wechat' },
+  { key: 'alipay', name: '支付宝', icon: 'alipay' },
+  { key: 'bankcard', name: '银行卡', icon: 'credit-pay' },
+  { key: 'cash', name: '现金', icon: 'gold-coin-o' },
+  { key: 'other', name: '其他', icon: 'more-o' },
+]
+
 const CATEGORY_MAP = {}
 CATEGORIES.forEach((c) => (CATEGORY_MAP[c.key] = c))
 
@@ -61,6 +70,7 @@ module.exports = {
   SCENES,
   CATEGORIES,
   SPLIT_METHODS,
+  PAYMENT_METHODS,
   CATEGORY_MAP,
   SCENE_MAP,
   SCENE_SHARE_IMAGES,

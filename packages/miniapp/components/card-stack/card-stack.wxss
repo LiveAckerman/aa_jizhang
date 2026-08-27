@@ -26,7 +26,7 @@
   transform: translateX(-50%);
   height: 56rpx;
   border-radius: 28rpx;
-  background: rgba(255, 255, 255, 0.7);
+  background: #e8edf2;
   box-shadow: 0 4rpx 12rpx rgba(47, 65, 89, 0.1);
 }
 /* 第一层影子：略窄，露出真实卡片下方 ~18rpx */
@@ -34,12 +34,14 @@
   z-index: 2;
   bottom: 18rpx;
   width: 93%;
+  background: #e8edf2;
 }
-/* 第二层影子：再窄一档，露在最下方 ~18rpx */
+/* 第二层影子：再窄一档，露在最下方 ~18rpx，颜色更浅显纵深 */
 .cs-shadow-2 {
   z-index: 1;
   bottom: 0;
   width: 86%;
+  background: #eff2f6;
 }
 /* 底部提示条：胶囊按钮样式 */
 .cs-hint {

@@ -34,6 +34,14 @@ const SPLIT_METHOD_LABEL: Record<string, string> = {
   fixed: '指定金额',
 }
 
+const PAYMENT_METHOD_LABEL: Record<string, string> = {
+  wechat: '微信',
+  alipay: '支付宝',
+  bankcard: '银行卡',
+  cash: '现金',
+  other: '其他',
+}
+
 @Injectable()
 export class TransactionService {
   constructor(
@@ -85,6 +93,7 @@ export class TransactionService {
       originalAmount,
       exchangeRate,
       category: dto.category || 'other',
+      paymentMethod: dto.paymentMethod || 'wechat',
       note: dto.note || '',
       payerId,
       creatorId: userId,
@@ -200,6 +209,7 @@ export class TransactionService {
       currency: tx.currency,
       originalAmount: tx.originalAmount,
       category: tx.category,
+      paymentMethod: tx.paymentMethod,
       note: tx.note,
       payerId: tx.payerId,
       splitMethod: tx.splitMethod,
@@ -212,6 +222,7 @@ export class TransactionService {
     if (dto.amount != null) tx.amount = dto.amount
     if (dto.type != null) tx.type = dto.type
     if (dto.category != null) tx.category = dto.category
+    if (dto.paymentMethod != null) tx.paymentMethod = dto.paymentMethod
     if (dto.note != null) tx.note = dto.note
     if (dto.images != null) tx.images = dto.images.length ? dto.images : null
     if (dto.locationName != null) tx.locationName = dto.locationName
@@ -292,6 +303,17 @@ export class TransactionService {
         label: '分类',
         oldValue: CATEGORY_LABEL[before.category] || before.category || '',
         newValue: CATEGORY_LABEL[tx.category] || tx.category,
+      })
+    }
+    if (before.paymentMethod !== tx.paymentMethod) {
+      changes.push({
+        field: 'paymentMethod',
+        label: '支付方式',
+        oldValue:
+          PAYMENT_METHOD_LABEL[before.paymentMethod] ||
+          before.paymentMethod ||
+          '',
+        newValue: PAYMENT_METHOD_LABEL[tx.paymentMethod] || tx.paymentMethod,
       })
     }
     if (before.note !== tx.note) {

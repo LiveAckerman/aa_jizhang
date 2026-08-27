@@ -57,6 +57,10 @@ export class Transaction {
   @Column({ length: 32, default: 'other' })
   category: string
 
+  /** 支付方式（wechat/alipay/bankcard/cash/other，默认微信） */
+  @Column({ length: 16, default: 'wechat' })
+  paymentMethod: string
+
   /** 备注 */
   @Column({ type: 'varchar', length: 255, default: '' })
   note: string
