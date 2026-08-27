@@ -3,6 +3,8 @@
   border-radius: 32rpx;
   overflow: hidden;
   box-shadow: 0 16rpx 64rpx rgba(47, 65, 89, 0.1);
+  /* 封面图未加载时的兜底底色，避免透出空白 */
+  background: #fff;
 }
 
 /* 列表态：卡片间距 + 可点反馈 */
@@ -26,15 +28,13 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  /* 轻度高斯模糊柔化背景，放大盖住边缘发虚 */
-  filter: blur(2rpx);
-  transform: scale(1.04);
 }
 
 .bc-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(47, 65, 89, 0.15), rgba(47, 65, 89, 0.68));
+  /* 从左往右的渐变黑色蒙版，保证白色文字可读 */
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0));
 }
 
 .bc-content {

@@ -423,7 +423,7 @@ Page({
     const imageUrl = this.data.coverUrl || shareImageForScene(book.scene)
     return {
       title: `邀请你加入「${book.name || '账本'}」一起记账`,
-      path: `/pages/join/join?code=${code}`,
+      path: `/packageA/pages/join/join?code=${code}`,
       imageUrl,
     }
   },

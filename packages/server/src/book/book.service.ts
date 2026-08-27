@@ -17,12 +17,13 @@ import { CreateBookDto } from './dto/create-book.dto'
 import { UpdateBookDto } from './dto/update-book.dto'
 
 /** 默认场景封面（CDN） */
+// 默认封面用 jpg：coverUrl 会作为微信分享 imageUrl，webp 会概率性抓取失败导致分享卡片空白
 const SCENE_COVERS: Record<string, string> = {
-  travel: 'https://cdn.ljw44.com/assets/covers/cover-travel.webp',
-  dinner: 'https://cdn.ljw44.com/assets/covers/cover-dinner.webp',
-  rent: 'https://cdn.ljw44.com/assets/covers/cover-rent.webp',
-  activity: 'https://cdn.ljw44.com/assets/covers/cover-activity.webp',
-  custom: 'https://cdn.ljw44.com/assets/covers/cover-custom.webp',
+  travel: 'https://cdn.ljw44.com/assets/covers/cover-travel.jpg',
+  dinner: 'https://cdn.ljw44.com/assets/covers/cover-dinner.jpg',
+  rent: 'https://cdn.ljw44.com/assets/covers/cover-rent.jpg',
+  activity: 'https://cdn.ljw44.com/assets/covers/cover-activity.jpg',
+  custom: 'https://cdn.ljw44.com/assets/covers/cover-custom.jpg',
 }
 
 @Injectable()

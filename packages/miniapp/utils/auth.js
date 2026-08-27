@@ -24,14 +24,35 @@ function isLoggedIn() {
  *        用于扫码/分享等需要落到特定页的场景；普通场景留空，登录页会自动返回上一页。
  * @returns {boolean} 是否已登录（true 表示可继续）
  */
+// 防重入标记：wx.navigateTo 是异步的，真机上一次点击可能触发两次 tap，
+// 在首个 navigateTo 完成前，栈顶还不是 login 页，仅靠 getCurrentPages 判断不够，
+// 故用短时标记拦住第二次跳转，避免登录页被压栈两次。
+let navigatingToLogin = false
+
 function requireLogin(options = {}) {
   if (isLoggedIn()) return true
+
+  // 已在跳转中 / 栈顶已是登录页：直接吞掉，避免重复 navigateTo
+  const pages = getCurrentPages()
+  const top = pages[pages.length - 1]
+  if (navigatingToLogin || (top && top.route === 'pages/login/login')) {
+    return false
+  }
+
   const query = []
   if (options.redirect) {
     query.push('redirect=' + encodeURIComponent(options.redirect))
   }
   const suffix = query.length ? '?' + query.join('&') : ''
-  wx.navigateTo({ url: '/pages/login/login' + suffix })
+
+  navigatingToLogin = true
+  wx.navigateTo({
+    url: '/pages/login/login' + suffix,
+    complete: () => {
+      // 跳转完成（成功或失败）后解除标记；留一点缓冲防抖
+      setTimeout(() => { navigatingToLogin = false }, 300)
+    },
+  })
   return false
 }
 

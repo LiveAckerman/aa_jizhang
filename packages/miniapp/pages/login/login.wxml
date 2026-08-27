@@ -26,7 +26,7 @@
       disabled="{{logining}}"
     >
       <view wx:if="{{logining}}" class="btn-spinner"></view>
-      <image wx:else class="wechat-icon" src="/assets/wechat-logo.webp" mode="aspectFit" />
+      <image wx:else class="wechat-icon" src="/assets/wechat-logo.png" mode="aspectFit" />
       <text>{{logining ? '登录中...' : '微信一键登录'}}</text>
     </button>
 

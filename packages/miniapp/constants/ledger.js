@@ -53,12 +53,14 @@ const SCENE_MAP = {}
 SCENES.forEach((s) => (SCENE_MAP[s.key] = s))
 
 /** 场景对应的分享卡片图（微信 onShareAppMessage.imageUrl，5:4 会自动裁） */
+// 分享封面图用 jpg（微信 onShareAppMessage 的 imageUrl 仅保证支持 png/jpg，
+// webp 概率性抓取失败导致分享卡片空白）
 const SCENE_SHARE_IMAGES = {
-  travel: 'https://cdn.ljw44.com/images/2026-08/share-travel.webp',
-  dinner: 'https://cdn.ljw44.com/images/2026-08/share-dinner.webp',
-  rent: 'https://cdn.ljw44.com/images/2026-08/share-rent.webp',
-  activity: 'https://cdn.ljw44.com/images/2026-08/share-activity.webp',
-  custom: 'https://cdn.ljw44.com/images/2026-08/share-custom.webp',
+  travel: 'https://cdn.ljw44.com/images/2026-08/share-travel.jpg',
+  dinner: 'https://cdn.ljw44.com/images/2026-08/share-dinner.jpg',
+  rent: 'https://cdn.ljw44.com/images/2026-08/share-rent.jpg',
+  activity: 'https://cdn.ljw44.com/images/2026-08/share-activity.jpg',
+  custom: 'https://cdn.ljw44.com/images/2026-08/share-custom.jpg',
 }
 
 /** 按场景取分享图；未匹配则 fallback 到 custom */
