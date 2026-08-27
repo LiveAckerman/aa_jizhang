@@ -9,8 +9,8 @@
 
 // 开发环境后端地址（本地调试时在开发者工具中关闭「校验合法域名」）
 // const DEV_API = 'http://10.0.10.40:9080/api'
-const DEV_API = 'http://192.168.101.5:9080/api'
-  // const DEV_API = 'https://aafz.lijiwang.top/api'
+// const DEV_API = 'http://192.168.101.5:9080/api'
+const DEV_API = 'https://aafz.lijiwang.top/api'
 
 // 生产环境后端地址（需为已备案 HTTPS 域名，并加入小程序 request 合法域名白名单）
 const PROD_API = 'https://aafz.lijiwang.top/api'
