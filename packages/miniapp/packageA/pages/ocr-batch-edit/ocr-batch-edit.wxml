@@ -6,7 +6,7 @@
       <!-- OCR 原图缩略图，带×关闭（设计图左上角） -->
       <view class="thumb-wrap" wx:if="{{ocrImageUrl}}">
         <image class="thumb-img" src="{{ocrImageUrl}}" mode="aspectFill" bindtap="onPreviewImage" />
-        <view class="thumb-close" catchtap="onSkipAll">
+        <view class="thumb-close" catchtap="onExit">
           <van-icon name="cross" size="14px" color="#fff" />
         </view>
       </view>
@@ -51,17 +51,25 @@
       />
     </view>
 
-    <!-- 底部确认提交 + 跳过 -->
+    <!-- 底部操作栏：垃圾桶 / 确认提交 / 跳过 -->
     <view class="bottom-bar">
-      <!-- 只有多条记录时才显示"跳过剩余"按钮 -->
-      <view class="skip-row" wx:if="{{records.length > 1}}" bindtap="onSkipAll">
-        <text class="skip-text">跳过剩余 {{records.length}} 条</text>
+      <view class="bar-row">
+        <!-- 左：垃圾桶（带角标，空时置灰不可点） -->
+        <view class="trash-btn {{trashed.length === 0 ? 'disabled' : ''}}" catchtap="onOpenTrash">
+          <van-icon name="delete-o" size="24px" color="{{trashed.length === 0 ? '#c4c4c4' : '#fa9583'}}" />
+          <view wx:if="{{trashed.length > 0}}" class="trash-badge">{{trashed.length}}</view>
+        </view>
+        <!-- 中：确认提交 -->
+        <button
+          class="btn-submit"
+          bindtap="onSubmit"
+          disabled="{{submitting}}"
+        >{{submitting ? '提交中...' : '确认提交'}}</button>
+        <!-- 右：跳过当前条 -->
+        <view class="skip-btn" catchtap="onSkipCurrent">
+          <text>跳过</text>
+        </view>
       </view>
-      <button
-        class="btn-submit"
-        bindtap="onSubmit"
-        disabled="{{submitting}}"
-      >{{submitting ? '提交中...' : '确认提交'}}</button>
     </view>
   </block>
 
@@ -75,6 +83,29 @@
   <!-- 加载中 -->
   <view wx:else class="loading-state">
     <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 垃圾桶抽屉：已跳过的记录，可恢复 -->
+  <view wx:if="{{showTrash}}" class="trash-mask" catchtap="onCloseTrash">
+    <view class="trash-panel" catchtap="stopPropagation">
+      <view class="trash-panel-header">
+        <text class="trash-panel-title">已跳过（{{trashed.length}}）</text>
+        <van-icon name="cross" size="18px" color="#8091a5" catchtap="onCloseTrash" />
+      </view>
+      <text class="trash-panel-sub">点击「恢复」可重新编辑并提交</text>
+      <scroll-view scroll-y class="trash-list">
+        <view wx:for="{{trashed}}" wx:key="id" class="trash-item">
+          <view class="trash-item-main">
+            <text class="trash-item-note">{{item.initial.note || '未填写备注'}}</text>
+            <text class="trash-item-amount">¥{{item.initial.amount}}</text>
+          </view>
+          <view class="trash-item-restore" data-id="{{item.id}}" catchtap="onRestore">
+            <van-icon name="replay" size="14px" color="#4097a9" />
+            <text>恢复</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
   </view>
 
 </view>

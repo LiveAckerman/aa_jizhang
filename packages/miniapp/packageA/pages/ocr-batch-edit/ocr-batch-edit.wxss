@@ -114,19 +114,47 @@
   box-shadow: 0 -4rpx 24rpx rgba(47, 65, 89, 0.07);
 }
 
-.skip-row {
-  text-align: center;
-  padding-bottom: 12rpx;
-}
-.skip-text {
-  font-size: 24rpx;
-  color: #8e9aad;
-  text-decoration: underline;
-  text-underline-offset: 4rpx;
+/* 三按钮一行：垃圾桶 / 确认提交 / 跳过 */
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
 }
 
+/* 左：垃圾桶按钮 */
+.trash-btn {
+  position: relative;
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 24rpx;
+  background: rgba(250, 149, 131, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.trash-btn.disabled {
+  background: rgba(128, 145, 165, 0.08);
+}
+.trash-badge {
+  position: absolute;
+  top: -8rpx;
+  right: -8rpx;
+  min-width: 32rpx;
+  height: 32rpx;
+  padding: 0 8rpx;
+  box-sizing: border-box;
+  border-radius: 16rpx;
+  background: #fa5151;
+  color: #fff;
+  font-size: 20rpx;
+  line-height: 32rpx;
+  text-align: center;
+}
+
+/* 中：确认提交（占满剩余宽度） */
 .btn-submit {
-  width: 100%;
+  flex: 1;
   height: 96rpx;
   line-height: 96rpx;
   border-radius: 48rpx;
@@ -136,11 +164,32 @@
   font-weight: 600;
   border: none;
   letter-spacing: 2rpx;
+  margin: 0;
 }
 .btn-submit[disabled] {
   opacity: 0.55;
 }
 .btn-submit::after { border: none; }
+
+/* 右：跳过按钮（描边样式，明确可点击，区别于禁用灰） */
+.skip-btn {
+  width: 128rpx;
+  height: 96rpx;
+  box-sizing: border-box;
+  border-radius: 48rpx;
+  background: #fff;
+  border: 2rpx solid #4097a9;
+  color: #4097a9;
+  font-size: 30rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.skip-btn:active {
+  background: rgba(64, 151, 169, 0.08);
+}
 
 /* ── 空态 ── */
 .empty-state {
@@ -177,4 +226,82 @@
 .loading-text {
   font-size: 28rpx;
   color: #8e9aad;
+}
+
+/* ── 垃圾桶抽屉 ── */
+.trash-mask {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100vw;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1001;
+  display: flex;
+  align-items: flex-end;
+}
+.trash-panel {
+  width: 100vw;
+  box-sizing: border-box;
+  background: #f5f6fa;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 32rpx 32rpx calc(32rpx + env(safe-area-inset-bottom));
+}
+.trash-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.trash-panel-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.trash-panel-sub {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  margin-top: 8rpx;
+  display: block;
+}
+.trash-list {
+  max-height: 640rpx;
+  margin-top: 24rpx;
+}
+.trash-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+}
+.trash-item-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+.trash-item-note {
+  font-size: 28rpx;
+  color: var(--text-primary);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.trash-item-amount {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #fa9583;
+}
+.trash-item-restore {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 12rpx 24rpx;
+  border-radius: 32rpx;
+  background: rgba(64, 151, 169, 0.1);
+  color: #4097a9;
+  font-size: 26rpx;
+  flex-shrink: 0;
+  margin-left: 16rpx;
 }

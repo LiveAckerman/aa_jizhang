@@ -9,7 +9,7 @@
       src="https://cdn.ljw44.com/images/2026-08/wordmark.webp"
       mode="aspectFit"
     />
-    <text class="brand-english">一起分账吧</text>
+    <!-- <text class="brand-english">一起分账吧</text> -->
     <text class="slogan">和朋友一起，轻松记账分账</text>
   </view>
 

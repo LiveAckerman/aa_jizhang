@@ -9,10 +9,12 @@ Page({
     rates: [{ code: 'CNY', name: '人民币', symbol: '¥', rate: 1, label: '人民币 (CNY)' }],
 
     ocrImageUrl: '',
-    records: [],   // [{ id, initial }]
+    records: [],   // [{ id, initial }] 待处理
+    trashed: [],   // [{ id, initial }] 已跳过（垃圾桶，可恢复）
     current: 0,    // 当前展示索引
     ready: false,
     submitting: false,
+    showTrash: false, // 垃圾桶抽屉显隐
   },
 
   onLoad(query) {
@@ -63,7 +65,9 @@ Page({
     this.setData({
       ocrImageUrl: imageUrl,
       records: list,
+      trashed: [],   // 重新识别：清空垃圾桶
       current: 0,
+      showTrash: false,
     })
   },
 
@@ -162,16 +166,70 @@ Page({
     }
   },
 
-  // 跳过剩余，直接退出
-  onSkipAll() {
-    const remaining = this.data.records.length
-    if (remaining === 0) {
+  // 跳过当前条：移进垃圾桶，自动展示下一条；records 空则直接返回
+  onSkipCurrent() {
+    const { records, current, trashed } = this.data
+    if (records.length === 0) return
+
+    const skipped = records[current]
+    const newRecords = records.slice()
+    newRecords.splice(current, 1)
+    const newTrashed = trashed.concat(skipped)
+
+    if (newRecords.length === 0) {
+      // 待处理清空：直接返回账本（跳过的记录随之丢弃）
       wx.navigateBack()
       return
     }
+
+    const newCurrent = Math.min(current, newRecords.length - 1)
+    this.setData({ records: newRecords, trashed: newTrashed, current: newCurrent })
+  },
+
+  // 打开垃圾桶抽屉（空则不弹）
+  onOpenTrash() {
+    if (this.data.trashed.length === 0) return
+    this.setData({ showTrash: true })
+  },
+
+  onCloseTrash() {
+    this.setData({ showTrash: false })
+  },
+
+  // 从垃圾桶恢复某条：移回待处理末尾，关抽屉并跳到该条
+  onRestore(e) {
+    const id = e.currentTarget.dataset.id
+    const { trashed, records } = this.data
+    const idx = trashed.findIndex((r) => r.id === id)
+    if (idx === -1) return
+
+    const restored = trashed[idx]
+    const newTrashed = trashed.slice()
+    newTrashed.splice(idx, 1)
+    const newRecords = records.concat(restored)
+
+    this.setData({
+      records: newRecords,
+      trashed: newTrashed,
+      current: newRecords.length - 1, // 跳到恢复的这条
+      showTrash: false,
+    })
+  },
+
+  // 主动返回（缩略图 × / 空态返回）：有未处理记录或垃圾桶非空时二次确认
+  onExit() {
+    const remaining = this.data.records.length
+    const trashedCount = this.data.trashed.length
+    if (remaining === 0 && trashedCount === 0) {
+      wx.navigateBack()
+      return
+    }
+    const parts = []
+    if (remaining > 0) parts.push(`${remaining} 条未处理`)
+    if (trashedCount > 0) parts.push(`${trashedCount} 条已跳过`)
     wx.showModal({
-      title: '跳过剩余',
-      content: `还有 ${remaining} 条记录未提交，确认退出？`,
+      title: '退出识别',
+      content: `还有 ${parts.join('、')}，退出后将丢弃，确认退出？`,
       confirmText: '退出',
       confirmColor: '#fa9583',
       success: (r) => { if (r.confirm) wx.navigateBack() },
@@ -182,4 +240,7 @@ Page({
   onBack() {
     wx.navigateBack()
   },
+
+  // 阻止抽屉面板内点击冒泡到遮罩层（避免误关）
+  stopPropagation() {},
 })
