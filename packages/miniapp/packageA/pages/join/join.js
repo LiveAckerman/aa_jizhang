@@ -87,4 +87,10 @@ Page({
     // switchTab 回到 tabBar 首页，避免 reLaunch 后左上角出现 home 图标
     wx.switchTab({ url: '/pages/books/books' })
   },
+
+  onUnload() {
+    // 离开加入流程（加入成功跳详情 / 取消 / 返回）后解除延迟标记，
+    // 用户下次进任意一级页面时正常弹出头像昵称授权抽屉。
+    getApp().globalData.deferAuthDrawer = false
+  },
 })

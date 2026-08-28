@@ -17,6 +17,9 @@ App({
     tabPrevSelected: 0,
     /** 是否需要弹出头像昵称授权抽屉（登录接口返回，只弹一次） */
     needProfilePrompt: false,
+    /** 延迟授权抽屉：join 加入流程期间为 true，此期间各页不弹抽屉、不消费门闩，
+     * 由 join 页 onUnload 清除，避免抽屉在转场账本页闪现后被加入页盖掉、门闩被吞 */
+    deferAuthDrawer: false,
   },
 
   onLaunch() {

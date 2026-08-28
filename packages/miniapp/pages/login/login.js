@@ -84,6 +84,10 @@ Page({
         if (pendingCode) {
           // 扫码/分享进入但未登录：登录后直达加入页
           wx.removeStorageSync('pendingInviteCode')
+          // 延迟授权抽屉：join 流程期间（转场账本页 + 加入页）都不弹授权抽屉，
+          // 避免抽屉在转瞬即逝的账本页闪现后被加入页盖掉、门闩被吞。
+          // join 页 onUnload 时清除该标记，用户离开加入流程后进任意一级页面再弹。
+          app.globalData.deferAuthDrawer = true
           // 先 reLaunch 到 tabbar 首页作为栈底，再 navigateTo 到加入页，
           // 这样加入页左上角 home 图标能正确回到首页，而不是回登录页
           wx.reLaunch({

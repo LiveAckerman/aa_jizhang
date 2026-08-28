@@ -30,6 +30,8 @@ module.exports = Behavior({
     maybeShowAuthDrawer() {
       const app = getApp()
       if (!app.isLoggedIn()) return
+      // join 流程期间延迟弹出：不弹、不消费门闩，待离开加入流程后进一级页面再弹
+      if (app.globalData.deferAuthDrawer) return
       const user = app.globalData.user || {}
       if (!app.globalData.needProfilePrompt || user.isProfileComplete) return
 
