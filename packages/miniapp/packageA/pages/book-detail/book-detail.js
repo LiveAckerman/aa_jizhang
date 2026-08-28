@@ -1,7 +1,11 @@
 const app = getApp()
 const api = require('../../../utils/api')
-const { CATEGORY_MAP, shareImageForScene } = require('../../../constants/ledger')
+const { CATEGORY_MAP, CATEGORIES, PAYMENT_METHODS, shareImageForScene } = require('../../../constants/ledger')
 const { handleBookAction } = require('../../../utils/book-actions')
+
+// 支付方式 key → 名称映射，用于筛选按钮文案
+const PAYMENT_MAP = {}
+PAYMENT_METHODS.forEach((p) => (PAYMENT_MAP[p.key] = p))
 
 Page({
   data: {
@@ -32,6 +36,15 @@ Page({
     settledList: [], // 已结算账单（全量，交给 card-stack 组件展示）
     txFilter: 'all', // 账单筛选：all / shared(公账) / private(私账)
     txCounts: { all: 0, shared: 0, private: 0 }, // 各 tab 的账单笔数（角标）
+
+    // 分类 / 支付方式 下拉筛选
+    catFilter: [],          // 已生效的分类筛选 key 数组（空=全部）
+    payFilter: [],          // 已生效的支付方式筛选 key 数组（空=全部）
+    catFilterText: '分类',   // 分类筛选按钮文案
+    payFilterText: '支付方式', // 支付方式筛选按钮文案
+    filterDrawer: '',       // 当前打开的抽屉：'' / 'cat' / 'pay'
+    filterOptions: [],      // 当前抽屉的选项列表
+    filterDraft: {},        // 抽屉内的临时勾选状态 { key: true }（确定后才生效）
     settling: false,          // 全部结算提交中
     showRoundDrawer: false,   // 进行中轮次弹窗
     activeRounds: [],         // 进行中轮次列表（弹窗用）
@@ -130,13 +143,74 @@ Page({
     this.applyTxFilter()
   },
 
+  // 打开分类筛选抽屉
+  onOpenCatFilter() {
+    const draft = {}
+    ;(this.data.catFilter || []).forEach((k) => (draft[k] = true))
+    this.setData({ filterDrawer: 'cat', filterOptions: CATEGORIES, filterDraft: draft })
+  },
+
+  // 打开支付方式筛选抽屉
+  onOpenPayFilter() {
+    const draft = {}
+    ;(this.data.payFilter || []).forEach((k) => (draft[k] = true))
+    this.setData({ filterDrawer: 'pay', filterOptions: PAYMENT_METHODS, filterDraft: draft })
+  },
+
+  // 抽屉内切换某个选项的勾选（临时草稿，确定后才生效）
+  onToggleFilterOption(e) {
+    const key = e.currentTarget.dataset.key
+    const draft = Object.assign({}, this.data.filterDraft)
+    if (draft[key]) delete draft[key]
+    else draft[key] = true
+    this.setData({ filterDraft: draft })
+  },
+
+  // 重置当前抽屉的勾选
+  onResetFilterDrawer() {
+    this.setData({ filterDraft: {} })
+  },
+
+  // 关闭抽屉（不应用）
+  onCloseFilterDrawer() {
+    this.setData({ filterDrawer: '' })
+  },
+
+  // 确定筛选：把草稿写回对应的生效筛选，刷新列表
+  onConfirmFilter() {
+    const keys = Object.keys(this.data.filterDraft || {})
+    if (this.data.filterDrawer === 'cat') {
+      const text = keys.length === 0
+        ? '分类'
+        : keys.length === 1
+          ? (CATEGORY_MAP[keys[0]] || {}).name || '分类'
+          : `分类·${keys.length}`
+      this.setData({ catFilter: keys, catFilterText: text, filterDrawer: '' })
+    } else if (this.data.filterDrawer === 'pay') {
+      const text = keys.length === 0
+        ? '支付方式'
+        : keys.length === 1
+          ? (PAYMENT_MAP[keys[0]] || {}).name || '支付方式'
+          : `支付方式·${keys.length}`
+      this.setData({ payFilter: keys, payFilterText: text, filterDrawer: '' })
+    }
+    this.applyTxFilter()
+  },
+
   // 按当前 txFilter 过滤账单，重算分组与各 tab 角标
   applyTxFilter() {
     const filter = this.data.txFilter
     const all = this.data.allTxs || []
+    const catSet = new Set(this.data.catFilter || [])
+    const paySet = new Set(this.data.payFilter || [])
     const list = all.filter((t) => {
-      if (filter === 'shared') return t.type !== 'private'
-      if (filter === 'private') return t.type === 'private'
+      // 公账/私账 tab
+      if (filter === 'shared' && t.type === 'private') return false
+      if (filter === 'private' && t.type !== 'private') return false
+      // 分类筛选（空=不限）
+      if (catSet.size > 0 && !catSet.has(t.category || 'other')) return false
+      // 支付方式筛选（空=不限；旧数据无 paymentMethod 视为 wechat）
+      if (paySet.size > 0 && !paySet.has(t.paymentMethod || 'wechat')) return false
       return true
     })
 
@@ -195,12 +269,15 @@ Page({
     }
     const activeSet = new Set(this.data.activeRoundIds || [])
     const settling = !!t.settledRoundId && activeSet.has(t.settledRoundId)
+    const payer = (this.data.members || []).find((m) => m.userId === t.payerId)
     return {
       ...t,
       amountText: (t.amount / 100).toFixed(2),
       categoryName: cat.name,
       categoryIcon: cat.icon,
+      categorySvg: cat.svgIcon || '',
       payerName: memberMap[t.payerId] || '成员',
+      payerAvatar: (payer && payer.avatar) || '',
       isPrivate: t.type === 'private',
       isSettled: !!t.settledRoundId,
       settling, // 结算中（归属进行中轮次）：列表内展示、不可选/改
@@ -290,6 +367,11 @@ Page({
 
   // 全部结算：把当前与我相关的未入轮次账单锁进新轮次 → 进该轮次的按人结算页
   async onSettleAll() {
+    // 单人账本无需结算（结算是多人间债务平账）
+    if ((this.data.members || []).length <= 1) {
+      wx.showToast({ title: '单人账本无需结算', icon: 'none' })
+      return
+    }
     if (this.data.settling) return
     this.setData({ settling: true })
     wx.showLoading({ title: '生成结算...', mask: true })
@@ -314,6 +396,11 @@ Page({
 
   // 部分结算：先查进行中轮次，有则弹窗让用户选择
   async onSettlePartial() {
+    // 单人账本无需结算（结算是多人间债务平账）
+    if ((this.data.members || []).length <= 1) {
+      wx.showToast({ title: '单人账本无需结算', icon: 'none' })
+      return
+    }
     let rounds = []
     try {
       rounds = await api.activeRounds(this.data.id)

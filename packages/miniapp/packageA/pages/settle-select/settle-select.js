@@ -66,6 +66,7 @@ Page({
           spentAt: t.spentAt || '',
           categoryName: cat.name,
           categoryIcon: cat.icon,
+          categorySvg: cat.svgIcon || '',
           note: t.note || (memberMap[t.payerId] || '成员') + ' 付款',
         }
       })

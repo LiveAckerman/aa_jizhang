@@ -76,7 +76,8 @@
               color="{{checkedMap[tx.id] ? '#4097a9' : '#c8c9cc'}}"
             />
             <view class="tx-icon">
-              <van-icon name="{{tx.categoryIcon}}" size="20px" color="#4097a9" />
+              <image wx:if="{{tx.categorySvg}}" class="tx-icon-svg" src="{{tx.categorySvg}}" mode="aspectFit" />
+              <van-icon wx:else name="{{tx.categoryIcon}}" size="20px" color="#4097a9" />
             </view>
             <view class="tx-mid">
               <text class="tx-cat">{{tx.categoryName}}</text>

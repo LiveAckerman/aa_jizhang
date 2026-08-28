@@ -46,13 +46,15 @@
         members="{{members}}"
         rates="{{rates}}"
         my-user-id="{{myUserId}}"
+        book-id="{{bookId}}"
         initial="{{item.initial}}"
       />
     </view>
 
     <!-- 底部确认提交 + 跳过 -->
     <view class="bottom-bar">
-      <view class="skip-row" wx:if="{{records.length > 0}}" bindtap="onSkipAll">
+      <!-- 只有多条记录时才显示"跳过剩余"按钮 -->
+      <view class="skip-row" wx:if="{{records.length > 1}}" bindtap="onSkipAll">
         <text class="skip-text">跳过剩余 {{records.length}} 条</text>
       </view>
       <button

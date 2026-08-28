@@ -67,11 +67,13 @@ Page({
       }
       this.setData({
         initial: {
+          id: tx.id,   // 查重排除自身，避免编辑态把账单自己算成重复
           type: tx.type,
           amount: displayAmount,
           category: tx.category,
           note: tx.note,
           splitMethod: tx.splitMethod || 'average',
+          paymentMethod: tx.paymentMethod || 'wechat',
           payerId: tx.payerId,
           images: tx.images || [],
           participantIds: (tx.splits || []).map((s) => s.userId),
@@ -82,6 +84,8 @@ Page({
             : null,
           spentAt: tx.spentAt,
           currency,
+          // 记账时快照汇率：编辑时若不改币种，沿用它，避免用当日汇率重算导致 CNY 金额漂移
+          exchangeRate: tx.exchangeRate != null ? Number(tx.exchangeRate) : null,
         },
       })
     } catch (e) {}

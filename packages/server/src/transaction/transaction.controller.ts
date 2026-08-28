@@ -60,6 +60,28 @@ export class TransactionController {
     return { code: 0, message: 'ok', data }
   }
 
+  /**
+   * 重复金额检查：返回该账本内相同金额且相同支付方式的账单数量（编辑态排除自己）
+   * 注意：必须定义在 @Get(':id') 之前，否则 "duplicate-check" 会被当作 id 参数匹配到详情路由
+   */
+  @Get('duplicate-check')
+  async duplicateCheck(
+    @CurrentUser('sub') userId: string,
+    @Query('bookId') bookId: string,
+    @Query('amount') amount: string,
+    @Query('paymentMethod') paymentMethod: string,
+    @Query('excludeId') excludeId?: string,
+  ) {
+    const data = await this.txService.duplicateCheck(
+      bookId,
+      userId,
+      parseInt(amount, 10),
+      paymentMethod || 'wechat',
+      excludeId,
+    )
+    return { code: 0, message: 'ok', data }
+  }
+
   /** 账单修改记录 */
   @Get(':id/logs')
   async logs(@CurrentUser('sub') userId: string, @Param('id') id: string) {

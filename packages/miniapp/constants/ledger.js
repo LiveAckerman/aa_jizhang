@@ -19,12 +19,14 @@ const SCENES = [
 // 记账分类（图标为 van-icon 名）
 const CATEGORIES = [
   { key: 'food', name: '餐饮', icon: 'goods-collect-o' },
+  { key: 'takeout', name: '外卖', icon: 'bag-o' },
   { key: 'transport', name: '交通', icon: 'logistics' },
   { key: 'hotel', name: '住宿', icon: 'hotel-o' },
   { key: 'ticket', name: '门票', icon: 'coupon-o' },
   { key: 'shopping', name: '购物', icon: 'shopping-cart-o' },
   { key: 'entertainment', name: '娱乐', icon: 'music-o' },
-  { key: 'drink', name: '饮品', icon: 'cash-back-record' },
+  // 饮品用自定义 SVG（vant 无杯子图标）：svgIcon=蓝色版路径，svgIconActive=白色版（选中态）
+  { key: 'drink', name: '饮品', icon: 'hot-o', svgIcon: '/assets/icons/drink.svg', svgIconActive: '/assets/icons/drink-white.svg' },
   { key: 'medical', name: '医疗', icon: 'like-o' },
   { key: 'other', name: '其他', icon: 'apps-o' },
 ]
@@ -41,8 +43,10 @@ const SPLIT_METHODS = [
 const PAYMENT_METHODS = [
   { key: 'wechat', name: '微信', icon: 'wechat' },
   { key: 'alipay', name: '支付宝', icon: 'alipay' },
-  { key: 'bankcard', name: '银行卡', icon: 'credit-pay' },
-  { key: 'cash', name: '现金', icon: 'gold-coin-o' },
+  { key: 'credit', name: '信用卡', icon: 'credit-pay' },
+  { key: 'huabei', name: '花呗', icon: 'balance-pay' },
+  { key: 'bankcard', name: '银行卡', icon: 'gold-coin-o' },
+  { key: 'cash', name: '现金', icon: 'cash-back-record' },
   { key: 'other', name: '其他', icon: 'more-o' },
 ]
 

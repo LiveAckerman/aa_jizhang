@@ -41,6 +41,12 @@ const api = {
   updateTransaction: (id, data) => request({ url: `/transactions/${id}`, method: 'PATCH', data }),
   deleteTransaction: (id) => request({ url: `/transactions/${id}`, method: 'DELETE' }),
   transactionLogs: (id) => request({ url: `/transactions/${id}/logs` }),
+  // 重复金额检查（传入支付方式：相同金额 + 相同支付方式才算重复）
+  checkDuplicateAmount: (bookId, amount, paymentMethod, excludeId) => {
+    let url = `/transactions/duplicate-check?bookId=${bookId}&amount=${amount}&paymentMethod=${paymentMethod}`
+    if (excludeId) url += `&excludeId=${excludeId}`
+    return request({ url })
+  },
 
   // ===== 汇率 =====
   exchangeRates: () => request({ url: '/exchange-rates' }),

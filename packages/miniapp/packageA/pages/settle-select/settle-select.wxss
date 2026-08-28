@@ -170,6 +170,11 @@
   justify-content: center;
   flex-shrink: 0;
 }
+/* 自定义 SVG 分类图标（饮品），尺寸对齐 van-icon 20px */
+.tx-icon-svg {
+  width: 40rpx;
+  height: 40rpx;
+}
 
 .tx-mid {
   flex: 1;

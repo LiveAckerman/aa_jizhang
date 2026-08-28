@@ -24,6 +24,8 @@ Component({
       value: [{ code: 'CNY', name: '人民币', symbol: '¥', rate: 1, label: '人民币 (CNY)' }],
     },
     myUserId: { type: String, value: '' },
+    // 所属账本 id：查重接口需要（金额失焦时校验该账本内是否已有相同金额账单）
+    bookId: { type: String, value: '' },
     initial: { type: Object, value: null },
     autofocus: { type: Boolean, value: false },
   },
@@ -49,6 +51,7 @@ Component({
     splitDialogItems: [],
     splitDialogValidation: '',
     splitDialogValid: false,
+    currencyUnit: '元', // 指定金额分账输入框的单位（跟随币种）
 
     images: [],
     location: null,
@@ -65,6 +68,9 @@ Component({
 
     // 分账关系预览：付款人视角(别人给我) / 参与人视角(我给付款人)
     settlePreview: { mode: '', payerName: '', myPayText: '', items: [] },
+
+    // 重复金额提示
+    duplicateWarning: '',
   },
 
   lifetimes: {
@@ -119,6 +125,12 @@ Component({
         dateText: this.formatDate(new Date(spentAt)),
       })
 
+      // 记录初始币种 + 记账时快照汇率：编辑保存时若币种未变，沿用快照汇率，
+      // 避免用当日汇率重算 CNY amount 导致金额漂移（改了币种则用当前汇率）
+      this._initialCurrency = currency
+      this._initialRate =
+        init.exchangeRate != null && init.exchangeRate > 0 ? init.exchangeRate : null
+
       // 参与人：优先用 initial.participantIds，否则默认全体成员
       if (init.participantIds && init.participantIds.length) {
         this._participantsTouched = true
@@ -128,12 +140,18 @@ Component({
       }
 
       // 回填分账明细：非平分方式（fixed/ratio/shares）需恢复每人金额/权重，
-      // 否则编辑态会因 splitDetails 为空而退回平分。fixed 用 amount(分)，ratio/shares 用 weight。
+      // 否则编辑态会因 splitDetails 为空而退回平分。fixed 用 amount(原币分)，ratio/shares 用 weight。
       const method = init.splitMethod || 'average'
       if (method !== 'average' && init.splits && init.splits.length) {
+        // 后端 splits[].amount 存的是 CNY 分；splitDetails 约定存原币分。
+        // 外币 fixed 编辑时需按快照汇率把 CNY 分还原成原币分，否则弹窗显示错、保存会二次乘汇率。
+        const backRate =
+          method === 'fixed' && currency !== 'CNY' && this._initialRate
+            ? this._initialRate
+            : 1
         const details = init.splits.map((s) =>
           method === 'fixed'
-            ? { userId: s.userId, amount: s.amount }
+            ? { userId: s.userId, amount: Math.round((s.amount || 0) / backRate) }
             : { userId: s.userId, weight: s.weight },
         )
         this.setData({ splitDetails: details })
@@ -186,8 +204,10 @@ Component({
       this.setData({ amount: e.detail.value })
       this.updateConverted()
     },
-    onAmountBlur() {
+    async onAmountBlur() {
       this.setData({ amountFocus: false })
+      // 金额失焦时检查重复
+      await this.checkDuplicate()
     },
     onCurrencyChange(e) {
       const idx = Number(e.detail.value)
@@ -201,6 +221,8 @@ Component({
     },
     onPickPaymentMethod(e) {
       this.setData({ paymentMethod: e.currentTarget.dataset.key })
+      // 支付方式变化后重新查重（金额+支付方式联合判断）
+      this.checkDuplicate()
     },
     onNoteInput(e) {
       this.setData({ note: e.detail.value })
@@ -323,11 +345,44 @@ Component({
         showSplitDialog: true, splitDialogMode: mode,
         splitDialogTitle: titles[mode] || '分账明细', splitDialogItems: items,
         splitDialogValidation: '', splitDialogValid: false,
+        // 指定金额分账的单位跟随当前币种（CNY 显示「元」，外币显示币种代码）
+        currencyUnit: this.data.currency === 'CNY' ? '元' : this.data.currency,
       })
     },
     onSplitDialogInput(e) {
+      const idx = e.currentTarget.dataset.index
       const items = this.data.splitDialogItems.slice()
-      items[e.currentTarget.dataset.index].value = e.detail.value
+      let val = e.detail.value
+
+      // 指定金额模式：单个输入框钳制在 [0, 总额]（type=digit 无原生 min/max，手动处理）
+      if (this.data.splitDialogMode === 'fixed') {
+        const total = parseFloat(this.data.amount)
+        const cur = parseFloat(val)
+        if (!isNaN(cur) && total > 0) {
+          if (cur < 0) {
+            val = '0'
+          } else if (cur > total) {
+            // 超出总额则截断为总额（用总额原始字符串，避免 toFixed 引入多余小数）
+            val = String(total)
+          }
+        }
+      }
+      items[idx].value = val
+
+      // 指定金额 + 恰好 2 人：改一个，另一个自动补足（总额 - 已填），始终只需填一个
+      if (
+        this.data.splitDialogMode === 'fixed' &&
+        items.length === 2
+      ) {
+        const total = parseFloat(this.data.amount)
+        const cur = parseFloat(val)
+        const otherIdx = idx === 0 ? 1 : 0
+        if (total > 0 && !isNaN(cur) && cur >= 0 && cur <= total) {
+          // 用分做差再转元，规避 0.1+0.2 类浮点误差
+          const rest = (Math.round(total * 100) - Math.round(cur * 100)) / 100
+          items[otherIdx].value = String(rest)
+        }
+      }
       this.setData({ splitDialogItems: items })
       this.validateSplitDialog()
     },
@@ -354,7 +409,7 @@ Component({
           if (isNaN(v) || v <= 0) { this.setSplitValidation('请输入有效的份数（大于0）', false); return false }
         }
         const totalShares = splitDialogItems.reduce((s, it) => s + parseFloat(it.value || 0), 0)
-        this.setSplitValidation(`✓ 每份约 ¥${(totalCent / totalShares / 100).toFixed(2)}`, true); return true
+        this.setSplitValidation(`✓ 每份约 ${this.data.currencySymbol}${(totalCent / totalShares / 100).toFixed(2)}`, true); return true
       } else if (splitDialogMode === 'fixed') {
         let sum = 0
         for (let i = 0; i < splitDialogItems.length; i++) {
@@ -364,8 +419,9 @@ Component({
         }
         const diff = Math.abs(sum - yuan)
         if (diff > 0.01) {
+          const sym = this.data.currencySymbol
           const status = sum > yuan ? '超出' : '不足'
-          this.setSplitValidation(`当前总和：¥${sum.toFixed(2)}，${status} ¥${diff.toFixed(2)}`, false); return false
+          this.setSplitValidation(`当前总和：${sym}${sum.toFixed(2)}，${status} ${sym}${diff.toFixed(2)}`, false); return false
         }
         this.setSplitValidation('✓ 校验通过', true); return true
       }
@@ -401,7 +457,26 @@ Component({
       const details = this.data.splitDetails || []
 
       if (method === 'fixed' && details.length > 0) {
-        details.forEach((d) => (map[d.userId] = d.amount || 0))
+        // details[].amount 是原币分；amountCent 是 CNY 分。
+        // 币种一致（CNY）时原样用；外币需按汇率转成 CNY 分，末位差值补足保证总和 = amountCent。
+        const currency = this.data.currency || 'CNY'
+        if (currency === 'CNY') {
+          details.forEach((d) => (map[d.userId] = d.amount || 0))
+        } else {
+          const rateObj = (this.properties.rates || []).find((r) => r.code === currency)
+          const rate = rateObj ? rateObj.rate : 1
+          let allocated = 0
+          details.forEach((d, i) => {
+            let share
+            if (i === details.length - 1) {
+              share = amountCent - allocated
+            } else {
+              share = Math.round((d.amount || 0) * rate)
+              allocated += share
+            }
+            map[d.userId] = share
+          })
+        }
         return map
       }
       if ((method === 'ratio' || method === 'shares') && details.length > 0) {
@@ -491,7 +566,13 @@ Component({
       const originalAmount = Math.round(yuan * 100)
       const currency = this.data.currency || 'CNY'
       const rateObj = (this.properties.rates || []).find((r) => r.code === currency)
-      const rate = rateObj ? rateObj.rate : 1
+      const currentRate = rateObj ? rateObj.rate : 1
+      // 币种未改动且存在记账时快照汇率 → 沿用快照，避免无关编辑用当日汇率重算导致金额漂移；
+      // 改了币种（或新建）→ 用当前汇率
+      const rate =
+        currency !== 'CNY' && currency === this._initialCurrency && this._initialRate
+          ? this._initialRate
+          : currentRate
       const amount = currency === 'CNY' ? originalAmount : Math.round(originalAmount * rate)
 
       if (this.data.type === 'shared' && this.data.participantIds.length === 0) {
@@ -521,7 +602,28 @@ Component({
         if (this.data.splitMethod === 'average') {
           // 后端自动均摊
         } else if (this.data.splitDetails.length > 0) {
-          payload.splits = this.data.splitDetails
+          // 有明细（弹窗确认过）：ratio/shares 直接用 weight，fixed 需汇率转换
+          if (this.data.splitMethod === 'fixed' && this.data.currency !== 'CNY') {
+            // 外币 fixed：splitDetails 存的是原币分，需乘汇率转 CNY 分，且总和要精确等于 amount（避免舍入差）
+            const rateObj = (this.properties.rates || []).find((r) => r.code === this.data.currency)
+            const rate = rateObj ? rateObj.rate : 1
+            const details = this.data.splitDetails.slice()
+            let sum = 0
+            const converted = details.map((d, i) => {
+              // 最后一个用差值补足，其他按汇率四舍五入
+              if (i === details.length - 1) {
+                return { userId: d.userId, amount: amount - sum }
+              } else {
+                const amountCNY = Math.round(d.amount * rate)
+                sum += amountCNY
+                return { userId: d.userId, amount: amountCNY }
+              }
+            })
+            payload.splits = converted
+          } else {
+            // CNY 的 fixed 或 ratio/shares：直接用 splitDetails
+            payload.splits = this.data.splitDetails
+          }
         } else if (this.data.splitMethod === 'ratio' || this.data.splitMethod === 'shares') {
           payload.splits = ids.map((userId) => ({ userId, amount: 0, weight: 1 }))
         } else if (this.data.splitMethod === 'fixed') {
@@ -536,6 +638,47 @@ Component({
         }
       }
       return { ok: true, payload }
+    },
+
+    /** 检查重复金额：金额失焦时调用，发现重复则显示黄色提示 */
+    async checkDuplicate() {
+      const { amount, currency } = this.data
+      const bookId = this.properties.bookId
+      const excludeId = this.properties.initial?.id // 编辑态排除自己
+
+      // 金额为空或无效，清空提示
+      if (!amount || !bookId) {
+        this.setData({ duplicateWarning: '' })
+        return
+      }
+
+      const yuan = parseFloat(amount)
+      if (!yuan || yuan <= 0) {
+        this.setData({ duplicateWarning: '' })
+        return
+      }
+
+      try {
+        // 换算成分（与提交逻辑一致）
+        const originalAmount = Math.round(yuan * 100)
+        const rateObj = (this.properties.rates || []).find((r) => r.code === currency)
+        const rate = rateObj ? rateObj.rate : 1
+        const amountInCents = currency === 'CNY' ? originalAmount : Math.round(originalAmount * rate)
+
+        const paymentMethod = this.data.paymentMethod || 'wechat'
+        const api = require('../../utils/api')
+        const res = await api.checkDuplicateAmount(bookId, amountInCents, paymentMethod, excludeId)
+
+        if (res.count > 0) {
+          this.setData({ duplicateWarning: `该账本存在 ${res.count} 笔相同金额、相同支付方式的账单，请留意重复` })
+        } else {
+          this.setData({ duplicateWarning: '' })
+        }
+      } catch (e) {
+        // 查重失败不阻塞表单，静默降级
+        console.warn('checkDuplicate failed:', e)
+        this.setData({ duplicateWarning: '' })
+      }
     },
   },
 })

@@ -48,6 +48,7 @@
         members="{{members}}"
         rates="{{rates}}"
         my-user-id="{{myUserId}}"
+        book-id="{{bookId}}"
         initial="{{initial}}"
         autofocus="{{!isEdit}}"
       />

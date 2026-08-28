@@ -10,6 +10,7 @@ import { Settlement } from './settlement.entity'
 import { SettlementRound } from './settlement-round.entity'
 import { TxShareSettlement } from './tx-share-settlement.entity'
 import { Transaction } from '../transaction/transaction.entity'
+import { BookMember } from '../book/book-member.entity'
 import { BookService } from '../book/book.service'
 import { CreateSettlementDto } from './dto/create-settlement.dto'
 import { BatchCreateSettlementDto } from './dto/batch-create-settlement.dto'
@@ -27,6 +28,8 @@ export class SettlementService {
     private readonly shareRepo: Repository<TxShareSettlement>,
     @InjectRepository(Transaction)
     private readonly txRepo: Repository<Transaction>,
+    @InjectRepository(BookMember)
+    private readonly memberRepo: Repository<BookMember>,
     private readonly bookService: BookService,
     private readonly dataSource: DataSource,
   ) {}
@@ -446,6 +449,13 @@ export class SettlementService {
    */
   async settle(userId: string, dto: SettleDto) {
     await this.bookService.assertMember(dto.bookId, userId)
+
+    // 单人账本无需结算（结算是多人间债务平账）
+    const memberCount = await this.memberRepo.count({ where: { bookId: dto.bookId } })
+    if (memberCount <= 1) {
+      throw new BadRequestException('单人账本无需结算')
+    }
+
     if (dto.type === 'partial' && (!dto.txIds || dto.txIds.length === 0)) {
       throw new BadRequestException('请选择要结算的账单')
     }

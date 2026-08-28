@@ -18,7 +18,7 @@
     </view>
     <view wx:if="{{expandedMap[item.otherUserId]}}" class="detail-list">
       <view wx:for="{{item.details}}" wx:for-item="d" wx:key="txId" class="detail-item">
-        <view class="detail-icon"><van-icon name="{{d.categoryIcon}}" size="18px" color="#4097a9" /></view>
+        <view class="detail-icon"><image wx:if="{{d.categorySvg}}" class="detail-icon-svg" src="{{d.categorySvg}}" mode="aspectFit" /><van-icon wx:else name="{{d.categoryIcon}}" size="18px" color="#4097a9" /></view>
         <view class="detail-mid">
           <text class="detail-cat">{{d.categoryName}}</text>
           <text class="detail-note">{{d.note || d.dateText}}</text>
@@ -34,13 +34,15 @@
 
 <!-- 待支付 section -->
 <template name="pay-section">
-  <view wx:if="{{withHeader}}" class="section-header-bar">
+  <!-- 全部 tab 下:有数据才显示 header;单独 tab 总是显示 header -->
+  <view wx:if="{{withHeader && (showEmpty || payables.length > 0)}}" class="section-header-bar">
     <van-icon name="cart-o" size="16px" color="#fa9583" />
     <text class="section-header-title pay">待支付</text>
   </view>
-  <view wx:if="{{payables.length === 0}}" class="empty-state">
-    <van-icon name="checked" size="48px" color="#52c41a" />
-    <text class="empty-text">{{withHeader ? '暂无待支付' : '没有待支付'}}</text>
+  <!-- 空态:单独 tab(showEmpty=true)总是显示;全部 tab(showEmpty=false)下无数据就不显示这块 -->
+  <view wx:if="{{payables.length === 0 && showEmpty}}" class="empty-state">
+    <van-icon name="notes-o" size="48px" color="#d9d9d9" />
+    <text class="empty-text">暂无待支付</text>
   </view>
   <view wx:for="{{payables}}" wx:key="otherUserId">
     <template is="person-card" data="{{item, kind: 'pay', expandedMap}}" />
@@ -49,16 +51,35 @@
 
 <!-- 待收款 section -->
 <template name="receive-section">
-  <view wx:if="{{withHeader}}" class="section-header-bar">
+  <!-- 全部 tab 下:有数据才显示 header;单独 tab 总是显示 header -->
+  <view wx:if="{{withHeader && (showEmpty || receivables.length > 0)}}" class="section-header-bar">
     <van-icon name="balance-o" size="16px" color="#4097a9" />
     <text class="section-header-title receive">待收款</text>
   </view>
-  <view wx:if="{{receivables.length === 0}}" class="empty-state">
-    <van-icon name="checked" size="48px" color="#52c41a" />
-    <text class="empty-text">{{withHeader ? '暂无待收款' : '没有待收款'}}</text>
+  <!-- 空态:单独 tab(showEmpty=true)总是显示;全部 tab(showEmpty=false)下无数据就不显示这块 -->
+  <view wx:if="{{receivables.length === 0 && showEmpty}}" class="empty-state">
+    <van-icon name="notes-o" size="48px" color="#d9d9d9" />
+    <text class="empty-text">暂无待收款</text>
   </view>
   <view wx:for="{{receivables}}" wx:key="otherUserId">
     <template is="person-card" data="{{item, kind: 'receive', expandedMap}}" />
+  </view>
+</template>
+
+<!-- 已结算 section -->
+<template name="settled-section">
+  <!-- 全部 tab 下:有数据才显示 header;单独 tab 总是显示 header -->
+  <view wx:if="{{withHeader && (showEmpty || settledList.length > 0)}}" class="section-header-bar">
+    <van-icon name="passed" size="16px" color="#52c41a" />
+    <text class="section-header-title settled">已结算</text>
+  </view>
+  <!-- 空态:单独 tab(showEmpty=true)总是显示;全部 tab(showEmpty=false)下无数据就不显示这块 -->
+  <view wx:if="{{settledList.length === 0 && showEmpty}}" class="empty-state">
+    <van-icon name="notes-o" size="48px" color="#d9d9d9" />
+    <text class="empty-text">暂无已结算记录</text>
+  </view>
+  <view wx:for="{{settledList}}" wx:key="otherUserId">
+    <template is="settled-card" data="{{item, expandedMap}}" />
   </view>
 </template>
 
@@ -82,7 +103,7 @@
     </view>
     <view wx:if="{{expandedMap[item.otherUserId]}}" class="detail-list">
       <view wx:for="{{item.details}}" wx:for-item="d" wx:key="txId" class="detail-item">
-        <view class="detail-icon"><van-icon name="{{d.categoryIcon}}" size="18px" color="#4097a9" /></view>
+        <view class="detail-icon"><image wx:if="{{d.categorySvg}}" class="detail-icon-svg" src="{{d.categorySvg}}" mode="aspectFit" /><van-icon wx:else name="{{d.categoryIcon}}" size="18px" color="#4097a9" /></view>
         <view class="detail-mid">
           <text class="detail-cat">{{d.categoryName}}</text>
           <text class="detail-note">{{d.note || d.dateText}}</text>
@@ -97,11 +118,12 @@
 </template>
 
 <view class="settle-detail-page">
-  <!-- 顶部 tab：全部 / 待支付 / 待收款 -->
+  <!-- 顶部 tab：全部 / 待支付 / 待收款 / 已结算 -->
   <view class="tab-switch">
     <view class="tab-item {{tab === 'all' ? 'active' : ''}}" data-tab="all" bindtap="onSwitchTab">全部</view>
     <view class="tab-item {{tab === 'pay' ? 'active' : ''}}" data-tab="pay" bindtap="onSwitchTab">待支付</view>
     <view class="tab-item {{tab === 'receive' ? 'active' : ''}}" data-tab="receive" bindtap="onSwitchTab">待收款</view>
+    <view class="tab-item {{tab === 'settled' ? 'active' : ''}}" data-tab="settled" bindtap="onSwitchTab">已结算</view>
   </view>
 
   <!-- 骨架屏 -->
@@ -121,29 +143,33 @@
 
   <!-- 内容 -->
   <block wx:else>
-    <!-- 全部 tab：按 sectionOrder 动态排序（有数据的排前面） -->
+    <!-- 全部 tab：按 sectionOrder 动态排序,三块都空时显示总空态 -->
     <block wx:if="{{tab === 'all'}}">
-      <block wx:for="{{sectionOrder}}" wx:key="*this" wx:for-item="sec">
-        <template wx:if="{{sec === 'pay'}}" is="pay-section" data="{{payables, expandedMap, withHeader: true}}" />
-        <template wx:else is="receive-section" data="{{receivables, expandedMap, withHeader: true}}" />
+      <block wx:if="{{payables.length === 0 && receivables.length === 0 && settledList.length === 0}}">
+        <!-- 三块都为空:显示总空态 -->
+        <view class="empty-state global-empty">
+          <van-icon name="notes-o" size="64px" color="#d9d9d9" />
+          <text class="empty-text">暂无数据</text>
+        </view>
+      </block>
+      <block wx:else>
+        <!-- 有数据:只显示非空的 section,无数据的跳过 -->
+        <block wx:for="{{sectionOrder}}" wx:key="*this" wx:for-item="sec">
+          <template wx:if="{{sec === 'pay'}}" is="pay-section" data="{{payables, expandedMap, withHeader: true, showEmpty: false}}" />
+          <template wx:else is="receive-section" data="{{receivables, expandedMap, withHeader: true, showEmpty: false}}" />
+        </block>
+        <!-- 已结算:有数据才显示 -->
+        <template wx:if="{{settledList.length > 0}}" is="settled-section" data="{{settledList, expandedMap, withHeader: true, showEmpty: false}}" />
       </block>
     </block>
 
     <!-- 待支付 tab -->
-    <template wx:elif="{{tab === 'pay'}}" is="pay-section" data="{{payables, expandedMap, withHeader: false}}" />
+    <template wx:elif="{{tab === 'pay'}}" is="pay-section" data="{{payables, expandedMap, withHeader: false, showEmpty: true}}" />
 
     <!-- 待收款 tab -->
-    <template wx:else is="receive-section" data="{{receivables, expandedMap, withHeader: false}}" />
+    <template wx:elif="{{tab === 'receive'}}" is="receive-section" data="{{receivables, expandedMap, withHeader: false, showEmpty: true}}" />
 
-    <!-- 已结清（所有 tab 都展示，可撤回） -->
-    <block wx:if="{{settledList.length > 0}}">
-      <view class="section-header-bar">
-        <van-icon name="passed" size="16px" color="#52c41a" />
-        <text class="section-header-title settled">已结清</text>
-      </view>
-      <view wx:for="{{settledList}}" wx:key="otherUserId">
-        <template is="settled-card" data="{{item, expandedMap}}" />
-      </view>
-    </block>
+    <!-- 已结算 tab -->
+    <template wx:elif="{{tab === 'settled'}}" is="settled-section" data="{{settledList, expandedMap, withHeader: false, showEmpty: true}}" />
   </block>
 </view>

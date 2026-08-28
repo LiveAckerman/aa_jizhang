@@ -32,6 +32,10 @@
     />
   </view>
   <view wx:if="{{convertedText}}" class="amount-converted">{{convertedText}}</view>
+  <view wx:if="{{duplicateWarning}}" class="duplicate-warning">
+    <van-icon name="warning-o" size="14px" color="#f59e0b" />
+    <text>{{duplicateWarning}}</text>
+  </view>
 
   <!-- 分类 -->
   <view class="glass-card section">
@@ -45,7 +49,13 @@
         bindtap="onPickCategory"
       >
         <view class="cat-icon">
-          <van-icon name="{{item.icon}}" size="22px" color="{{category === item.key ? '#fff' : '#4097a9'}}" />
+          <image
+            wx:if="{{item.svgIcon}}"
+            class="cat-icon-svg"
+            src="{{category === item.key ? item.svgIconActive : item.svgIcon}}"
+            mode="aspectFit"
+          />
+          <van-icon wx:else name="{{item.icon}}" size="22px" color="{{category === item.key ? '#fff' : '#4097a9'}}" />
         </view>
         <text class="cat-name">{{item.name}}</text>
       </view>
@@ -104,9 +114,9 @@
 
     <view class="glass-card section payer-section">
       <view class="section-label">付款人</view>
-      <!-- 谁记账谁付款：只显示当前用户，label 与 chip 同一行 -->
+      <!-- 显示账单真实付款人（payerId）：新建时默认当前用户，编辑/查看时回显原付款人 -->
       <block wx:for="{{members}}" wx:key="userId">
-        <view wx:if="{{item.userId === myUserId}}" class="member-chip active payer-chip">
+        <view wx:if="{{item.userId === payerId}}" class="member-chip active payer-chip">
           <image class="member-chip-avatar" src="{{item.avatar}}" mode="aspectFill" />
           <text>{{item.nickname}}</text>
         </view>
@@ -200,7 +210,7 @@
             data-index="{{index}}"
             bindinput="onSplitDialogInput"
           />
-          <text class="split-dialog-unit">{{splitDialogMode === 'ratio' ? '%' : splitDialogMode === 'shares' ? '份' : '元'}}</text>
+          <text class="split-dialog-unit">{{splitDialogMode === 'ratio' ? '%' : splitDialogMode === 'shares' ? '份' : currencyUnit}}</text>
         </view>
       </view>
       <view class="split-dialog-validation {{splitDialogValid ? 'valid' : 'invalid'}}">

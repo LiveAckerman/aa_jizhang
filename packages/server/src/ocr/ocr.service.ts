@@ -7,7 +7,7 @@ import nodeFetch from 'node-fetch'
 
 // AI 返回值白名单：非白名单值（含 AI 乱填/缺省）一律归 other
 const AI_CATEGORY_WHITELIST = [
-  'food', 'transport', 'hotel', 'ticket', 'shopping',
+  'food', 'takeout', 'transport', 'hotel', 'ticket', 'shopping',
   'entertainment', 'drink', 'medical', 'other',
 ]
 const AI_PAYMENT_METHOD_WHITELIST = ['wechat', 'alipay', 'bankcard', 'cash', 'other']
@@ -151,7 +151,7 @@ ${safeText}
 - confidence: 置信度（0-1之间的浮点数）
 - source: 来源（'wechat' | 'alipay' | 'generic'）
 - category: 消费分类，只能取以下值之一，根据商户名/商品判断，无法判断时用 "other"：
-    food(餐饮) | transport(交通) | hotel(住宿) | ticket(门票) | shopping(购物) | entertainment(娱乐) | drink(饮品) | medical(医疗) | other(其他)
+    food(餐饮) | takeout(外卖) | transport(交通) | hotel(住宿) | ticket(门票) | shopping(购物) | entertainment(娱乐) | drink(饮品) | medical(医疗) | other(其他)
 - paymentMethod: 支付方式，只能取以下值之一，根据文本中的支付渠道判断，无法判断时用 "other"：
     wechat(微信) | alipay(支付宝) | bankcard(银行卡/信用卡/储蓄卡) | cash(现金) | other(其他)
 - spentAt: 支付时间（ISO 8601 格式字符串，如果文本中有时间则解析，否则使用当前时间）
@@ -162,7 +162,7 @@ ${safeText}
 - 文本 "0.5元"                → amount: 50（不是 0.5）
 
 分类/支付方式判断示例：
-- "星巴克/餐厅/外卖" → category: "food"；"滴滴/地铁/加油" → "transport"；"酒店/民宿" → "hotel"
+- "星巴克/餐厅堂食" → category: "food"；"美团外卖/饿了么/外卖订单" → "takeout"；"滴滴/地铁/加油" → "transport"；"酒店/民宿" → "hotel"
 - 文本含"微信支付/微信" → paymentMethod: "wechat"；含"支付宝" → "alipay"；含"云闪付/银行卡/信用卡/尾号" → "bankcard"
 - 无法从文本判断分类或支付方式时，对应字段填 "other"
 
@@ -571,6 +571,10 @@ ${safeText}
    */
   private guessCategory(merchant: string): string {
     const rules = [
+      {
+        keywords: ['外卖', '美团', '饿了么', '美团外卖'],
+        category: 'takeout',
+      },
       {
         keywords: [
           '餐',

@@ -234,6 +234,11 @@
   justify-content: center;
   flex-shrink: 0;
 }
+/* 自定义 SVG 分类图标（饮品），尺寸对齐 van-icon 18px */
+.detail-icon-svg {
+  width: 36rpx;
+  height: 36rpx;
+}
 .detail-mid {
   flex: 1;
   min-width: 0;
@@ -281,8 +286,8 @@
 }
 .empty-text {
   font-size: 30rpx;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-weight: 400;
+  color: #999;
   margin-top: 16rpx;
 }
 .empty-sub {

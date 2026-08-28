@@ -139,6 +139,18 @@
       </view>
     </view>
 
+    <!-- 分类 / 支付方式 下拉筛选（并排，点击弹抽屉多选）-->
+    <view class="dropdown-filters">
+      <view class="dropdown-btn {{catFilter.length > 0 ? 'active' : ''}}" bindtap="onOpenCatFilter">
+        <text>{{catFilterText}}</text>
+        <van-icon name="arrow-down" size="12px" color="{{catFilter.length > 0 ? '#4097a9' : '#8091a5'}}" />
+      </view>
+      <view class="dropdown-btn {{payFilter.length > 0 ? 'active' : ''}}" bindtap="onOpenPayFilter">
+        <text>{{payFilterText}}</text>
+        <van-icon name="arrow-down" size="12px" color="{{payFilter.length > 0 ? '#4097a9' : '#8091a5'}}" />
+      </view>
+    </view>
+
     <!-- 空流水 -->
     <view wx:if="{{groups.length === 0}}" class="empty-tx">
       <image class="empty-tx-img" src="https://cdn.ljw44.com/assets/illustrations/empty-transactions.webp" mode="aspectFit" />
@@ -158,8 +170,13 @@
             data-id="{{tx.id}}"
             bindtap="onTapTransaction"
           >
+            <view class="tx-payer">
+              <image wx:if="{{tx.payerAvatar}}" class="tx-payer-avatar" src="{{tx.payerAvatar}}" mode="aspectFill" />
+              <view wx:else class="tx-payer-avatar tx-payer-avatar-fallback">{{tx.payerName[0]}}</view>
+            </view>
             <view class="tx-icon">
-              <van-icon name="{{tx.categoryIcon}}" size="22px" color="{{tx.myReceiveText ? '#4097a9' : tx.myShareText ? '#fa9c8b' : '#4097a9'}}" />
+              <image wx:if="{{tx.categorySvg}}" class="tx-icon-svg" src="{{tx.categorySvg}}" mode="aspectFit" />
+              <van-icon wx:else name="{{tx.categoryIcon}}" size="22px" color="{{tx.myReceiveText ? '#4097a9' : tx.myShareText ? '#fa9c8b' : '#4097a9'}}" />
             </view>
             <view class="tx-mid">
               <view class="tx-title-row">
@@ -189,8 +206,13 @@
       <!-- 折叠态顶部卡片：最新一条 -->
       <view slot="top" class="glass-card tx-list">
         <view class="tx-item {{settledList[0].isMyPayment ? 'my-payment' : ''}} {{settledList[0].myReceiveText ? 'has-receive' : ''}} {{settledList[0].myShareText && !settledList[0].myReceiveText ? 'has-pay' : ''}}">
+          <view class="tx-payer">
+            <image wx:if="{{settledList[0].payerAvatar}}" class="tx-payer-avatar" src="{{settledList[0].payerAvatar}}" mode="aspectFill" />
+            <view wx:else class="tx-payer-avatar tx-payer-avatar-fallback">{{settledList[0].payerName[0]}}</view>
+          </view>
           <view class="tx-icon">
-            <van-icon name="{{settledList[0].categoryIcon}}" size="22px" color="{{settledList[0].myReceiveText ? '#4097a9' : settledList[0].myShareText ? '#fa9c8b' : '#4097a9'}}" />
+            <image wx:if="{{settledList[0].categorySvg}}" class="tx-icon-svg" src="{{settledList[0].categorySvg}}" mode="aspectFit" />
+            <van-icon wx:else name="{{settledList[0].categoryIcon}}" size="22px" color="{{settledList[0].myReceiveText ? '#4097a9' : settledList[0].myShareText ? '#fa9c8b' : '#4097a9'}}" />
           </view>
           <view class="tx-mid">
             <view class="tx-title-row">
@@ -217,8 +239,13 @@
           data-id="{{tx.id}}"
           bindtap="onTapTransaction"
         >
+          <view class="tx-payer">
+            <image wx:if="{{tx.payerAvatar}}" class="tx-payer-avatar" src="{{tx.payerAvatar}}" mode="aspectFill" />
+            <view wx:else class="tx-payer-avatar tx-payer-avatar-fallback">{{tx.payerName[0]}}</view>
+          </view>
           <view class="tx-icon">
-            <van-icon name="{{tx.categoryIcon}}" size="22px" color="{{tx.myReceiveText ? '#4097a9' : tx.myShareText ? '#fa9c8b' : '#4097a9'}}" />
+            <image wx:if="{{tx.categorySvg}}" class="tx-icon-svg" src="{{tx.categorySvg}}" mode="aspectFit" />
+            <van-icon wx:else name="{{tx.categoryIcon}}" size="22px" color="{{tx.myReceiveText ? '#4097a9' : tx.myShareText ? '#fa9c8b' : '#4097a9'}}" />
           </view>
           <view class="tx-mid">
             <view class="tx-title-row">
@@ -262,5 +289,37 @@
       </view>
     </view>
     <button class="round-new-btn" catchtap="onStartNewRound">开启新一轮部分结算</button>
+  </view>
+</view>
+
+<!-- 筛选抽屉：分类 / 支付方式 多选 -->
+<view wx:if="{{filterDrawer}}" class="filter-mask" catchtap="onCloseFilterDrawer">
+  <view class="filter-panel" catchtap="stopPropagation">
+    <view class="filter-panel-header">
+      <text class="filter-panel-title">{{filterDrawer === 'cat' ? '按分类筛选' : '按支付方式筛选'}}</text>
+      <view class="filter-panel-reset" catchtap="onResetFilterDrawer">重置</view>
+    </view>
+    <view class="filter-options">
+      <view
+        wx:for="{{filterOptions}}"
+        wx:key="key"
+        class="filter-option {{filterDraft[item.key] ? 'active' : ''}}"
+        data-key="{{item.key}}"
+        catchtap="onToggleFilterOption"
+      >
+        <view class="filter-option-icon">
+          <image
+            wx:if="{{item.svgIcon}}"
+            class="filter-option-icon-svg"
+            src="{{filterDraft[item.key] ? item.svgIconActive : item.svgIcon}}"
+            mode="aspectFit"
+          />
+          <van-icon wx:else name="{{item.icon}}" size="20px" color="{{filterDraft[item.key] ? '#fff' : '#4097a9'}}" />
+        </view>
+        <text class="filter-option-name">{{item.name}}</text>
+        <van-icon wx:if="{{filterDraft[item.key]}}" class="filter-option-check" name="success" size="16px" color="#4097a9" />
+      </view>
+    </view>
+    <button class="filter-confirm-btn" catchtap="onConfirmFilter">确定</button>
   </view>
 </view>

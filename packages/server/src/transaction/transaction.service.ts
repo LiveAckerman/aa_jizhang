@@ -17,6 +17,7 @@ import { BookService } from '../book/book.service'
 /** 分类中文名，用于修改日志显示 */
 const CATEGORY_LABEL: Record<string, string> = {
   food: '餐饮',
+  takeout: '外卖',
   transport: '交通',
   hotel: '住宿',
   ticket: '门票',
@@ -469,5 +470,30 @@ export class TransactionService {
       pendingReceive: netBalance > 0 ? netBalance : 0,
       pendingPay: netBalance < 0 ? -netBalance : 0,
     }
+  }
+
+  /** 重复金额检查：返回该账本内相同金额且相同支付方式的账单数量（编辑态排除自己） */
+  async duplicateCheck(
+    bookId: string,
+    userId: string,
+    amount: number,
+    paymentMethod: string,
+    excludeId?: string,
+  ): Promise<{ count: number }> {
+    await this.bookService.assertMember(bookId, userId)
+
+    const qb = this.txRepo
+      .createQueryBuilder('tx')
+      .where('tx.bookId = :bookId', { bookId })
+      .andWhere('tx.amount = :amount', { amount })
+      .andWhere('tx.paymentMethod = :paymentMethod', { paymentMethod })
+
+    // 编辑态：排除当前账单自己
+    if (excludeId) {
+      qb.andWhere('tx.id != :excludeId', { excludeId })
+    }
+
+    const count = await qb.getCount()
+    return { count }
   }
 }

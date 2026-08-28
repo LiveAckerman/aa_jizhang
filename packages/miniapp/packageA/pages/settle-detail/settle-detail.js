@@ -6,7 +6,7 @@ Page({
   data: {
     bookId: '',
     roundId: '',             // 轮次模式：只算该轮账单；空=全部账单模式
-    tab: 'all',              // all=全部 / receive=待收款 / pay=待支付
+    tab: 'all',              // all=全部 / receive=待收款 / pay=待支付 / settled=已结算
     me: null,              // { userId, nickname, avatar }
     receivables: [],       // 待收款列表（未结清）
     payables: [],          // 待支付列表（未结清）
@@ -18,8 +18,9 @@ Page({
   },
 
   onLoad(query) {
-    const tab = query.tab === 'pay' ? 'pay' : query.tab === 'receive' ? 'receive' : 'all'
-    const titleMap = { all: '结算明细', receive: '待收款', pay: '待支付' }
+    const validTabs = ['all', 'pay', 'receive', 'settled']
+    const tab = validTabs.includes(query.tab) ? query.tab : 'all'
+    const titleMap = { all: '结算明细', receive: '待收款', pay: '待支付', settled: '已结算' }
     const roundId = query.roundId || ''
     this.setData({ bookId: query.bookId || '', roundId, tab })
     wx.setNavigationBarTitle({ title: roundId ? '轮次结算' : titleMap[tab] })
@@ -65,6 +66,7 @@ Page({
           ...d,
           categoryName: cat.name,
           categoryIcon: cat.icon,
+          categorySvg: cat.svgIcon || '',
           amountText: (d.amount / 100).toFixed(2),
           dateText: d.spentAt ? String(d.spentAt).slice(0, 10) : '',
           // they_owe：对方欠我；i_owe：我欠对方
@@ -78,7 +80,7 @@ Page({
   onSwitchTab(e) {
     const tab = e.currentTarget.dataset.tab
     if (tab === this.data.tab) return
-    const titleMap = { all: '结算明细', receive: '待收款', pay: '待支付' }
+    const titleMap = { all: '结算明细', receive: '待收款', pay: '待支付', settled: '已结算' }
     this.setData({ tab })
     wx.setNavigationBarTitle({ title: titleMap[tab] })
   },
@@ -93,9 +95,10 @@ Page({
 
   onSettle(e) {
     const { id, name } = e.currentTarget.dataset
-    const isReceive = this.data.tab === 'receive'
+    // 根据数据源判断是待收款还是待支付,而不是靠 tab(全部 tab 下点待收款区域 tab 是 'all')
+    const isReceive = this.data.receivables.some((item) => item.otherUserId === id)
     const content = isReceive
-      ? `确认「${name}」已把钱转给你了吗？结算后这些账单将标记为已处理。`
+      ? `确认已收到「${name}」的转账了吗？结算后这些账单将标记为已处理。`
       : `确认你已把钱转给「${name}」了吗？结算后这些账单将标记为已处理。`
     wx.showModal({
       title: '确认结算',
