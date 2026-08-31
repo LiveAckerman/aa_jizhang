@@ -1,18 +1,26 @@
 import { BadRequestException } from '@nestjs/common'
 import type { SplitDetail, SplitMethod } from './transaction.entity'
 
+/** 前端传入的分账明细(DTO):ratio/shares 时 amount 可选,由后端计算 */
+export interface SplitInput {
+  userId: string
+  amount?: number
+  weight?: number
+}
+
 /**
  * 计算分账明细
  * @param method    分账方式
- * @param amount    总金额（分）
- * @param participantIds  参与人（average 使用）
- * @param splits    手动明细（ratio/shares/fixed 使用）
+ * @param amount    总金额(分)
+ * @param participantIds  参与人(average 使用)
+ * @param splits    手动明细(ratio/shares/fixed 使用)
+ * @returns 完整的分账明细(amount 已算好)
  */
 export function computeSplits(
   method: SplitMethod,
   amount: number,
   participantIds?: string[],
-  splits?: SplitDetail[],
+  splits?: SplitInput[],
 ): SplitDetail[] {
   switch (method) {
     case 'average':
@@ -44,7 +52,7 @@ function splitAverage(amount: number, participantIds?: string[]): SplitDetail[] 
 }
 
 /** 按权重（比例/份数）分摊，余数补给最后一人 */
-function splitByWeight(amount: number, splits?: SplitDetail[]): SplitDetail[] {
+function splitByWeight(amount: number, splits?: SplitInput[]): SplitDetail[] {
   if (!splits || splits.length === 0) {
     throw new BadRequestException('该分账方式需要提供每人的权重')
   }
@@ -67,13 +75,17 @@ function splitByWeight(amount: number, splits?: SplitDetail[]): SplitDetail[] {
 }
 
 /** 指定金额，校验总和等于总金额 */
-function validateFixed(amount: number, splits?: SplitDetail[]): SplitDetail[] {
+function validateFixed(amount: number, splits?: SplitInput[]): SplitDetail[] {
   if (!splits || splits.length === 0) {
     throw new BadRequestException('指定金额分账需要提供每人金额')
   }
-  const sum = splits.reduce((s, item) => s + item.amount, 0)
+  // fixed 方式必须传 amount
+  if (splits.some((s) => s.amount == null)) {
+    throw new BadRequestException('指定金额分账必须提供每人的 amount')
+  }
+  const sum = splits.reduce((s, item) => s + (item.amount || 0), 0)
   if (sum !== amount) {
     throw new BadRequestException(`分账金额总和(${sum})与账单金额(${amount})不一致`)
   }
-  return splits.map((s) => ({ userId: s.userId, amount: s.amount }))
+  return splits.map((s) => ({ userId: s.userId, amount: s.amount! }))
 }

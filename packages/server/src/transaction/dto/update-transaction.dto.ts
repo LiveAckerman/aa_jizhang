@@ -17,9 +17,12 @@ class SplitDetailDto {
   @IsString()
   userId: string
 
+  // amount 可选：ratio/shares 方式下由后端按 weight 计算，前端只传 weight；
+  // 仅 fixed（指定金额）方式需要传 amount（其总和校验在 computeSplits 里做）
+  @IsOptional()
   @IsInt()
   @Min(0)
-  amount: number
+  amount?: number
 
   @IsOptional()
   @IsInt()
