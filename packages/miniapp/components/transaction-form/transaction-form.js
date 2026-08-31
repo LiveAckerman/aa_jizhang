@@ -1,6 +1,10 @@
 const app = getApp()
 const { CATEGORIES, SPLIT_METHODS, PAYMENT_METHODS } = require('../../constants/ledger')
 
+// 分账方式 key → 名称映射（分账预览里显示当前方式）
+const SPLIT_METHOD_MAP = {}
+SPLIT_METHODS.forEach((m) => (SPLIT_METHOD_MAP[m.key] = m.name))
+
 /**
  * 通用记账表单组件
  * 被 add-transaction（单条）和 ocr-batch-edit（多条 swiper）复用。
@@ -139,6 +143,10 @@ Component({
         this.setParticipants(this.properties.members.map((m) => m.userId))
       }
 
+      // 三种分账方式各存一份独立草稿（弹窗回显专用，避免 ratio 的百分比串到 shares 的份数）。
+      // 键为 userId，值为弹窗输入字符串。splitDetails 仍是「当前生效明细」，用于计算/提交。
+      this._splitDrafts = { ratio: {}, shares: {}, fixed: {} }
+
       // 回填分账明细：非平分方式（fixed/ratio/shares）需恢复每人金额/权重，
       // 否则编辑态会因 splitDetails 为空而退回平分。fixed 用 amount(原币分)，ratio/shares 用 weight。
       const method = init.splitMethod || 'average'
@@ -155,8 +163,20 @@ Component({
             : { userId: s.userId, weight: s.weight },
         )
         this.setData({ splitDetails: details })
+        // 同步把编辑态的值写进对应模式的草稿，便于打开弹窗回显
+        const draft = {}
+        details.forEach((d) => {
+          draft[d.userId] = method === 'fixed' ? String((d.amount || 0) / 100) : String(d.weight)
+        })
+        this._splitDrafts[method] = draft
+        // 编辑态：快照指向已确认的方案，取消弹窗时恢复到它
+        this._prevSplitMethod = method
+        this._prevSplitDetails = details
       } else {
         this.setData({ splitDetails: [] })
+        // 无已确认方案（平均分摊/新建）：取消时回退平均分摊
+        this._prevSplitMethod = 'average'
+        this._prevSplitDetails = []
       }
 
       this.updateConverted()
@@ -320,25 +340,32 @@ Component({
     // ---- 分账方式 + 明细弹窗 ----
     onPickSplitMethod(e) {
       const method = e.currentTarget.dataset.key
-      this.setData({ splitMethod: method })
-      if (method !== 'average') this.openSplitDialog(method)
-      else this.setData({ splitDetails: [] })
+      if (method !== 'average') {
+        // 不在此处记快照：快照指向「最后一次确认过的方案」（在 initForm / 确认时维护）。
+        // 否则先点 average 再点本方式，会把临时的 average 误记为快照，取消后错退到 average。
+        this.setData({ splitMethod: method })
+        this.openSplitDialog(method)
+      } else {
+        // 切到平均分摊：保留 splitDetails（average 计算/提交都不看它），
+        // 以便之后切回按比例/份额/指定金额时能回显上次填的明细
+        this.setData({ splitMethod: 'average' })
+      }
     },
     openSplitDialog(mode) {
-      const { participantIds, splitDetails } = this.data
+      const { participantIds } = this.data
       const members = this.properties.members
       if (participantIds.length === 0) {
         wx.showToast({ title: '请先选择参与人', icon: 'none' })
         return
       }
       const titles = { ratio: '按比例分账', shares: '按份额分账', fixed: '指定金额分账' }
+      // 从「本模式」的独立草稿回显；无草稿时用各自默认值（份额默认 1，其余留空）。
+      // 三模式草稿隔离，切换不再串味（比例的 30% 不会当成份额的 30 份）。
+      const draft = (this._splitDrafts && this._splitDrafts[mode]) || {}
       const items = participantIds.map((userId) => {
         const member = members.find((m) => m.userId === userId) || {}
-        const existing = splitDetails.find((s) => s.userId === userId)
-        let defaultValue = ''
-        if (mode === 'ratio') defaultValue = existing?.weight ? String(existing.weight) : ''
-        else if (mode === 'shares') defaultValue = existing?.weight ? String(existing.weight) : '1'
-        else if (mode === 'fixed') defaultValue = existing?.amount ? String(existing.amount / 100) : ''
+        const saved = draft[userId]
+        let defaultValue = saved != null && saved !== '' ? saved : (mode === 'shares' ? '1' : '')
         return { userId, nickname: member.nickname || '成员', avatar: member.avatar || '', value: defaultValue }
       })
       this.setData({
@@ -351,36 +378,55 @@ Component({
     },
     onSplitDialogInput(e) {
       const idx = e.currentTarget.dataset.index
+      const mode = this.data.splitDialogMode
       const items = this.data.splitDialogItems.slice()
       let val = e.detail.value
 
-      // 指定金额模式：单个输入框钳制在 [0, 总额]（type=digit 无原生 min/max，手动处理）
-      if (this.data.splitDialogMode === 'fixed') {
-        const total = parseFloat(this.data.amount)
+      // 该模式的「总数」：指定金额=总金额(元)，按比例=100(%)，按份额无固定总数(NaN)
+      const modeTotal =
+        mode === 'fixed' ? parseFloat(this.data.amount) : mode === 'ratio' ? 100 : NaN
+
+      // 单框钳制在 [0, 总数]（type=digit 无原生 min/max，手动处理）
+      if (!isNaN(modeTotal) && modeTotal > 0) {
         const cur = parseFloat(val)
-        if (!isNaN(cur) && total > 0) {
+        if (!isNaN(cur)) {
           if (cur < 0) {
             val = '0'
-          } else if (cur > total) {
-            // 超出总额则截断为总额（用总额原始字符串，避免 toFixed 引入多余小数）
-            val = String(total)
+          } else if (cur > modeTotal) {
+            // 超出总数则截断（用原始字符串，避免 toFixed 引入多余小数）
+            val = String(modeTotal)
           }
         }
       }
       items[idx].value = val
 
-      // 指定金额 + 恰好 2 人：改一个，另一个自动补足（总额 - 已填），始终只需填一个
-      if (
-        this.data.splitDialogMode === 'fixed' &&
-        items.length === 2
-      ) {
-        const total = parseFloat(this.data.amount)
-        const cur = parseFloat(val)
-        const otherIdx = idx === 0 ? 1 : 0
-        if (total > 0 && !isNaN(cur) && cur >= 0 && cur <= total) {
-          // 用分做差再转元，规避 0.1+0.2 类浮点误差
-          const rest = (Math.round(total * 100) - Math.round(cur * 100)) / 100
-          items[otherIdx].value = String(rest)
+      // 自动补足最后一人（fixed / ratio，都有明确总数）：
+      //   - 恰好 2 人：改一个，另一个始终自动 = 总数 - 这个
+      //   - 3 人及以上：只补空缺，当「除当前框外恰好剩一个空框」时把它自动算出；全部填满后不再联动
+      if (!isNaN(modeTotal) && modeTotal > 0) {
+        let targetIdx = -1
+        if (items.length === 2) {
+          targetIdx = idx === 0 ? 1 : 0
+        } else if (items.length >= 3) {
+          const otherEmpties = []
+          for (let i = 0; i < items.length; i++) {
+            if (i !== idx && (items[i].value === '' || items[i].value == null)) otherEmpties.push(i)
+          }
+          if (otherEmpties.length === 1) targetIdx = otherEmpties[0]
+        }
+        if (targetIdx !== -1) {
+          const cur = parseFloat(val)
+          if (!isNaN(cur) && cur >= 0) {
+            // 用「百分之一」精度(×100 取整)做差，规避 0.1+0.2 类浮点误差；fixed 即分、ratio 即 0.01%
+            let sumOthersUnit = 0
+            for (let i = 0; i < items.length; i++) {
+              if (i === targetIdx) continue
+              sumOthersUnit += Math.round((parseFloat(items[i].value) || 0) * 100)
+            }
+            const restUnit = Math.round(modeTotal * 100) - sumOthersUnit
+            // 已填之和已超总数则不硬填负数，留空交给校验提示
+            if (restUnit >= 0) items[targetIdx].value = String(restUnit / 100)
+          }
         }
       }
       this.setData({ splitDialogItems: items })
@@ -435,11 +481,24 @@ Component({
           ? { userId: it.userId, amount: Math.round(parseFloat(it.value) * 100) }
           : { userId: it.userId, weight: parseFloat(it.value) },
       )
+      // 把本次输入存进「本模式」草稿，下次打开同模式时回显（切到其他模式不受影响）
+      if (!this._splitDrafts) this._splitDrafts = { ratio: {}, shares: {}, fixed: {} }
+      const draft = {}
+      splitDialogItems.forEach((it) => (draft[it.userId] = it.value))
+      this._splitDrafts[splitDialogMode] = draft
+      // 确认成功 → 本方案成为「最后确认的方案」，更新快照供后续取消时恢复
+      this._prevSplitMethod = splitDialogMode
+      this._prevSplitDetails = details
       this.setData({ splitDetails: details, showSplitDialog: false })
       wx.showToast({ title: '已设置', icon: 'success' })
     },
     onSplitDialogCancel() {
-      this.setData({ showSplitDialog: false, splitMethod: 'average', splitDetails: [] })
+      // 取消 = 回到打开弹窗前的状态（有快照则恢复，否则回退平均分摊兜底）
+      this.setData({
+        showSplitDialog: false,
+        splitMethod: this._prevSplitMethod || 'average',
+        splitDetails: this._prevSplitDetails || [],
+      })
     },
 
     // ---- 对外：读取金额 ----
@@ -533,6 +592,17 @@ Component({
       }
       const shareMap = this.perShareMap(amountCent)
 
+      // 分账方式标签 + 每人明细文本（按比例→百分比，按份额→份数；平均/指定金额不额外标注）
+      const method = this.data.splitMethod
+      const methodLabel = SPLIT_METHOD_MAP[method] || ''
+      const details = this.data.splitDetails || []
+      const detailTextOf = (uid) => {
+        if (method !== 'ratio' && method !== 'shares') return ''
+        const d = details.find((x) => x.userId === uid)
+        if (!d || d.weight == null) return ''
+        return method === 'ratio' ? `${d.weight}%` : `${d.weight} 份`
+      }
+
       if (payerId === myUserId) {
         // 付款人视角：其他参与人各自应还给我的份额
         const items = ids
@@ -540,17 +610,20 @@ Component({
           .map((uid) => ({
             nickname: nameOf(uid),
             amountText: ((shareMap[uid] || 0) / 100).toFixed(2),
+            detailText: detailTextOf(uid),
           }))
           .filter((it) => Number(it.amountText) > 0)
-        this.setData({ settlePreview: { mode: 'payer', payerName: '', myPayText: '', items } })
+        this.setData({ settlePreview: { mode: 'payer', methodLabel, payerName: '', myPayText: '', myDetailText: '', items } })
       } else if (ids.indexOf(myUserId) !== -1) {
         // 参与人视角：我应付给付款人的份额
         const myShare = (shareMap[myUserId] || 0) / 100
         this.setData({
           settlePreview: {
             mode: 'participant',
+            methodLabel,
             payerName: nameOf(payerId),
             myPayText: myShare.toFixed(2),
+            myDetailText: detailTextOf(myUserId),
             items: [],
           },
         })

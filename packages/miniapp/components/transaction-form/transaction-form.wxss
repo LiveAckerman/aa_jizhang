@@ -387,6 +387,26 @@
 }
 
 /* 分账关系预览 */
+.settle-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8rpx;
+}
+.settle-preview-method {
+  font-size: 24rpx;
+  color: var(--color-accent);
+  background: rgba(64, 151, 169, 0.1);
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+}
+.settle-preview-detail {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  background: rgba(128, 145, 165, 0.1);
+  padding: 2rpx 12rpx;
+  border-radius: 16rpx;
+}
 .settle-preview-row {
   display: flex;
   align-items: center;
