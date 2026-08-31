@@ -47,6 +47,22 @@
   align-items: center;
   justify-content: center;
 }
+/* 缩略图数量角标（多图时显示，右下角） */
+.thumb-count {
+  position: absolute;
+  bottom: -8rpx;
+  right: -8rpx;
+  min-width: 32rpx;
+  height: 32rpx;
+  padding: 0 8rpx;
+  border-radius: 16rpx;
+  background: #4097a9;
+  color: #fff;
+  font-size: 22rpx;
+  line-height: 32rpx;
+  text-align: center;
+  box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.2);
+}
 
 /* 识别结果 meta */
 .top-meta {
@@ -205,6 +221,30 @@
   color: #52c41a;
   font-weight: 600;
 }
+.empty-title-warn {
+  color: #fa9583;
+}
+.empty-sub {
+  font-size: 26rpx;
+  color: #8e9aad;
+  margin-top: -12rpx;
+}
+.empty-actions {
+  display: flex;
+  gap: 24rpx;
+  align-items: center;
+}
+.btn-reupload {
+  height: 88rpx;
+  line-height: 88rpx;
+  padding: 0 48rpx;
+  border-radius: 44rpx;
+  background: #fff !important;
+  color: #4097a9 !important;
+  font-size: 28rpx;
+  border: 2rpx solid #4097a9 !important;
+}
+.btn-reupload::after { border: none; }
 .btn-back {
   height: 88rpx;
   line-height: 88rpx;
@@ -220,13 +260,54 @@
 /* ── 加载中 ── */
 .loading-state {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding-top: 200rpx;
+  gap: 24rpx;
+}
+.loading-spinner {
+  width: 56rpx;
+  height: 56rpx;
+  border: 6rpx solid #e3e8ef;
+  border-top-color: #4097a9;
+  border-radius: 50%;
+  animation: ocr-spin 0.8s linear infinite;
 }
 .loading-text {
   font-size: 28rpx;
   color: #8e9aad;
+}
+.loading-sub {
+  font-size: 24rpx;
+  color: #b3bccb;
+}
+@keyframes ocr-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── 后台串行识别进度条 ── */
+.batch-progress {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin: 0 24rpx 16rpx;
+  padding: 14rpx 20rpx;
+  background: rgba(64, 151, 169, 0.1);
+  border-radius: 16rpx;
+}
+.batch-progress-spinner {
+  width: 28rpx;
+  height: 28rpx;
+  border: 4rpx solid rgba(64, 151, 169, 0.3);
+  border-top-color: #4097a9;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: ocr-spin 0.8s linear infinite;
+}
+.batch-progress-text {
+  font-size: 24rpx;
+  color: #4097a9;
 }
 
 /* ── 垃圾桶抽屉 ── */

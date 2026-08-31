@@ -20,6 +20,10 @@ App({
     /** 延迟授权抽屉：join 加入流程期间为 true，此期间各页不弹抽屉、不消费门闩，
      * 由 join 页 onUnload 清除，避免抽屉在转场账本页闪现后被加入页盖掉、门闩被吞 */
     deferAuthDrawer: false,
+    /** 批量 OCR 跨页传参：入口页处理完第 1 张后写入，ocr-batch-edit onLoad 读取后清空。
+     * 用 globalData 而非 eventChannel，规避 redirectTo 不支持 eventChannel 的问题。
+     * 结构：{ firstResult, firstSkip, remainingPaths, totalImages } */
+    ocrBatchPayload: null,
   },
 
   onLaunch() {

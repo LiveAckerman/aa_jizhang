@@ -78,42 +78,55 @@ Page({
     if (this.data.mode === 'manual') {
       wx.redirectTo({ url: `/packageA/pages/add-transaction/add-transaction?bookId=${bookId}` })
     } else {
-      // OCR：先选图识别，再跳批量编辑
+      // OCR：多选图片，先识别第 1 张再跳批量编辑，其余交给结果页串行追加
       wx.chooseMedia({
-        count: 1,
+        count: 9,
         mediaType: ['image'],
         sourceType: ['camera', 'album'],
-        success: async (res) => {
-          // 分阶段 loading：OCR 提取 → AI 总结
-          wx.showLoading({ title: '提取文字中...', mask: true })
-          const steps = [
-            { delay: 2500, title: 'AI 总结中...' },
-            { delay: 6000, title: '即将完成...' },
-          ]
-          const timers = steps.map(({ delay, title }) =>
-            setTimeout(() => wx.showLoading({ title, mask: true }), delay),
-          )
-
-          try {
-            const result = await api.ocrRecognizeReceipt(res.tempFiles[0].tempFilePath, bookId)
-            timers.forEach(clearTimeout)
-            wx.hideLoading()
-            if (!result.records || result.records.length === 0) {
-              wx.showToast({ title: '未识别到账单记录', icon: 'none' })
-              return
-            }
-            wx.redirectTo({
-              url: `/packageA/pages/ocr-batch-edit/ocr-batch-edit?bookId=${bookId}`,
-              success: (navRes) => navRes.eventChannel.emit('ocrResult', result),
-            })
-          } catch (e) {
-            timers.forEach(clearTimeout)
-            wx.hideLoading()
-            wx.showToast({ title: (e && e.message) || '识别失败', icon: 'none' })
-          }
+        success: (res) => {
+          const paths = (res.tempFiles || []).map((f) => f.tempFilePath)
+          if (paths.length === 0) return
+          this.processFirstAndJump(paths, bookId)
         },
       })
     }
+  },
+
+  // 识别第 1 张（当前页转圈），落定后写 globalData 跳结果页，剩余图片交给结果页
+  async processFirstAndJump(paths, bookId) {
+    // 分阶段 loading：OCR 提取 → AI 总结
+    wx.showLoading({ title: '提取文字中...', mask: true })
+    const steps = [
+      { delay: 2500, title: 'AI 总结中...' },
+      { delay: 6000, title: '即将完成...' },
+    ]
+    const timers = steps.map(({ delay, title }) =>
+      setTimeout(() => wx.showLoading({ title, mask: true }), delay),
+    )
+
+    let firstResult = null
+    let firstSkip = '' // '' 成功有记录 / 'empty' 识别为空 / 'failed' 请求失败
+    try {
+      const result = await api.ocrRecognizeReceipt(paths[0], bookId)
+      if (result && result.records && result.records.length > 0) {
+        firstResult = result
+      } else {
+        firstSkip = 'empty'
+      }
+    } catch (e) {
+      firstSkip = 'failed'
+    } finally {
+      timers.forEach(clearTimeout)
+      wx.hideLoading()
+    }
+
+    getApp().globalData.ocrBatchPayload = {
+      firstResult,
+      firstSkip,
+      remainingPaths: paths.slice(1),
+      totalImages: paths.length,
+    }
+    wx.redirectTo({ url: `/packageA/pages/ocr-batch-edit/ocr-batch-edit?bookId=${bookId}` })
   },
 
   onSwitchMode(e) {

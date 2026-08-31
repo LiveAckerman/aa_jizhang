@@ -310,31 +310,43 @@ Page({
   // 票据自动识别：拍照/相册 → 上传识别 → 跳批量编辑页
   onOcrRecognize() {
     wx.chooseMedia({
-      count: 1,
+      count: 9,
       mediaType: ['image'],
       sourceType: ['camera', 'album'],
-      success: async (res) => {
-        wx.showLoading({ title: '识别中...', mask: true })
-        try {
-          const filePath = res.tempFiles[0].tempFilePath
-          const result = await api.ocrRecognizeReceipt(filePath, this.data.id)
-          wx.hideLoading()
-          if (!result.records || result.records.length === 0) {
-            wx.showToast({ title: '未识别到账单记录', icon: 'none' })
-            return
-          }
-          wx.navigateTo({
-            url: `/packageA/pages/ocr-batch-edit/ocr-batch-edit?bookId=${this.data.id}`,
-            success: (navRes) => {
-              navRes.eventChannel.emit('ocrResult', result)
-            },
-          })
-        } catch (e) {
-          wx.hideLoading()
-          wx.showToast({ title: (e && e.message) || '识别失败', icon: 'none' })
-        }
+      success: (res) => {
+        const paths = (res.tempFiles || []).map((f) => f.tempFilePath)
+        if (paths.length === 0) return
+        this.processFirstAndJump(paths)
       },
     })
+  },
+
+  // 识别第 1 张（当前页转圈），落定后写 globalData 跳结果页，剩余图片交给结果页串行追加
+  async processFirstAndJump(paths) {
+    const bookId = this.data.id
+    wx.showLoading({ title: '识别中...', mask: true })
+    let firstResult = null
+    let firstSkip = '' // '' 成功有记录 / 'empty' 识别为空 / 'failed' 请求失败
+    try {
+      const result = await api.ocrRecognizeReceipt(paths[0], bookId)
+      if (result && result.records && result.records.length > 0) {
+        firstResult = result
+      } else {
+        firstSkip = 'empty'
+      }
+    } catch (e) {
+      firstSkip = 'failed'
+    } finally {
+      wx.hideLoading()
+    }
+
+    getApp().globalData.ocrBatchPayload = {
+      firstResult,
+      firstSkip,
+      remainingPaths: paths.slice(1),
+      totalImages: paths.length,
+    }
+    wx.navigateTo({ url: `/packageA/pages/ocr-batch-edit/ocr-batch-edit?bookId=${bookId}` })
   },
 
   onTapTransaction(e) {

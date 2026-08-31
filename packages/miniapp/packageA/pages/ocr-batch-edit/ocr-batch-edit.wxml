@@ -3,16 +3,17 @@
   <!-- 顶部区域：缩略图 + 进度 + 翻页 -->
   <view class="top-bar" wx:if="{{records.length > 0}}">
     <view class="top-left">
-      <!-- OCR 原图缩略图，带×关闭（设计图左上角） -->
+      <!-- OCR 原图缩略图，带数量角标 + ×关闭（点击预览全部图片） -->
       <view class="thumb-wrap" wx:if="{{ocrImageUrl}}">
         <image class="thumb-img" src="{{ocrImageUrl}}" mode="aspectFill" bindtap="onPreviewImage" />
+        <view wx:if="{{allImages.length > 1}}" class="thumb-count">{{allImages.length}}</view>
         <view class="thumb-close" catchtap="onExit">
           <van-icon name="cross" size="14px" color="#fff" />
         </view>
       </view>
       <!-- 识别结果 + 进度 + 重新上传 -->
       <view class="top-meta">
-       <view><text class="top-title">识别结果</text><text class="top-progress">{{current + 1}}/{{records.length}}</text></view> 
+       <view><text class="top-title">识别结果</text><text class="top-progress">{{current + 1}}/{{records.length}}</text></view>
         <!-- 进度：当前在剩余记录中的位置（翻页/删除都能正确反映） -->
         <view class="reupload-btn" catchtap="onReupload">
           <van-icon name="replay" size="14px" color="#4097a9" />
@@ -35,6 +36,12 @@
         <van-icon name="arrow" size="20px" color="{{current === records.length - 1 ? '#c4c4c4' : '#4097a9'}}" />
       </view>
     </view>
+  </view>
+
+  <!-- 后台串行识别进度条：首条已就绪、仍在识别剩余图片时显示 -->
+  <view class="batch-progress" wx:if="{{processing && firstReady}}">
+    <view class="batch-progress-spinner"></view>
+    <text class="batch-progress-text">识别中 {{processedCount}}/{{totalCount}}，可先编辑已识别的记录</text>
   </view>
 
   <!-- 表单主体：每条记录一个 transaction-form -->
@@ -72,14 +79,31 @@
     </view>
   </block>
 
-  <!-- 空态 -->
-  <view wx:elif="{{ready}}" class="empty-state">
+  <!-- 首条未就绪：整页 loading（首张识别中，或首张为空/失败但仍在识别后续） -->
+  <view wx:elif="{{!firstReady || (records.length === 0 && processing)}}" class="loading-state">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">识别中 {{processedCount}}/{{totalCount}}...</text>
+    <text wx:if="{{totalCount > 1}}" class="loading-sub">识别完一张即可开始编辑</text>
+  </view>
+
+  <!-- 空态：全部识别结束且无待处理记录 -->
+  <!-- 识别到过记录（已全部提交/跳过）→ 绿勾"全部处理完成"；从未识别到任何记录 → 提示重新上传 -->
+  <view wx:elif="{{ready && everHadRecords}}" class="empty-state">
     <van-icon name="checked" size="64px" color="#52c41a" />
     <text class="empty-title">全部处理完成</text>
     <button class="btn-back" bindtap="onBack">返回账本</button>
   </view>
+  <view wx:elif="{{ready}}" class="empty-state">
+    <van-icon name="info-o" size="64px" color="#fa9583" />
+    <text class="empty-title empty-title-warn">未识别到任何记录</text>
+    <text class="empty-sub">{{totalCount}} 张图片均未识别到账单信息</text>
+    <view class="empty-actions">
+      <button class="btn-reupload" bindtap="onReupload">重新上传</button>
+      <button class="btn-back" bindtap="onBack">返回账本</button>
+    </view>
+  </view>
 
-  <!-- 加载中 -->
+  <!-- 兜底加载中 -->
   <view wx:else class="loading-state">
     <text class="loading-text">加载中...</text>
   </view>
