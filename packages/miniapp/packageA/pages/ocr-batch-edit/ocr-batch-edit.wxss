@@ -63,6 +63,7 @@
 .top-progress {
   font-size: 24rpx;
   color: #8e9aad;
+  margin-left: 10rpx;
 }
 .reupload-btn {
   display: inline-flex;
