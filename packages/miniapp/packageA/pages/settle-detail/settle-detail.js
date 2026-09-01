@@ -1,6 +1,6 @@
 const app = getApp()
 const api = require('../../../utils/api')
-const { CATEGORY_MAP } = require('../../../constants/ledger')
+const { CATEGORY_MAP, COLLECTION_REMINDER_IMAGE } = require('../../../constants/ledger')
 
 Page({
   data: {
@@ -24,6 +24,10 @@ Page({
     const roundId = query.roundId || ''
     this.setData({ bookId: query.bookId || '', roundId, tab })
     wx.setNavigationBarTitle({ title: roundId ? '轮次结算' : titleMap[tab] })
+    // 开启转发能力（催收「提醒 TA」按钮走 open-type=share）
+    if (wx.showShareMenu) {
+      wx.showShareMenu({ withShareTicket: true, menus: ['shareAppMessage'] })
+    }
     this.loadData()
   },
 
@@ -149,5 +153,33 @@ Page({
         }
       },
     })
+  },
+
+  // 催收提醒：点「提醒 TA」按钮时存当前催收对象（兜底用）
+  onRemind(e) {
+    this._remindTarget = e.currentTarget.dataset
+  },
+
+  // 分享给微信好友：催收提醒（点「提醒 TA」按钮触发）
+  onShareAppMessage(res) {
+    // button 触发（催收）：从 target.dataset 读待收款对象
+    if (res.from === 'button' && res.target && res.target.dataset) {
+      const { name, amount } = res.target.dataset
+      return {
+        title: `${name || 'TA'}，记得转 ¥${amount || '?'} 给我哦~ 💰`,
+        path: `/packageA/pages/settle-detail/settle-detail?bookId=${this.data.bookId}&tab=pay`,
+        imageUrl: COLLECTION_REMINDER_IMAGE,
+      }
+    }
+    // 右上角菜单触发（或兜底）：用上次记录的催收对象，或通用文案
+    const target = this._remindTarget || {}
+    const title = target.name
+      ? `${target.name}，记得转 ¥${target.amount || '?'} 给我哦~ 💰`
+      : '查看结算详情'
+    return {
+      title,
+      path: `/packageA/pages/settle-detail/settle-detail?bookId=${this.data.bookId}&tab=pay`,
+      imageUrl: COLLECTION_REMINDER_IMAGE,
+    }
   },
 })

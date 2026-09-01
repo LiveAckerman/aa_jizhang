@@ -159,6 +159,14 @@
 .person-amount.receive { color: #52c41a; }
 .person-amount.pay { color: var(--color-accent); }
 
+/* 右侧操作区：待收款卡片有「提醒 TA + 已结算」两个按钮，竖排 */
+.person-actions {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
 .settle-btn {
   width: 180rpx !important;
   height: 72rpx;
@@ -176,8 +184,17 @@
   gap: 6rpx;
   line-height: normal;
   flex-shrink: 0;
+  margin: 0;
 }
 .settle-btn::after { border: none; }
+/* 提醒 TA 按钮：描边青色款，区别于实心的「已结算」 */
+.settle-btn.remind-btn {
+  background: rgba(64, 151, 169, 0.12) !important;
+  color: var(--color-primary) !important;
+}
+.settle-btn.remind-btn van-icon {
+  color: var(--color-primary) !important;
+}
 /* 撤回按钮：描边款 */
 .settle-btn.revert {
   background: #fff !important;

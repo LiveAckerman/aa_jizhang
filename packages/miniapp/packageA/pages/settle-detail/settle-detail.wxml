@@ -7,7 +7,19 @@
         <text class="person-name">{{item.nickname}}</text>
         <text class="person-amount {{kind}}">{{kind === 'receive' ? '需转你' : '需付'}} ¥{{item.netAmountText}}</text>
       </view>
-      <button class="settle-btn" data-id="{{item.otherUserId}}" data-name="{{item.nickname}}" catchtap="onSettle">
+      <!-- 待收款：两按钮竖排（提醒 TA + 已结算） -->
+      <view wx:if="{{kind === 'receive'}}" class="person-actions">
+        <button class="settle-btn remind-btn" data-id="{{item.otherUserId}}" data-name="{{item.nickname}}" data-amount="{{item.netAmountText}}" open-type="share" catchtap="onRemind">
+          <van-icon name="chat-o" size="14px" color="#4097a9" />
+          <text>提醒 TA</text>
+        </button>
+        <button class="settle-btn" data-id="{{item.otherUserId}}" data-name="{{item.nickname}}" catchtap="onSettle">
+          <van-icon name="passed" size="14px" color="#fff" />
+          <text>已结算</text>
+        </button>
+      </view>
+      <!-- 待支付：只有「已结算」按钮 -->
+      <button wx:else class="settle-btn" data-id="{{item.otherUserId}}" data-name="{{item.nickname}}" catchtap="onSettle">
         <van-icon name="passed" size="14px" color="#fff" />
         <text>已结算</text>
       </button>
