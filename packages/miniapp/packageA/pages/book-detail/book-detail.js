@@ -37,12 +37,14 @@ Page({
     txFilter: 'all', // 账单筛选：all / shared(公账) / private(私账)
     txCounts: { all: 0, shared: 0, private: 0 }, // 各 tab 的账单笔数（角标）
 
-    // 分类 / 支付方式 下拉筛选
+    // 分类 / 支付方式 / 支付人 下拉筛选
     catFilter: [],          // 已生效的分类筛选 key 数组（空=全部）
     payFilter: [],          // 已生效的支付方式筛选 key 数组（空=全部）
+    payerFilter: [],        // 已生效的支付人筛选 userId 数组（空=全部）
     catFilterText: '分类',   // 分类筛选按钮文案
     payFilterText: '支付方式', // 支付方式筛选按钮文案
-    filterDrawer: '',       // 当前打开的抽屉：'' / 'cat' / 'pay'
+    payerFilterText: '支付人', // 支付人筛选按钮文案
+    filterDrawer: '',       // 当前打开的抽屉：'' / 'cat' / 'pay' / 'payer'
     filterOptions: [],      // 当前抽屉的选项列表
     filterDraft: {},        // 抽屉内的临时勾选状态 { key: true }（确定后才生效）
     settling: false,          // 全部结算提交中
@@ -157,6 +159,19 @@ Page({
     this.setData({ filterDrawer: 'pay', filterOptions: PAYMENT_METHODS, filterDraft: draft })
   },
 
+  // 打开支付人筛选抽屉
+  onOpenPayerFilter() {
+    const draft = {}
+    ;(this.data.payerFilter || []).forEach((k) => (draft[k] = true))
+    // 将 members 转换为筛选选项格式
+    const payerOptions = (this.data.members || []).map((m) => ({
+      key: m.userId,
+      name: m.nickname || '成员',
+      avatar: m.avatar || '',
+    }))
+    this.setData({ filterDrawer: 'payer', filterOptions: payerOptions, filterDraft: draft })
+  },
+
   // 抽屉内切换某个选项的勾选（临时草稿，确定后才生效）
   onToggleFilterOption(e) {
     const key = e.currentTarget.dataset.key
@@ -193,6 +208,13 @@ Page({
           ? (PAYMENT_MAP[keys[0]] || {}).name || '支付方式'
           : `支付方式·${keys.length}`
       this.setData({ payFilter: keys, payFilterText: text, filterDrawer: '' })
+    } else if (this.data.filterDrawer === 'payer') {
+      const text = keys.length === 0
+        ? '支付人'
+        : keys.length === 1
+          ? ((this.data.members || []).find((m) => m.userId === keys[0]) || {}).nickname || '支付人'
+          : `支付人·${keys.length}`
+      this.setData({ payerFilter: keys, payerFilterText: text, filterDrawer: '' })
     }
     this.applyTxFilter()
   },
@@ -203,6 +225,7 @@ Page({
     const all = this.data.allTxs || []
     const catSet = new Set(this.data.catFilter || [])
     const paySet = new Set(this.data.payFilter || [])
+    const payerSet = new Set(this.data.payerFilter || [])
     const list = all.filter((t) => {
       // 公账/私账 tab
       if (filter === 'shared' && t.type === 'private') return false
@@ -211,6 +234,8 @@ Page({
       if (catSet.size > 0 && !catSet.has(t.category || 'other')) return false
       // 支付方式筛选（空=不限；旧数据无 paymentMethod 视为 wechat）
       if (paySet.size > 0 && !paySet.has(t.paymentMethod || 'wechat')) return false
+      // 支付人筛选（空=不限）
+      if (payerSet.size > 0 && !payerSet.has(t.payerId)) return false
       return true
     })
 

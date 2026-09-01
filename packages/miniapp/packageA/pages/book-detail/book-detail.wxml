@@ -139,7 +139,7 @@
       </view>
     </view>
 
-    <!-- 分类 / 支付方式 下拉筛选（并排，点击弹抽屉多选）-->
+    <!-- 分类 / 支付方式 / 支付人 下拉筛选（并排，点击弹抽屉多选）-->
     <view class="dropdown-filters">
       <view class="dropdown-btn {{catFilter.length > 0 ? 'active' : ''}}" bindtap="onOpenCatFilter">
         <text>{{catFilterText}}</text>
@@ -148,6 +148,10 @@
       <view class="dropdown-btn {{payFilter.length > 0 ? 'active' : ''}}" bindtap="onOpenPayFilter">
         <text>{{payFilterText}}</text>
         <van-icon name="arrow-down" size="12px" color="{{payFilter.length > 0 ? '#4097a9' : '#8091a5'}}" />
+      </view>
+      <view class="dropdown-btn {{payerFilter.length > 0 ? 'active' : ''}}" bindtap="onOpenPayerFilter">
+        <text>{{payerFilterText}}</text>
+        <van-icon name="arrow-down" size="12px" color="{{payerFilter.length > 0 ? '#4097a9' : '#8091a5'}}" />
       </view>
     </view>
 
@@ -292,11 +296,11 @@
   </view>
 </view>
 
-<!-- 筛选抽屉：分类 / 支付方式 多选 -->
+<!-- 筛选抽屉：分类 / 支付方式 / 支付人 多选 -->
 <view wx:if="{{filterDrawer}}" class="filter-mask" catchtap="onCloseFilterDrawer">
   <view class="filter-panel" catchtap="stopPropagation">
     <view class="filter-panel-header">
-      <text class="filter-panel-title">{{filterDrawer === 'cat' ? '按分类筛选' : '按支付方式筛选'}}</text>
+      <text class="filter-panel-title">{{filterDrawer === 'cat' ? '按分类筛选' : filterDrawer === 'pay' ? '按支付方式筛选' : '按支付人筛选'}}</text>
       <view class="filter-panel-reset" catchtap="onResetFilterDrawer">重置</view>
     </view>
     <view class="filter-options">
@@ -308,8 +312,16 @@
         catchtap="onToggleFilterOption"
       >
         <view class="filter-option-icon">
+          <!-- 支付人：头像 -->
           <image
-            wx:if="{{item.svgIcon}}"
+            wx:if="{{item.avatar}}"
+            class="filter-option-avatar"
+            src="{{item.avatar}}"
+            mode="aspectFill"
+          />
+          <!-- 分类：SVG 或 icon -->
+          <image
+            wx:elif="{{item.svgIcon}}"
             class="filter-option-icon-svg"
             src="{{filterDraft[item.key] ? item.svgIconActive : item.svgIcon}}"
             mode="aspectFit"

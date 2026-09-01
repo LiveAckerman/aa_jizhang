@@ -354,6 +354,15 @@
   background: rgba(128, 145, 165, 0.08);
   font-size: 26rpx;
   color: var(--text-secondary);
+  overflow: hidden;
+}
+
+.dropdown-btn text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
 }
 
 .dropdown-btn.active {
@@ -945,6 +954,14 @@ color: #4097a9;
 .filter-option-icon-svg {
   width: 40rpx;
   height: 40rpx;
+}
+
+/* 支付人头像：圆形，填满图标区域 */
+.filter-option-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: block;
 }
 
 .filter-option-name {
