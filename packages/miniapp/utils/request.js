@@ -37,10 +37,14 @@ function request({ url, method = 'GET', data = {}, header = {} }) {
           // 再次触发需要账号的动作时会引导登录
           getApp().clearLoginState()
           wx.reLaunch({ url: '/pages/books/books' })
-          reject(res)
+          // reject 出 body（含 message），保持与其它分支一致，调用方可读 err.message
+          reject((body && typeof body === 'object') ? body : res)
         } else {
-          wx.showToast({ title: `请求错误 ${statusCode}`, icon: 'none' })
-          reject(res)
+          // 后端异常统一响应体 { message, error, statusCode }（见 AllExceptionsFilter）
+          // 优先展示后端 message，并 reject 出 body，让调用方能拿到具体错误文案
+          const msg = (body && body.message) || `请求错误 ${statusCode}`
+          wx.showToast({ title: msg, icon: 'none' })
+          reject((body && typeof body === 'object') ? body : res)
         }
       },
       fail(err) {
