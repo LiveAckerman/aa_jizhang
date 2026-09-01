@@ -41,6 +41,10 @@ Page({
     }
   },
 
+  onInvite() {
+    wx.navigateTo({ url: `/packageA/pages/invite/invite?id=${this.data.bookId}` })
+  },
+
   onRemove(e) {
     const { id, name } = e.currentTarget.dataset
     wx.showModal({
