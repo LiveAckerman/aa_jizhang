@@ -110,18 +110,22 @@ Page({
       confirmColor: '#4097a9',
       success: async (res) => {
         if (!res.confirm) return
-        if (this.data.submitting) return
+        // 防重复提交：用实例变量而非 data，避免 setData 异步导致的竞态条件
+        if (this._submitting) return
+        this._submitting = true
         this.setData({ submitting: true })
         wx.showLoading({ title: '结算中...', mask: true })
         try {
           await api.settlePersonDebt(this.data.bookId, id, this.data.roundId || undefined)
           wx.hideLoading()
           wx.showToast({ title: '已结算', icon: 'success' })
+          this._submitting = false
           this.setData({ submitting: false })
           this.loadData()
         } catch (err) {
           wx.hideLoading()
           wx.showToast({ title: (err && err.message) || '结算失败', icon: 'none' })
+          this._submitting = false
           this.setData({ submitting: false })
         }
       },
@@ -137,18 +141,22 @@ Page({
       confirmColor: '#fa9583',
       success: async (res) => {
         if (!res.confirm) return
-        if (this.data.submitting) return
+        // 防重复提交：用实例变量而非 data，避免 setData 异步导致的竞态条件
+        if (this._submitting) return
+        this._submitting = true
         this.setData({ submitting: true })
         wx.showLoading({ title: '撤回中...', mask: true })
         try {
           await api.revertPersonDebt(this.data.bookId, id, this.data.roundId || undefined)
           wx.hideLoading()
           wx.showToast({ title: '已撤回', icon: 'success' })
+          this._submitting = false
           this.setData({ submitting: false })
           this.loadData()
         } catch (err) {
           wx.hideLoading()
           wx.showToast({ title: (err && err.message) || '撤回失败', icon: 'none' })
+          this._submitting = false
           this.setData({ submitting: false })
         }
       },
