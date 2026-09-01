@@ -370,7 +370,7 @@
 }
 
 .tx-list {
-  padding: 8rpx 24rpx;
+  padding: 0rpx 24rpx;
 }
 
 .tx-item {
