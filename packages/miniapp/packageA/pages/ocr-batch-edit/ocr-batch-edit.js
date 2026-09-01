@@ -249,7 +249,14 @@ Page({
       newRecords.splice(current, 1)
 
       if (newRecords.length === 0 && !this.data.processing) {
-        // 全部处理完成且无后台识别：直接返回账本，不停留
+        // 全部处理完成且无后台识别：通知上一页刷新后返回
+        const pages = getCurrentPages()
+        if (pages.length >= 2) {
+          const prevPage = pages[pages.length - 2]
+          if (prevPage.route && prevPage.route.includes('book-detail')) {
+            prevPage._needRefresh = true
+          }
+        }
         wx.navigateBack()
         return
       }
@@ -276,7 +283,14 @@ Page({
     const newTrashed = trashed.concat(skipped)
 
     if (newRecords.length === 0 && !this.data.processing) {
-      // 待处理清空且无后台识别：直接返回账本（跳过的记录随之丢弃）
+      // 待处理清空且无后台识别：通知上一页刷新后返回（有些记录已提交成功）
+      const pages = getCurrentPages()
+      if (pages.length >= 2) {
+        const prevPage = pages[pages.length - 2]
+        if (prevPage.route && prevPage.route.includes('book-detail')) {
+          prevPage._needRefresh = true
+        }
+      }
       wx.navigateBack()
       return
     }
@@ -320,6 +334,14 @@ Page({
     const remaining = this.data.records.length
     const trashedCount = this.data.trashed.length
     if (remaining === 0 && trashedCount === 0) {
+      // 可能有部分已提交成功，通知刷新
+      const pages = getCurrentPages()
+      if (pages.length >= 2) {
+        const prevPage = pages[pages.length - 2]
+        if (prevPage.route && prevPage.route.includes('book-detail')) {
+          prevPage._needRefresh = true
+        }
+      }
       wx.navigateBack()
       return
     }
@@ -331,12 +353,32 @@ Page({
       content: `还有 ${parts.join('、')}，退出后将丢弃，确认退出？`,
       confirmText: '退出',
       confirmColor: '#fa9583',
-      success: (r) => { if (r.confirm) wx.navigateBack() },
+      success: (r) => {
+        if (r.confirm) {
+          // 确认退出时也通知刷新（可能有部分已提交）
+          const pages = getCurrentPages()
+          if (pages.length >= 2) {
+            const prevPage = pages[pages.length - 2]
+            if (prevPage.route && prevPage.route.includes('book-detail')) {
+              prevPage._needRefresh = true
+            }
+          }
+          wx.navigateBack()
+        }
+      },
     })
   },
 
   // 空态下直接返回
   onBack() {
+    // 空态说明所有记录都已处理完，通知刷新
+    const pages = getCurrentPages()
+    if (pages.length >= 2) {
+      const prevPage = pages[pages.length - 2]
+      if (prevPage.route && prevPage.route.includes('book-detail')) {
+        prevPage._needRefresh = true
+      }
+    }
     wx.navigateBack()
   },
 

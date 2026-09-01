@@ -64,7 +64,16 @@ Page({
   },
 
   onShow() {
-    if (this.data.id) this.loadAll()
+    // 子页面编辑后返回时会设置 _needRefresh 标记，强制刷新
+    if (this.data.id) {
+      if (this._needRefresh) {
+        this._needRefresh = false
+        this.loadAll()
+      } else {
+        // 正常返回也刷新（保持原有行为）
+        this.loadAll()
+      }
+    }
   },
 
   onPullDownRefresh() {

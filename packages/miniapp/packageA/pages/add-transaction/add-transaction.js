@@ -114,6 +114,15 @@ Page({
       else await api.createTransaction(res.payload)
       wx.hideLoading()
       wx.showToast({ title: '已保存', icon: 'success' })
+      // 通知上一页刷新（通过 eventChannel 或全局标记）
+      const pages = getCurrentPages()
+      if (pages.length >= 2) {
+        const prevPage = pages[pages.length - 2]
+        // 如果上一页是 book-detail，标记需要刷新
+        if (prevPage.route && prevPage.route.includes('book-detail')) {
+          prevPage._needRefresh = true
+        }
+      }
       setTimeout(() => wx.navigateBack(), 600)
     } catch (e) {
       wx.hideLoading()
@@ -137,8 +146,18 @@ Page({
         try {
           await api.deleteTransaction(this.data.id)
           wx.showToast({ title: '已删除', icon: 'success' })
+          // 删除后也通知上一页刷新
+          const pages = getCurrentPages()
+          if (pages.length >= 2) {
+            const prevPage = pages[pages.length - 2]
+            if (prevPage.route && prevPage.route.includes('book-detail')) {
+              prevPage._needRefresh = true
+            }
+          }
           setTimeout(() => wx.navigateBack(), 500)
-        } catch (e) {}
+        } catch (e) {
+          wx.showToast({ title: (e && e.message) || '删除失败', icon: 'none' })
+        }
       },
     })
   },
