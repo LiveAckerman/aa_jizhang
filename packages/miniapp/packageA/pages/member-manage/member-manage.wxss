@@ -1,0 +1,108 @@
+.member-page {
+  min-height: 100vh;
+  padding: 24rpx 32rpx calc(40rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.member-count {
+  font-size: 26rpx;
+  color: #8091a5;
+  padding: 8rpx 8rpx 20rpx;
+}
+
+.member-list {
+  border-radius: 24rpx;
+  overflow: hidden;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 28rpx;
+  border-bottom: 2rpx solid rgba(128, 145, 165, 0.12);
+}
+.member-item:last-child {
+  border-bottom: none;
+}
+
+.member-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: #eef1f4;
+  flex-shrink: 0;
+}
+
+.member-info {
+  flex: 1;
+  min-width: 0;
+  margin-left: 20rpx;
+}
+
+.member-name-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.member-name {
+  font-size: 30rpx;
+  color: #2f4159;
+  font-weight: 500;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.member-tag {
+  font-size: 20rpx;
+  padding: 2rpx 12rpx;
+  border-radius: 16rpx;
+  flex-shrink: 0;
+}
+.member-tag.owner {
+  color: #4097a9;
+  background: rgba(64, 151, 169, 0.12);
+}
+.member-tag.me {
+  color: #8091a5;
+  background: rgba(128, 145, 165, 0.12);
+}
+
+.member-remove {
+  flex-shrink: 0;
+  padding: 12rpx 28rpx;
+  border-radius: 32rpx;
+  border: 2rpx solid #fa9583;
+  color: #fa9583;
+  font-size: 26rpx;
+}
+.member-remove:active {
+  background: rgba(250, 149, 131, 0.08);
+}
+
+.member-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 8rpx;
+  padding: 24rpx 12rpx;
+  font-size: 24rpx;
+  color: #8091a5;
+  line-height: 1.6;
+}
+
+/* 骨架屏 */
+.sk-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: rgba(128, 145, 165, 0.15);
+  flex-shrink: 0;
+}
+.sk-line {
+  flex: 1;
+  height: 32rpx;
+  margin-left: 20rpx;
+  border-radius: 8rpx;
+  background: rgba(128, 145, 165, 0.15);
+}

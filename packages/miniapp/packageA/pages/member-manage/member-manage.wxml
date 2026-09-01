@@ -1,0 +1,41 @@
+<view class="member-page">
+  <!-- 骨架屏 -->
+  <block wx:if="{{loading}}">
+    <view class="glass-card member-item" wx:for="{{[1,2,3]}}" wx:key="*this">
+      <view class="sk-avatar"></view>
+      <view class="sk-line"></view>
+    </view>
+  </block>
+
+  <block wx:else>
+    <view class="member-count">共 {{members.length}} 位成员</view>
+
+    <view class="glass-card member-list">
+      <view class="member-item" wx:for="{{members}}" wx:key="userId">
+        <image class="member-avatar" src="{{item.avatar}}" mode="aspectFill" />
+        <view class="member-info">
+          <view class="member-name-row">
+            <text class="member-name">{{item.nickname}}</text>
+            <text wx:if="{{item.isOwner}}" class="member-tag owner">创建者</text>
+            <text wx:elif="{{item.isMe}}" class="member-tag me">我</text>
+          </view>
+        </view>
+        <!-- 仅创建者可移除他人（不含自己、不含创建者本人） -->
+        <view
+          wx:if="{{isOwner && !item.isOwner}}"
+          class="member-remove"
+          data-id="{{item.userId}}"
+          data-name="{{item.nickname}}"
+          catchtap="onRemove"
+        >
+          <text>移除</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="member-tip">
+      <van-icon name="info-o" size="14px" color="#8091a5" />
+      <text>移除成员前需先结清其账目，被移除成员的账单记录将保留</text>
+    </view>
+  </block>
+</view>

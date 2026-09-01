@@ -6,7 +6,7 @@
  *   light        - 是否用浅色样式（图标白色，用于封面上方）
  *   showCopy     - 是否显示「复制账本」入口（默认 true）
  * 触发的事件（自定义 event）：
- *   action { type: 'settings'|'invite'|'archive'|'unarchive'|'delete'|'leave'|'copy'|'move-group', book }
+ *   action { type: 'settings'|'members'|'invite'|'archive'|'unarchive'|'delete'|'leave'|'copy'|'move-group', book }
  */
 Component({
   properties: {
@@ -26,6 +26,7 @@ Component({
       // 「邀请好友」放最上面 —— 是账本高频操作
       items.push({ label: '邀请好友', type: 'invite' })
       if (isOwner) items.push({ label: '账本设置', type: 'settings' })
+      if (isOwner) items.push({ label: '成员管理', type: 'members' })
       if (showCopy) items.push({ label: '复制账本', type: 'copy' })
       items.push({ label: '移动到分组', type: 'move-group' })
       if (isOwner) items.push({ label: book.archived ? '取消归档' : '归档账本', type: book.archived ? 'unarchive' : 'archive' })

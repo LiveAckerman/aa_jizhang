@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { In, Repository } from 'typeorm'
+import { In, IsNull, Repository } from 'typeorm'
 import { randomBytes } from 'crypto'
 import { Book } from './book.entity'
 import { BookMember } from './book-member.entity'
@@ -13,6 +13,7 @@ import { BookGroup } from './book-group.entity'
 import { User } from '../user/user.entity'
 import { Transaction } from '../transaction/transaction.entity'
 import { TransactionLog } from '../transaction/transaction-log.entity'
+import { TxShareSettlement } from '../settlement/tx-share-settlement.entity'
 import { CreateBookDto } from './dto/create-book.dto'
 import { UpdateBookDto } from './dto/update-book.dto'
 
@@ -41,6 +42,8 @@ export class BookService {
     private readonly txRepo: Repository<Transaction>,
     @InjectRepository(TransactionLog)
     private readonly logRepo: Repository<TransactionLog>,
+    @InjectRepository(TxShareSettlement)
+    private readonly shareRepo: Repository<TxShareSettlement>,
   ) {}
 
   /** 生成 8 位邀请码 */
@@ -294,7 +297,67 @@ export class BookService {
     return { ...book, coverUrl: this.resolveCover(book) }
   }
 
-  /** 移除成员（仅 owner，不能移除自己，需检查未结清债务） */
+  /**
+   * 校验某成员在账本内是否有未结清账目，有则抛错。
+   * 口径对齐结算页 byPerson：
+   *  - 只算「未入轮次(settledRoundId=null) 且 未整笔结清(personSettledAt=null)」的公账
+   *  - 排除已按人结清的份额(tx_share_settlements 里 roundId=null 的)
+   *  - 按「目标成员 vs 每个其他人」两两算净额，任一对≠0 即视为有未结清
+   *    （不能用总净额，A欠B、C欠A 会正负抵消误判为已结清）
+   * @param isSelf true=退出场景(文案用"你")，false=移除场景(文案用"该成员")
+   */
+  private async assertNoUnsettledDebt(
+    bookId: string,
+    targetUserId: string,
+    isSelf: boolean,
+  ) {
+    // 未入轮次且未整笔结清的公账
+    const txs = await this.txRepo.find({
+      where: {
+        bookId,
+        type: 'shared',
+        settledRoundId: IsNull(),
+        personSettledAt: IsNull(),
+      },
+    })
+    // 已按人结清的份额（roundId=null 即全部模式下的结清），键 = txId::debtorUserId
+    const shares = await this.shareRepo.find({ where: { bookId, roundId: IsNull() } })
+    const settledSet = new Set(
+      shares.map((s) => `${s.transactionId}::${s.debtorUserId}`),
+    )
+
+    // 目标成员 vs 其他人 的两两净额（正=对方欠他，负=他欠对方）
+    const pairNet = new Map<string, number>()
+    for (const t of txs) {
+      const splits = t.splits || []
+      if (t.payerId === targetUserId) {
+        // 目标是付款人：其他人欠目标
+        for (const s of splits) {
+          if (s.userId === targetUserId || s.amount <= 0) continue
+          if (settledSet.has(`${t.id}::${s.userId}`)) continue // 该份额已结清
+          pairNet.set(s.userId, (pairNet.get(s.userId) || 0) + s.amount)
+        }
+      } else {
+        // 目标是参与人：目标欠付款人
+        const mine = splits.find((s) => s.userId === targetUserId)
+        if (!mine || mine.amount <= 0) continue
+        if (settledSet.has(`${t.id}::${targetUserId}`)) continue // 目标这份已结清
+        pairNet.set(t.payerId, (pairNet.get(t.payerId) || 0) - mine.amount)
+      }
+    }
+
+    // 任一对净额不为 0 → 有未结清
+    for (const net of pairNet.values()) {
+      if (net !== 0) {
+        throw new BadRequestException(
+          isSelf
+            ? '你在本账本有未结清账目，请先完成结算后再退出'
+            : '该成员有未结清账目，请先完成结算后再移除',
+        )
+      }
+    }
+  }
+
   async removeMember(bookId: string, ownerId: string, targetUserId: string) {
     const book = await this.bookRepo.findOne({ where: { id: bookId } })
     if (!book) throw new NotFoundException('账本不存在')
@@ -304,35 +367,8 @@ export class BookService {
     if (targetUserId === ownerId) {
       throw new BadRequestException('不能移除创建者，请使用删除账本')
     }
-
-    // 检查该成员是否有未结清的债务
-    const txs = await this.txRepo.find({
-      where: { bookId, type: 'shared' },
-    })
-
-    // 计算净收支
-    const balanceMap = new Map<string, number>()
-    for (const tx of txs) {
-      // 付款人：应收
-      const payerBalance = balanceMap.get(tx.payerId) || 0
-      const totalAmount = (tx.splits || []).reduce((sum, s) => sum + s.amount, 0)
-      balanceMap.set(tx.payerId, payerBalance + totalAmount)
-
-      // 参与人：应付
-      for (const split of tx.splits || []) {
-        const participantBalance = balanceMap.get(split.userId) || 0
-        balanceMap.set(split.userId, participantBalance - split.amount)
-      }
-    }
-
-    const targetBalance = balanceMap.get(targetUserId) || 0
-    if (Math.abs(targetBalance) > 0) {
-      const amountYuan = (Math.abs(targetBalance) / 100).toFixed(2)
-      const statusText = targetBalance > 0 ? '应收' : '应付'
-      throw new BadRequestException(
-        `该成员有 ${statusText} ¥${amountYuan} 未结清，请先完成结算后再移除`,
-      )
-    }
+    await this.assertMember(bookId, targetUserId)
+    await this.assertNoUnsettledDebt(bookId, targetUserId, false)
 
     await this.memberRepo.delete({ bookId, userId: targetUserId })
     return { removed: true }
@@ -346,6 +382,8 @@ export class BookService {
       throw new BadRequestException('创建者不能退出账本，请删除账本')
     }
     await this.assertMember(bookId, userId)
+    await this.assertNoUnsettledDebt(bookId, userId, true)
+
     await this.memberRepo.delete({ bookId, userId })
     return { left: true }
   }

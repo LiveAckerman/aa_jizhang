@@ -20,7 +20,8 @@
         "pages/settle-rounds/settle-rounds",
         "pages/ocr-batch-edit/ocr-batch-edit",
         "pages/invite/invite",
-        "pages/join/join"
+        "pages/join/join",
+        "pages/member-manage/member-manage"
       ]
     },
     {

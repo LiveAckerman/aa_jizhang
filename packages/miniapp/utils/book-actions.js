@@ -13,6 +13,10 @@ async function handleBookAction(detail, onDone) {
       wx.navigateTo({ url: `/packageA/pages/book-form/book-form?id=${book.id}` })
       break
 
+    case 'members':
+      wx.navigateTo({ url: `/packageA/pages/member-manage/member-manage?id=${book.id}` })
+      break
+
     case 'invite':
       wx.navigateTo({ url: `/packageA/pages/invite/invite?id=${book.id}` })
       break

@@ -6,6 +6,7 @@ import { BookGroup } from './book-group.entity'
 import { User } from '../user/user.entity'
 import { Transaction } from '../transaction/transaction.entity'
 import { TransactionLog } from '../transaction/transaction-log.entity'
+import { TxShareSettlement } from '../settlement/tx-share-settlement.entity'
 import { BookService } from './book.service'
 import { BookController } from './book.controller'
 import { BookGroupService } from './book-group.service'
@@ -13,7 +14,7 @@ import { BookGroupController } from './book-group.controller'
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Book, BookMember, BookGroup, User, Transaction, TransactionLog]),
+    TypeOrmModule.forFeature([Book, BookMember, BookGroup, User, Transaction, TransactionLog, TxShareSettlement]),
   ],
   controllers: [BookController, BookGroupController],
   providers: [BookService, BookGroupService],
