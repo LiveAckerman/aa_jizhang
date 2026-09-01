@@ -73,7 +73,7 @@ function shareImageForScene(scene) {
 }
 
 /** 催收提醒分享卡片图（待收款「提醒 TA」用；jpg 保证微信抓取兼容） */
-const COLLECTION_REMINDER_IMAGE = 'https://cdn.ljw44.com/images/2026-09/share-collection-reminder-generic.jpg'
+const COLLECTION_REMINDER_IMAGE = 'https://cdn.ljw44.com/images/2026-09/share-collection-simple.jpg'
 
 module.exports = {
   SCENES,
