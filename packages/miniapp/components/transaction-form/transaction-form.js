@@ -105,6 +105,13 @@ Component({
   },
 
   methods: {
+    // 工具：获取指定币种的汇率（避免重复查找）
+    getRate(currency) {
+      if (!currency || currency === 'CNY') return 1
+      const rateObj = (this.properties.rates || []).find((r) => r.code === currency)
+      return rateObj ? rateObj.rate : 1
+    },
+
     initForm() {
       const init = this.properties.initial || {}
       const myUserId = this.properties.myUserId
@@ -202,12 +209,11 @@ Component({
     },
     updateConverted() {
       const { amount, currency } = this.data
-      const rates = this.properties.rates
       if (currency === 'CNY' || !amount) {
         this.setData({ convertedText: '' })
         return
       }
-      const rate = (rates.find((r) => r.code === currency) || {}).rate
+      const rate = this.getRate(currency)
       const yuan = parseFloat(amount)
       if (!rate || !yuan || yuan <= 0) {
         this.setData({ convertedText: '' })
@@ -522,8 +528,7 @@ Component({
         if (currency === 'CNY') {
           details.forEach((d) => (map[d.userId] = d.amount || 0))
         } else {
-          const rateObj = (this.properties.rates || []).find((r) => r.code === currency)
-          const rate = rateObj ? rateObj.rate : 1
+          const rate = this.getRate(currency)
           let allocated = 0
           details.forEach((d, i) => {
             let share
@@ -579,8 +584,7 @@ Component({
         return
       }
       const currency = this.data.currency || 'CNY'
-      const rateObj = (this.properties.rates || []).find((r) => r.code === currency)
-      const rate = rateObj ? rateObj.rate : 1
+      const rate = this.getRate(currency)
       const amountCent = currency === 'CNY' ? Math.round(yuan * 100) : Math.round(yuan * 100 * rate)
 
       const myUserId = this.properties.myUserId
@@ -638,8 +642,7 @@ Component({
       if (!yuan || yuan <= 0) return { ok: false, message: '请输入金额' }
       const originalAmount = Math.round(yuan * 100)
       const currency = this.data.currency || 'CNY'
-      const rateObj = (this.properties.rates || []).find((r) => r.code === currency)
-      const currentRate = rateObj ? rateObj.rate : 1
+      const currentRate = this.getRate(currency)
       // 币种未改动且存在记账时快照汇率 → 沿用快照，避免无关编辑用当日汇率重算导致金额漂移；
       // 改了币种（或新建）→ 用当前汇率
       const rate =
@@ -678,8 +681,7 @@ Component({
           // 有明细（弹窗确认过）：ratio/shares 直接用 weight，fixed 需汇率转换
           if (this.data.splitMethod === 'fixed' && this.data.currency !== 'CNY') {
             // 外币 fixed：splitDetails 存的是原币分，需乘汇率转 CNY 分，且总和要精确等于 amount（避免舍入差）
-            const rateObj = (this.properties.rates || []).find((r) => r.code === this.data.currency)
-            const rate = rateObj ? rateObj.rate : 1
+            // 重要：复用前面的 rate（快照汇率或当日汇率），确保 amount 和 splits 用同一汇率计算
             const details = this.data.splitDetails.slice()
             let sum = 0
             const converted = details.map((d, i) => {
@@ -734,8 +736,7 @@ Component({
       try {
         // 换算成分（与提交逻辑一致）
         const originalAmount = Math.round(yuan * 100)
-        const rateObj = (this.properties.rates || []).find((r) => r.code === currency)
-        const rate = rateObj ? rateObj.rate : 1
+        const rate = this.getRate(currency)
         const amountInCents = currency === 'CNY' ? originalAmount : Math.round(originalAmount * rate)
 
         const paymentMethod = this.data.paymentMethod || 'wechat'
