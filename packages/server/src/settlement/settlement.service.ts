@@ -315,6 +315,10 @@ export class SettlementService {
     } catch (e) {
       if (queryRunner.isTransactionActive)
         await queryRunner.rollbackTransaction()
+      // 捕获唯一约束冲突（重复结算）
+      if ((e as any).code === '23505' && (e as any).constraint === 'UQ_146b812db2977142f3af001eeb5') {
+        throw new BadRequestException('该结算记录已存在，请勿重复操作')
+      }
       throw e
     } finally {
       if (!queryRunner.isReleased) await queryRunner.release()
