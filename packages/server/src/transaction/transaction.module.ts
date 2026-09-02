@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { Module, forwardRef } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { Transaction } from './transaction.entity'
 import { TransactionLog } from './transaction-log.entity'
@@ -10,7 +10,7 @@ import { BookModule } from '../book/book.module'
 @Module({
   imports: [
     TypeOrmModule.forFeature([Transaction, TransactionLog, TxShareSettlement]),
-    BookModule,
+    forwardRef(() => BookModule),
   ],
   controllers: [TransactionController],
   providers: [TransactionService],

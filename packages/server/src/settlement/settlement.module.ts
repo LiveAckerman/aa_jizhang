@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { Module, forwardRef } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { Settlement } from './settlement.entity'
 import { SettlementRound } from './settlement-round.entity'
@@ -16,7 +16,7 @@ import { BookModule } from '../book/book.module'
       TxShareSettlement,
       Transaction,
     ]),
-    BookModule,
+    forwardRef(() => BookModule),
   ],
   providers: [SettlementService],
   controllers: [SettlementController],
