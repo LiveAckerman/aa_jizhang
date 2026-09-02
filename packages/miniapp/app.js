@@ -39,6 +39,17 @@ App({
         this.globalData.needProfilePrompt = true
       }
     }
+
+    // 隐私授权处理：当某 API 需要隐私弹窗时，微信会调此回调
+    if (wx.onNeedPrivacyAuthorization) {
+      wx.onNeedPrivacyAuthorization((resolve) => {
+        // 直接调起微信官方隐私弹窗（基础库 >= 2.32.3），用户同意后自动放行
+        wx.requirePrivacyAuthorize({
+          success: () => resolve({ event: 'agree', buttonId: '' }),
+          fail: () => resolve({ event: 'disagree' }),
+        })
+      })
+    }
   },
 
   /** 是否已登录 */
