@@ -143,8 +143,14 @@ const api = {
   createShareToken: (bookId, data) =>
     request({ url: `/books/${bookId}/share-token`, method: 'POST', data }),
   // 获取分享总结数据（公开接口，无需登录）
-  getShareSummary: (tokenId) =>
-    request({ url: `/share/summary/${tokenId}`, skipAuth: true }),
+  // opts: { groupBy, includeUnsettled } 可选，用于前端切换统计维度
+  getShareSummary: (tokenId, opts = {}) => {
+    const params = []
+    if (opts.groupBy) params.push(`groupBy=${opts.groupBy}`)
+    if (opts.includeUnsettled != null) params.push(`includeUnsettled=${opts.includeUnsettled ? 1 : 0}`)
+    const qs = params.length ? `?${params.join('&')}` : ''
+    return request({ url: `/share/summary/${tokenId}${qs}`, skipAuth: true })
+  },
 }
 
 module.exports = api

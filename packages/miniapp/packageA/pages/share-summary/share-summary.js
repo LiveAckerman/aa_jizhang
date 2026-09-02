@@ -12,6 +12,9 @@ Page({
     expired: false,
     saving: false,
     expandedMap: {}, // 记录哪些组是展开状态：{ groupKey: true }
+    // 本地筛选状态（切换后重新请求，覆盖令牌配置）
+    groupBy: 'person', // person / category / paymentMethod
+    includeUnsettled: false,
   },
 
   onLoad(query) {
@@ -61,7 +64,10 @@ Page({
     if (!this.data.book) this.setData({ loading: true })
 
     try {
-      const res = await api.getShareSummary(this.data.tokenId)
+      const res = await api.getShareSummary(this.data.tokenId, {
+        groupBy: this.data.groupBy,
+        includeUnsettled: this.data.includeUnsettled,
+      })
       const { book, config, summary, groups, expiresAt } = res
 
       // 检查是否过期
@@ -72,32 +78,46 @@ Page({
         return
       }
 
-      // 装饰 groups 数据
+      // 装饰 groups 数据（用实际返回的 groupBy，不用本地状态）
       const decorated = this.decorateGroups(groups, config.groupBy)
 
-      wx.setNavigationBarTitle({
-        title: `${book.name} · 账单总结`
-      })
+      wx.setNavigationBarTitle({ title: `${book.name} · 账单总结` })
 
       this.setData({
         book,
         config,
         summary,
         groups: decorated,
+        groupBy: config.groupBy,
+        includeUnsettled: config.includeUnsettled,
         loading: false,
         expired: false,
+        expandedMap: {}, // 切换维度时收起所有展开项
       })
     } catch (e) {
       this.setData({ loading: false })
       const msg = (e && e.message) || '加载失败'
-
-      // 判断是否是过期错误
       if (msg.includes('过期') || msg.includes('expired')) {
         this.setData({ expired: true })
       } else {
         wx.showToast({ title: msg, icon: 'none' })
       }
     }
+  },
+
+  // 切换统计维度
+  onSwitchGroupBy(e) {
+    const groupBy = e.currentTarget.dataset.key
+    if (groupBy === this.data.groupBy) return
+    this.setData({ groupBy, loading: true })
+    this.loadData()
+  },
+
+  // 切换是否包含未结算
+  onToggleUnsettled(e) {
+    const includeUnsettled = !!e.detail.value
+    this.setData({ includeUnsettled, loading: true })
+    this.loadData()
   },
 
   // 装饰分组数据，添加展示字段

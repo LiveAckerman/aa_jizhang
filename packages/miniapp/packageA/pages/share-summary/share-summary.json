@@ -1,7 +1,5 @@
 {
   "navigationBarTitleText": "账单总结",
-  "navigationBarBackgroundColor": "#667eea",
-  "navigationBarTextStyle": "white",
   "enablePullDownRefresh": true,
   "usingComponents": {
     "van-icon": "@vant/weapp/icon/index"

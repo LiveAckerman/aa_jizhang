@@ -1,4 +1,4 @@
-import { Controller, Get, Param, NotFoundException, BadRequestException } from '@nestjs/common'
+import { Controller, Get, Param, Query, NotFoundException, BadRequestException } from '@nestjs/common'
 import { ShareTokenService } from './share-token.service'
 import { BookService } from '../book/book.service'
 import { TransactionService } from '../transaction/transaction.service'
@@ -19,12 +19,29 @@ export class ShareSummaryController {
   /**
    * 获取分享总结数据（公开接口，仅需令牌）
    * @param tokenId 分享令牌 ID
+   * @param groupBy 可选：覆盖令牌里的统计维度（前端切换用）
+   * @param includeUnsettled 可选：覆盖令牌里的结算筛选（前端切换用）
    * @returns 账本基础信息 + 按配置聚合的账单统计
    */
   @Get('summary/:tokenId')
-  async getSummary(@Param('tokenId') tokenId: string) {
+  async getSummary(
+    @Param('tokenId') tokenId: string,
+    @Query('groupBy') groupByQuery?: string,
+    @Query('includeUnsettled') includeUnsettledQuery?: string,
+  ) {
     // 1. 验证令牌
     const token = await this.shareTokenService.verify(tokenId)
+
+    // 令牌只用于鉴权（限定 bookId），统计维度/结算筛选允许前端 query 覆盖，
+    // 这样切换维度不需要每次都重新生成令牌
+    const validGroupBy = ['person', 'category', 'paymentMethod']
+    const groupBy = validGroupBy.includes(groupByQuery || '')
+      ? (groupByQuery as 'person' | 'category' | 'paymentMethod')
+      : token.config.groupBy
+    const includeUnsettled =
+      includeUnsettledQuery != null
+        ? includeUnsettledQuery === 'true' || includeUnsettledQuery === '1'
+        : token.config.includeUnsettled
 
     // 2. 获取账本基础信息（脱敏：仅返回名称、封面、成员头像）
     const book = await this.bookService.getRaw(token.bookId)
@@ -47,13 +64,12 @@ export class ShareSummaryController {
     const isSettled = (t: any) =>
       !!t.personSettledAt || (!!t.settledRoundId && !activeRoundIds.has(t.settledRoundId))
 
-    const txs = token.config.includeUnsettled
+    const txs = includeUnsettled
       ? allTxs.filter((t) => t.type !== 'private') // 排除私账
       : allTxs.filter((t) => t.type !== 'private' && isSettled(t))
 
     // 6. 根据 groupBy 聚合数据
     let groups: any[] = []
-    const groupBy = token.config.groupBy
 
     if (groupBy === 'person') {
       // 按人聚合：统计每个人在所有账单中的消费份额总和（splits）
@@ -179,7 +195,7 @@ export class ShareSummaryController {
             nickname: m.nickname,
           })),
         },
-        config: token.config,
+        config: { groupBy, includeUnsettled },
         summary: {
           totalAmount,
           totalAmountText: (totalAmount / 100).toFixed(2),
