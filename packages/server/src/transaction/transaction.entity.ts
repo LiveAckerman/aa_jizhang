@@ -119,9 +119,9 @@ export class Transaction {
   @Column({ type: 'timestamptz' })
   spentAt: Date
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date
 }

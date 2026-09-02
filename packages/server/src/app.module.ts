@@ -11,6 +11,7 @@ import { ExchangeRateModule } from './exchange-rate/exchange-rate.module'
 import { StatsModule } from './stats/stats.module'
 import { SettlementModule } from './settlement/settlement.module'
 import { OcrModule } from './ocr/ocr.module'
+import { ShareTokenModule } from './share-token/share-token.module'
 import { User } from './user/user.entity'
 import { Book } from './book/book.entity'
 import { BookMember } from './book/book-member.entity'
@@ -20,6 +21,7 @@ import { TransactionLog } from './transaction/transaction-log.entity'
 import { Settlement } from './settlement/settlement.entity'
 import { SettlementRound } from './settlement/settlement-round.entity'
 import { TxShareSettlement } from './settlement/tx-share-settlement.entity'
+import { ShareToken } from './share-token/share-token.entity'
 
 @Module({
   imports: [
@@ -46,7 +48,7 @@ import { TxShareSettlement } from './settlement/tx-share-settlement.entity'
         username: config.get('DB_USERNAME'),
         password: config.get('DB_PASSWORD'),
         database,
-        entities: [User, Book, BookMember, BookGroup, Transaction, TransactionLog, Settlement, SettlementRound, TxShareSettlement],
+        entities: [User, Book, BookMember, BookGroup, Transaction, TransactionLog, Settlement, SettlementRound, TxShareSettlement, ShareToken],
         // 自动同步表结构：默认关闭（生产安全）。本地开发需自动建表时在 .env 设 DB_SYNCHRONIZE=true。
         // 生产改表走 migration（见 data-source.ts + pnpm migration:*），避免误删列/丢数据。
         synchronize: config.get('DB_SYNCHRONIZE') === 'true',
@@ -77,6 +79,7 @@ import { TxShareSettlement } from './settlement/tx-share-settlement.entity'
     StatsModule,
     SettlementModule,
     OcrModule,
+    ShareTokenModule,
   ],
 })
 export class AppModule {}

@@ -9,19 +9,19 @@
       </view>
       <!-- 待收款：两按钮竖排（提醒 TA + 已结算） -->
       <view wx:if="{{kind === 'receive'}}" class="person-actions">
-        <button class="settle-btn remind-btn" data-id="{{item.otherUserId}}" data-name="{{item.nickname}}" data-amount="{{item.netAmountText}}" open-type="share" catchtap="onRemind">
+        <button class="settle-btn remind-btn" data-id="{{item.otherUserId}}" data-name="{{item.nickname}}" data-amount="{{item.netAmountText}}" open-type="share" catchtap="onRemind" disabled="{{submitting}}">
           <van-icon name="chat-o" size="14px" color="#4097a9" />
           <text>提醒 TA</text>
         </button>
-        <button class="settle-btn" data-id="{{item.otherUserId}}" data-name="{{item.nickname}}" catchtap="onSettle">
-          <van-icon name="passed" size="14px" color="#fff" />
-          <text>已结算</text>
+        <button class="settle-btn" data-id="{{item.otherUserId}}" data-name="{{item.nickname}}" catchtap="onSettle" disabled="{{submitting}}" loading="{{submitting}}">
+          <van-icon wx:if="{{!submitting}}" name="passed" size="14px" color="#fff" />
+          <text>{{submitting ? '结算中...' : '已结算'}}</text>
         </button>
       </view>
       <!-- 待支付：只有「已结算」按钮 -->
-      <button wx:else class="settle-btn" data-id="{{item.otherUserId}}" data-name="{{item.nickname}}" catchtap="onSettle">
-        <van-icon name="passed" size="14px" color="#fff" />
-        <text>已结算</text>
+      <button wx:else class="settle-btn" data-id="{{item.otherUserId}}" data-name="{{item.nickname}}" catchtap="onSettle" disabled="{{submitting}}" loading="{{submitting}}">
+        <van-icon wx:if="{{!submitting}}" name="passed" size="14px" color="#fff" />
+        <text>{{submitting ? '结算中...' : '已结算'}}</text>
       </button>
     </view>
     <view class="expand-toggle" data-id="{{item.otherUserId}}" bindtap="onToggleExpand">
@@ -107,7 +107,7 @@
         </view>
         <text class="person-amount settled-amount">{{item.direction === 'they_owe' ? '已收' : '已付'}} ¥{{item.netAmountText}}</text>
       </view>
-      <button class="settle-btn revert" data-id="{{item.otherUserId}}" data-name="{{item.nickname}}" catchtap="onRevert">撤回</button>
+      <button class="settle-btn revert" data-id="{{item.otherUserId}}" data-name="{{item.nickname}}" catchtap="onRevert" disabled="{{submitting}}" loading="{{submitting}}">{{submitting ? '撤回中...' : '撤回'}}</button>
     </view>
     <view class="expand-toggle" data-id="{{item.otherUserId}}" bindtap="onToggleExpand">
       <text>{{expandedMap[item.otherUserId] ? '收起明细' : '展开明细（' + item.details.length + '笔）'}}</text>

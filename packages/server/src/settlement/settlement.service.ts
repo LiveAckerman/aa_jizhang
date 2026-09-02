@@ -470,12 +470,15 @@ export class SettlementService {
       await queryRunner.startTransaction()
 
       // 1. 悲观写锁读取候选账单（未入轮次的公账）
+      //    同时排除已在「全部账单模式」下按人结清的账单（personSettledAt 有值），
+      //    与 byPerson 全部模式的过滤保持对称，避免账单同时归属两种结算模式导致数据割裂。
       const qb = queryRunner.manager
         .createQueryBuilder(Transaction, 't')
         .setLock('pessimistic_write')
         .where('t.bookId = :bookId', { bookId: dto.bookId })
         .andWhere("t.type = 'shared'")
         .andWhere('t.settledRoundId IS NULL')
+        .andWhere('t.personSettledAt IS NULL')
       if (dto.type === 'partial') {
         qb.andWhere('t.id IN (:...ids)', { ids: dto.txIds })
       }

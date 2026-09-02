@@ -56,6 +56,9 @@ CATEGORIES.forEach((c) => (CATEGORY_MAP[c.key] = c))
 const SCENE_MAP = {}
 SCENES.forEach((s) => (SCENE_MAP[s.key] = s))
 
+const PAYMENT_MAP_FULL = {}
+PAYMENT_METHODS.forEach((p) => (PAYMENT_MAP_FULL[p.key] = p))
+
 /** 场景对应的分享卡片图（微信 onShareAppMessage.imageUrl，5:4 会自动裁） */
 // 分享封面图用 jpg（微信 onShareAppMessage 的 imageUrl 仅保证支持 png/jpg，
 // webp 概率性抓取失败导致分享卡片空白）
@@ -82,6 +85,7 @@ module.exports = {
   PAYMENT_METHODS,
   CATEGORY_MAP,
   SCENE_MAP,
+  PAYMENT_MAP_FULL,
   SCENE_SHARE_IMAGES,
   shareImageForScene,
   COLLECTION_REMINDER_IMAGE,

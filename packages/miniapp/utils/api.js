@@ -137,6 +137,14 @@ const api = {
     })
   },
   batchCreateFromOcr: (data) => request({ url: '/ocr/batch-create-transactions', method: 'POST', data }),
+
+  // ===== 分享总结 =====
+  // 创建分享令牌（登录态）
+  createShareToken: (bookId, data) =>
+    request({ url: `/books/${bookId}/share-token`, method: 'POST', data }),
+  // 获取分享总结数据（公开接口，无需登录）
+  getShareSummary: (tokenId) =>
+    request({ url: `/share/summary/${tokenId}`, skipAuth: true }),
 }
 
 module.exports = api

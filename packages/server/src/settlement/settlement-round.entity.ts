@@ -50,6 +50,6 @@ export class SettlementRound {
   @Column({ type: 'jsonb', nullable: true })
   transferPlans: RoundTransferPlan[] | null
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date
 }

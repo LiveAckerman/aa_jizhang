@@ -144,6 +144,18 @@ export class TransactionService {
   }
 
   /**
+   * 取账本全部账单（不做用户可见性过滤）。
+   * 用于分享总结等公开场景：访问权限由分享令牌控制，令牌验证通过即视为可见全部公账。
+   * 注意：私账的过滤由调用方按 groupBy 规则处理（人员/分类/支付方式统计均不含私账）。
+   */
+  async listAll(bookId: string) {
+    return this.txRepo.find({
+      where: { bookId },
+      order: { spentAt: 'DESC', createdAt: 'DESC' },
+    })
+  }
+
+  /**
    * 可部分结算的公账：与当前用户相关、未轮次结算、且仍存在跟当前用户相关的未结清份额。
    * 用于 settle-select 页，过滤掉「我这边已按人结清」的账单。
    *   - 我是付款人：还有其他参与人的份额未结清（别人还欠我）

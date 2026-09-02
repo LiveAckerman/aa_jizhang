@@ -48,6 +48,6 @@ export class Settlement {
   completedAt: Date | null
 
   /** 创建时间 */
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date
 }

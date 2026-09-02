@@ -50,6 +50,6 @@ export class TransactionLog {
   @Column({ type: 'jsonb', nullable: true })
   changes: FieldChange[] | null
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date
 }

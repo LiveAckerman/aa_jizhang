@@ -1,0 +1,132 @@
+<view class="share-summary-page">
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="loading-state">
+    <van-loading size="24px" vertical>加载中...</van-loading>
+  </view>
+
+  <!-- 已过期 -->
+  <view wx:elif="{{expired}}" class="expired-state">
+    <van-icon name="clock-o" size="64px" color="#8091a5" />
+    <text class="expired-title">分享链接已过期</text>
+    <text class="expired-text">该分享链接已失效，请联系分享人重新生成</text>
+    <button class="btn-back" bindtap="onBackHome">返回首页</button>
+  </view>
+
+  <!-- 正常内容 -->
+  <view wx:else class="content">
+    <!-- 头部：账本信息 -->
+    <view class="header-card glass-card">
+      <view class="book-info">
+        <image wx:if="{{book.coverUrl}}" class="book-cover" src="{{book.coverUrl}}" mode="aspectFill" />
+        <view wx:else class="book-cover-placeholder">
+          <van-icon name="photo-o" size="32px" color="#8091a5" />
+        </view>
+        <view class="book-meta">
+          <text class="book-name">{{book.name}}</text>
+          <text class="book-member-count">{{book.memberCount}} 人参与</text>
+        </view>
+      </view>
+
+      <!-- 成员头像列表 -->
+      <view class="member-avatars">
+        <image
+          wx:for="{{book.members}}"
+          wx:key="index"
+          class="member-avatar"
+          src="{{item.avatar}}"
+          mode="aspectFill"
+        />
+      </view>
+    </view>
+
+    <!-- 总览卡片 -->
+    <view class="summary-card glass-card">
+      <view class="summary-row">
+        <text class="summary-label">总金额</text>
+        <text class="summary-value primary">¥{{summary.totalAmountText}}</text>
+      </view>
+      <view class="summary-row">
+        <text class="summary-label">账单笔数</text>
+        <text class="summary-value">{{summary.txCount}} 笔</text>
+      </view>
+      <view class="summary-row">
+        <text class="summary-label">统计维度</text>
+        <text class="summary-value">{{config.groupBy === 'person' ? '按人员' : config.groupBy === 'category' ? '按分类' : '按支付方式'}}</text>
+      </view>
+      <view class="summary-row">
+        <text class="summary-label">结算状态</text>
+        <text class="summary-value">{{config.includeUnsettled ? '包含未结算' : '仅已结算'}}</text>
+      </view>
+    </view>
+
+    <!-- 分组明细列表 -->
+    <view class="groups-section">
+      <view class="section-title">明细统计</view>
+
+      <view class="group-list">
+        <view wx:for="{{groups}}" wx:key="index" class="group-item glass-card">
+          <!-- 可点击的头部区域 -->
+          <view class="group-header" bindtap="toggleGroup" data-key="{{item.key}}">
+            <!-- 左侧：图标或头像 -->
+            <view class="group-icon-area">
+              <!-- 人员：头像 -->
+              <image wx:if="{{config.groupBy === 'person'}}" class="group-avatar" src="{{item.avatar}}" mode="aspectFill" />
+
+              <!-- 分类：SVG 或 icon -->
+              <view wx:elif="{{config.groupBy === 'category'}}" class="group-icon-box">
+                <image wx:if="{{item.svgIcon}}" class="category-svg" src="{{item.svgIcon}}" mode="aspectFit" />
+                <van-icon wx:else name="{{item.icon}}" size="28px" color="#4097a9" />
+              </view>
+
+              <!-- 支付方式：icon -->
+              <view wx:else class="group-icon-box">
+                <van-icon name="{{item.icon}}" size="28px" color="#4097a9" />
+              </view>
+            </view>
+
+            <!-- 中间：标签和副标签 -->
+            <view class="group-info">
+              <text class="group-label">{{item.label}}</text>
+              <text class="group-sublabel">{{item.sublabel}}</text>
+            </view>
+
+            <!-- 右侧：金额 + 折叠箭头 -->
+            <view class="group-amount-area">
+              <text class="group-amount">¥{{item.totalAmountText}}</text>
+              <van-icon name="{{expandedMap[item.key] ? 'arrow-up' : 'arrow-down'}}" size="16px" color="#8091a5" />
+            </view>
+          </view>
+
+          <!-- 账单明细列表（展开时显示） -->
+          <view class="group-detail" wx:if="{{expandedMap[item.key]}}">
+            <view class="tx-item" wx:for="{{item.transactions}}" wx:key="id" wx:for-item="tx">
+              <view class="tx-header">
+                <text class="tx-note">{{tx.note || '无备注'}}</text>
+                <text class="tx-amount" style="color: {{tx.type === 'income' ? '#67c23a' : '#fa9583'}}">
+                  {{tx.type === 'income' ? '+' : '-'}}¥{{tx.amountText}}
+                </text>
+              </view>
+              <view class="tx-meta">
+                <text class="tx-category">{{tx.categoryName}}</text>
+                <text class="tx-dot">·</text>
+                <text class="tx-date">{{tx.spentAt}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部操作区 -->
+    <view class="footer-actions">
+      <button class="btn-save" bindtap="onSaveImage" disabled="{{saving}}" loading="{{saving}}">
+        <van-icon name="photo-o" size="18px" />
+        <text>{{saving ? '生成中...' : '保存图片'}}</text>
+      </button>
+      <button class="btn-back-home" bindtap="onBackHome">返回首页</button>
+    </view>
+
+    <!-- 离屏 Canvas（用于生成图片，用户不可见） -->
+    <canvas type="2d" id="summaryCanvas" style="position: fixed; left: -9999px; top: -9999px; width: 375px; height: 1000px;"></canvas>
+  </view>
+</view>

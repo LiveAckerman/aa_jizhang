@@ -38,9 +38,9 @@ export class User {
   @Column({ default: false })
   hasUsedWechatNickname: boolean
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date
 }

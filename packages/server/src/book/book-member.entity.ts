@@ -42,6 +42,6 @@ export class BookMember {
   @Column({ length: 36, default: '' })
   groupId: string
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   joinedAt: Date
 }

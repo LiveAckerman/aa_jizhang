@@ -532,6 +532,26 @@ Page({
     wx.navigateTo({ url: `/packageA/pages/settle-rounds/settle-rounds?bookId=${this.data.id}` })
   },
 
+  // 账单总结入口
+  onOpenSummary() {
+    // 先生成分享令牌，然后跳转到分享页面
+    wx.showLoading({ title: '生成中...', mask: true })
+    api.createShareToken(this.data.id, {
+      groupBy: 'person',
+      includeUnsettled: false,
+    })
+      .then((res) => {
+        wx.hideLoading()
+        wx.navigateTo({
+          url: `/packageA/pages/share-summary/share-summary?token=${res.tokenId}`,
+        })
+      })
+      .catch((e) => {
+        wx.hideLoading()
+        wx.showToast({ title: e.message || '生成失败', icon: 'none' })
+      })
+  },
+
   // 阻止弹窗面板点击冒泡到遮罩
   stopPropagation() {},
 

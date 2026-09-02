@@ -178,6 +178,16 @@ export class BookService {
     return book
   }
 
+  /** 取账本封面 URL（供分享总结等场景用） */
+  getCoverUrl(book: Book): string {
+    return this.resolveCover(book)
+  }
+
+  /** 取账本成员列表（含昵称头像，供分享总结等公开场景用，不校验成员身份） */
+  async getMembers(bookId: string) {
+    return this.enrichMembers(bookId)
+  }
+
   /** 取账本全部成员的 userId 列表 */
   async listMemberIds(bookId: string): Promise<string[]> {
     const members = await this.memberRepo.find({ where: { bookId } })

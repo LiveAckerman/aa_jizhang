@@ -33,9 +33,9 @@ export class BookGroup {
   @Column({ type: 'int', default: 100 })
   sortOrder: number
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date
 }

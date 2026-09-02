@@ -5,10 +5,10 @@ const app = getApp()
 
 /**
  * 发起请求
- * @param {object} options { url, method, data, header }
+ * @param {object} options { url, method, data, header, skipAuth }
  * @returns {Promise}
  */
-function request({ url, method = 'GET', data = {}, header = {} }) {
+function request({ url, method = 'GET', data = {}, header = {}, skipAuth = false }) {
   const baseURL = getApp().globalData.apiBaseUrl
   const token = getApp().globalData.token
 
@@ -19,7 +19,7 @@ function request({ url, method = 'GET', data = {}, header = {} }) {
       data,
       header: {
         'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(token && !skipAuth ? { Authorization: `Bearer ${token}` } : {}),
         ...header,
       },
       success(res) {

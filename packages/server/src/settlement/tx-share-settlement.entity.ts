@@ -50,6 +50,6 @@ export class TxShareSettlement {
   @Column({ type: 'uuid', nullable: true })
   roundId: string | null
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date
 }
