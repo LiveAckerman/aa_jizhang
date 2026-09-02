@@ -1,5 +1,5 @@
 <view class="share-summary-page">
-  <!-- 加载中 -->
+  <!-- 整页骨架屏：首次加载 -->
   <view wx:if="{{loading}}" class="loading-state">
     <view class="loading-spinner"></view>
     <text class="loading-text">加载中...</text>
@@ -15,7 +15,7 @@
 
   <!-- 正常内容 -->
   <view wx:else class="content">
-    <!-- 头部：账本信息 -->
+    <!-- 账本信息卡片 -->
     <view class="book-card">
       <view class="book-info">
         <image wx:if="{{book.coverUrl}}" class="book-cover" src="{{book.coverUrl}}" mode="aspectFill" />
@@ -28,13 +28,7 @@
         </view>
       </view>
       <view class="member-avatars">
-        <image
-          wx:for="{{book.members}}"
-          wx:key="index"
-          class="member-avatar"
-          src="{{item.avatar}}"
-          mode="aspectFill"
-        />
+        <image wx:for="{{book.members}}" wx:key="index" class="member-avatar" src="{{item.avatar}}" mode="aspectFill" />
       </view>
     </view>
 
@@ -48,8 +42,6 @@
         <text class="summary-label">账单笔数</text>
         <text class="summary-value">{{summary.txCount}} 笔</text>
       </view>
-      <view class="summary-divider"></view>
-      <!-- 包含未结算勾选 -->
       <view class="summary-row settle-toggle">
         <text class="summary-label">包含未结算账单</text>
         <switch checked="{{includeUnsettled}}" bindchange="onToggleUnsettled" color="#4097a9" />
@@ -58,73 +50,85 @@
 
     <!-- 维度切换 tab -->
     <view class="tab-switch">
-      <view
-        class="tab-item {{groupBy === 'person' ? 'active' : ''}}"
-        bindtap="onSwitchGroupBy"
-        data-key="person"
-      >按人员</view>
-      <view
-        class="tab-item {{groupBy === 'category' ? 'active' : ''}}"
-        bindtap="onSwitchGroupBy"
-        data-key="category"
-      >按分类</view>
-      <view
-        class="tab-item {{groupBy === 'paymentMethod' ? 'active' : ''}}"
-        bindtap="onSwitchGroupBy"
-        data-key="paymentMethod"
-      >按支付方式</view>
+      <view class="tab-item {{groupBy === 'person' ? 'active' : ''}}" bindtap="onSwitchGroupBy" data-key="person">按人员</view>
+      <view class="tab-item {{groupBy === 'category' ? 'active' : ''}}" bindtap="onSwitchGroupBy" data-key="category">按分类</view>
+      <view class="tab-item {{groupBy === 'paymentMethod' ? 'active' : ''}}" bindtap="onSwitchGroupBy" data-key="paymentMethod">按支付方式</view>
     </view>
 
-    <!-- 分组明细列表 -->
+    <!-- 分组明细列表：二次加载时只 loading 这个区域 -->
     <view class="groups-section">
-      <view class="group-list">
-        <view wx:for="{{groups}}" wx:key="index" class="group-card">
-          <!-- 可点击的头部区域 -->
+      <!-- 列表骨架屏 -->
+      <block wx:if="{{groupsLoading}}">
+        <view class="glass-card tx-list skeleton-group" wx:for="{{[1,2,3]}}" wx:key="*this">
+          <view class="skeleton-group-row">
+            <view class="skeleton-avatar"></view>
+            <view class="skeleton-lines">
+              <view class="skeleton-line w60"></view>
+              <view class="skeleton-line w40"></view>
+            </view>
+            <view class="skeleton-line w30"></view>
+          </view>
+        </view>
+      </block>
+
+      <!-- 实际列表 -->
+      <block wx:else>
+        <view wx:for="{{groups}}" wx:key="index" class="group-block">
+          <!-- 分组头部（可折叠） -->
           <view class="group-header" bindtap="toggleGroup" data-key="{{item.key}}">
-            <!-- 左侧：图标或头像 -->
             <view class="group-icon-area">
+              <!-- 人员：头像 -->
               <image wx:if="{{groupBy === 'person' && item.avatar}}" class="group-avatar" src="{{item.avatar}}" mode="aspectFill" />
               <view wx:elif="{{groupBy === 'person'}}" class="group-avatar-placeholder">
-                <van-icon name="manager-o" size="24px" color="#8091a5" />
+                <van-icon name="manager-o" size="22px" color="#8091a5" />
               </view>
+              <!-- 分类 -->
               <view wx:elif="{{groupBy === 'category'}}" class="group-icon-box">
-                <image wx:if="{{item.svgIcon}}" class="category-svg" src="{{item.svgIcon}}" mode="aspectFit" />
-                <van-icon wx:else name="{{item.icon || 'more-o'}}" size="24px" color="#4097a9" />
+                <image wx:if="{{item.svgIcon}}" class="group-icon-svg" src="{{item.svgIcon}}" mode="aspectFit" />
+                <van-icon wx:else name="{{item.icon || 'more-o'}}" size="22px" color="#4097a9" />
               </view>
+              <!-- 支付方式 -->
               <view wx:else class="group-icon-box">
-                <van-icon name="{{item.icon || 'card'}}" size="24px" color="#4097a9" />
+                <van-icon name="{{item.icon || 'card'}}" size="22px" color="#4097a9" />
               </view>
             </view>
-
-            <!-- 中间：标签和副标签 -->
             <view class="group-info">
               <text class="group-label">{{item.label}}</text>
               <text class="group-sublabel">{{item.sublabel}}</text>
             </view>
-
-            <!-- 右侧：金额 + 折叠箭头 -->
-            <view class="group-amount-area">
+            <view class="group-right">
               <text class="group-amount">¥{{item.totalAmountText}}</text>
               <van-icon name="{{expandedMap[item.key] ? 'arrow-up' : 'arrow-down'}}" size="14px" color="#8091a5" />
             </view>
           </view>
 
-          <!-- 账单明细列表（展开时显示） -->
-          <view class="group-detail" wx:if="{{expandedMap[item.key]}}">
-            <view class="tx-item" wx:for="{{item.transactions}}" wx:key="id" wx:for-item="tx">
-              <view class="tx-row">
-                <text class="tx-note">{{tx.note || '无备注'}}</text>
-                <text class="tx-amount">¥{{tx.amountText}}</text>
+          <!-- 账单明细（展开时，样式对齐 book-detail） -->
+          <view wx:if="{{expandedMap[item.key]}}" class="glass-card tx-list">
+            <view
+              wx:for="{{item.transactions}}"
+              wx:key="id"
+              wx:for-item="tx"
+              class="tx-item"
+            >
+              <!-- 分类/支付方式模式显示 icon，人员模式不显示头像 -->
+              <view class="tx-icon">
+                <image wx:if="{{tx.categorySvg}}" class="tx-icon-svg" src="{{tx.categorySvg}}" mode="aspectFit" />
+                <van-icon wx:else name="{{tx.categoryIcon || 'shopping-cart-o'}}" size="22px" color="#4097a9" />
               </view>
-              <view class="tx-meta">
-                <text class="tx-tag">{{tx.categoryName}}</text>
-                <text class="tx-dot"> · </text>
-                <text class="tx-date">{{tx.spentAt}}</text>
+              <view class="tx-mid">
+                <view class="tx-title-row">
+                  <text class="tx-cat">{{tx.categoryName}}</text>
+                </view>
+                <text class="tx-note">{{tx.note || '无备注'}}</text>
+              </view>
+              <view class="tx-right">
+                <text class="tx-amount">¥{{tx.amountText}}</text>
+                <text class="tx-date-tag">{{tx.spentAt}}</text>
               </view>
             </view>
           </view>
         </view>
-      </view>
+      </block>
     </view>
 
     <!-- 底部操作区 -->

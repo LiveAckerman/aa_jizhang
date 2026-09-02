@@ -1,0 +1,209 @@
+/**
+ * 公共账单卡片样式
+ * 被 book-detail 和 share-summary 共用
+ * 使用方式：在页面 wxss 里 @import '/styles/tx-card.wxss';
+ */
+
+/* 日期分组标题 */
+.tx-date {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  margin: 24rpx 8rpx 12rpx;
+}
+
+/* 账单列表容器 */
+.tx-list {
+  padding: 0 24rpx;
+}
+
+/* 单条账单 */
+.tx-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 2rpx solid rgba(128, 145, 165, 0.12);
+}
+
+.tx-item:last-child {
+  border-bottom: none;
+}
+
+/* 付款人头像 */
+.tx-payer {
+  margin-right: 16rpx;
+  flex-shrink: 0;
+}
+.tx-payer-avatar {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: #eef1f4;
+  display: block;
+}
+.tx-payer-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26rpx;
+  color: #fff;
+  background: #4097a9;
+}
+
+/* 分类图标 */
+.tx-icon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 20rpx;
+  background: rgba(64, 151, 169, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+.tx-icon-svg {
+  width: 44rpx;
+  height: 44rpx;
+}
+.tx-item.private .tx-icon {
+  background: rgba(47, 65, 89, 0.1);
+}
+
+/* 中间文字区域 */
+.tx-mid {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.tx-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  overflow: hidden;
+}
+.tx-cat {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+.tx-note {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 结算状态标签 */
+.tx-settling-tag {
+  font-size: 18rpx;
+  color: #fa9583;
+  background: rgba(250, 149, 131, 0.14);
+  padding: 2rpx 12rpx;
+  border-radius: 16rpx;
+}
+.tx-settled-tag {
+  font-size: 18rpx;
+  color: #52c41a;
+  background: rgba(82, 196, 26, 0.12);
+  padding: 2rpx 12rpx;
+  border-radius: 16rpx;
+}
+
+/* 右侧金额区 */
+.tx-right {
+  flex-shrink: 0;
+  margin-left: 16rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.tx-amount {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+.my-payment .tx-amount {
+  color: #4097a9;
+}
+.tx-myshare {
+  font-size: 22rpx;
+  color: #fa9c8b;
+  margin-top: 6rpx;
+}
+.tx-myshare.receive {
+  color: #4097a9;
+  font-weight: 600;
+}
+
+/* 日期小标签（share-summary 用，替代 myshare 位置） */
+.tx-date-tag {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+  margin-top: 6rpx;
+}
+
+/* 应收/应付左侧竖线 */
+.tx-item.has-receive::before,
+.tx-item.has-pay::before {
+  content: '';
+  position: absolute;
+  left: -15rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6rpx;
+  height: 48rpx;
+  border-radius: 4rpx;
+}
+.tx-item.has-receive::before { background: #4097a9; }
+.tx-item.has-pay::before { background: #fa9c8b; }
+.tx-item.has-receive .tx-icon { background: rgba(64, 151, 169, 0.12); }
+.tx-item.has-pay .tx-icon { background: rgba(250, 156, 139, 0.12); }
+.tx-item.my-payment .tx-icon { background: rgba(64, 151, 169, 0.18); }
+
+/* 骨架屏（供 share-summary 二次加载使用） */
+.skeleton-group {
+  padding: 0 24rpx;
+}
+.skeleton-group-row {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 0;
+  gap: 20rpx;
+  border-bottom: 2rpx solid rgba(128, 145, 165, 0.08);
+}
+.skeleton-group-row:last-child { border-bottom: none; }
+.skeleton-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: rgba(128, 145, 165, 0.1);
+  flex-shrink: 0;
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+.skeleton-lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+.skeleton-line {
+  height: 24rpx;
+  border-radius: 12rpx;
+  background: rgba(128, 145, 165, 0.1);
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+.skeleton-line.w60 { width: 60%; }
+.skeleton-line.w40 { width: 40%; }
+.skeleton-line.w30 { width: 30%; }
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}

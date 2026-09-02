@@ -4,24 +4,32 @@ const { CATEGORY_MAP, PAYMENT_MAP_FULL } = require('../../../constants/ledger')
 Page({
   data: {
     tokenId: '',
+    bookId: '',       // 从 book-detail 直接进入时使用
+    isOwner: true,    // 从 book-detail 进入时为 true，分享链接进入为 false
     book: null,
     config: null,
     summary: null,
     groups: [],
-    loading: true,
+    loading: true,     // 首次加载（整页骨架屏）
+    groupsLoading: false, // 二次加载（仅列表区骨架屏）
     expired: false,
     saving: false,
-    expandedMap: {}, // 记录哪些组是展开状态：{ groupKey: true }
-    // 本地筛选状态（切换后重新请求，覆盖令牌配置）
-    groupBy: 'person', // person / category / paymentMethod
+    expandedMap: {},
+    groupBy: 'person',
     includeUnsettled: false,
   },
 
   onLoad(query) {
-    // 从 query 或 scene 获取 tokenId
-    let tokenId = query.token || query.tokenId || ''
+    // 从 book-detail 直接进入：携带 bookId
+    if (query.bookId) {
+      this.setData({ bookId: query.bookId, isOwner: true })
+      this.initWithBookId(query.bookId)
+      wx.showShareMenu({ withShareTicket: false })
+      return
+    }
 
-    // 如果是扫码进入，scene 格式为 t=xxx
+    // 从分享链接进入：携带 token 或 scene
+    let tokenId = query.token || query.tokenId || ''
     if (query.scene) {
       const decoded = decodeURIComponent(query.scene)
       const match = decoded.match(/t=([^&]+)/)
@@ -34,23 +42,17 @@ Page({
       return
     }
 
-    this.setData({ tokenId })
+    this.setData({ tokenId, isOwner: false })
     this.loadData()
-
-    // 开启分享功能
-    wx.showShareMenu({ withShareTicket: false })
   },
 
   onShareAppMessage() {
     const { book, tokenId } = this.data
     if (!book || !tokenId) {
-      return {
-        title: '查看账单总结',
-        path: '/pages/books/books',
-      }
+      return { title: '查看账本总结', path: '/pages/books/books' }
     }
     return {
-      title: `${book.name} - 账单总结`,
+      title: `${book.name} - 账本总结`,
       path: `/packageA/pages/share-summary/share-summary?token=${tokenId}`,
       imageUrl: 'https://cdn.ljw44.com/images/share-summary.jpg',
     }
@@ -60,8 +62,29 @@ Page({
     this.loadData().finally(() => wx.stopPullDownRefresh())
   },
 
+  // 从 bookId 进入：先创建 token，再加载数据
+  async initWithBookId(bookId) {
+    this.setData({ loading: true })
+    try {
+      const res = await api.createShareToken(bookId, {
+        groupBy: this.data.groupBy,
+        includeUnsettled: this.data.includeUnsettled,
+      })
+      this.setData({ tokenId: res.tokenId })
+      await this.loadData()
+    } catch (e) {
+      this.setData({ loading: false })
+      wx.showToast({ title: (e && e.message) || '加载失败', icon: 'none' })
+    }
+  },
+
   async loadData() {
-    if (!this.data.book) this.setData({ loading: true })
+    // 首次加载（无数据）用全页骨架；之后切换维度只 loading 列表区
+    if (!this.data.book) {
+      this.setData({ loading: true })
+    } else {
+      this.setData({ groupsLoading: true })
+    }
 
     try {
       const res = await api.getShareSummary(this.data.tokenId, {
@@ -70,18 +93,13 @@ Page({
       })
       const { book, config, summary, groups, expiresAt } = res
 
-      // 检查是否过期
-      const now = new Date().getTime()
-      const expiry = new Date(expiresAt).getTime()
-      if (now > expiry) {
-        this.setData({ expired: true, loading: false })
+      if (new Date().getTime() > new Date(expiresAt).getTime()) {
+        this.setData({ expired: true, loading: false, groupsLoading: false })
         return
       }
 
-      // 装饰 groups 数据（用实际返回的 groupBy，不用本地状态）
       const decorated = this.decorateGroups(groups, config.groupBy)
-
-      wx.setNavigationBarTitle({ title: `${book.name} · 账单总结` })
+      wx.setNavigationBarTitle({ title: `${book.name} · 账本总结` })
 
       this.setData({
         book,
@@ -91,11 +109,12 @@ Page({
         groupBy: config.groupBy,
         includeUnsettled: config.includeUnsettled,
         loading: false,
+        groupsLoading: false,
         expired: false,
-        expandedMap: {}, // 切换维度时收起所有展开项
+        expandedMap: {},
       })
     } catch (e) {
-      this.setData({ loading: false })
+      this.setData({ loading: false, groupsLoading: false })
       const msg = (e && e.message) || '加载失败'
       if (msg.includes('过期') || msg.includes('expired')) {
         this.setData({ expired: true })
@@ -109,14 +128,14 @@ Page({
   onSwitchGroupBy(e) {
     const groupBy = e.currentTarget.dataset.key
     if (groupBy === this.data.groupBy) return
-    this.setData({ groupBy, loading: true })
+    this.setData({ groupBy })
     this.loadData()
   },
 
   // 切换是否包含未结算
   onToggleUnsettled(e) {
     const includeUnsettled = !!e.detail.value
-    this.setData({ includeUnsettled, loading: true })
+    this.setData({ includeUnsettled })
     this.loadData()
   },
 

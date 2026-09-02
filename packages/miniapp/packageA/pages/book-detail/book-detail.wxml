@@ -115,7 +115,7 @@
       </view>
       <view class="quick-item" bindtap="onOpenSummary">
         <van-icon name="bar-chart-o" size="24px" color="#4097a9" />
-        <text>账单总结</text>
+        <text>账本总结</text>
       </view>
       <!-- 统计暂时隐藏，后续可能放出来
       <view class="quick-item" bindtap="onStatistics">
