@@ -538,7 +538,6 @@ Page({
       url: `/packageA/pages/share-summary/share-summary?bookId=${this.data.id}`,
     })
   },
-  },
 
   // 阻止弹窗面板点击冒泡到遮罩
   stopPropagation() {},
