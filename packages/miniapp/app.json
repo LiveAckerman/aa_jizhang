@@ -65,7 +65,7 @@
   "componentFramework": "glass-easel",
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents",
-  "requiredPrivateInfos": ["chooseLocation", "saveFileToDisk"],
+  "requiredPrivateInfos": ["chooseLocation"],
   "permission": {
     "scope.userLocation": {
       "desc": "用于记录消费发生的地点，便于账单管理"
