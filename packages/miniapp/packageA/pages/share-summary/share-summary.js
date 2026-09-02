@@ -105,6 +105,7 @@ Page({
     if (groupBy === 'person') {
       return groups.map((g) => ({
         ...g,
+        key: g.key || g.userId, // 确保有 key 字段
         label: g.nickname || '未知成员',
         sublabel: `共 ${g.count} 笔`,
       }))
@@ -113,6 +114,7 @@ Page({
         const cat = CATEGORY_MAP[g.category] || CATEGORY_MAP.other
         return {
           ...g,
+          key: g.key || g.category, // 确保有 key 字段
           label: cat.name,
           icon: cat.icon,
           svgIcon: cat.svgIcon || '',
@@ -124,6 +126,7 @@ Page({
         const pay = PAYMENT_MAP_FULL[g.paymentMethod] || { name: '未知', icon: 'paid' }
         return {
           ...g,
+          key: g.key || g.paymentMethod, // 确保有 key 字段
           label: pay.name,
           icon: pay.icon,
           sublabel: `共 ${g.count} 笔`,
@@ -146,10 +149,16 @@ Page({
     if (this.data.saving) return
     this.setData({ saving: true })
 
-    // 延迟绘制，确保数据已加载
-    setTimeout(() => {
-      this.renderToCanvas()
-    }, 100)
+    try {
+      // 延迟绘制，确保数据已加载
+      setTimeout(() => {
+        this.renderToCanvas()
+      }, 100)
+    } catch (e) {
+      console.error('保存图片失败', e)
+      wx.showToast({ title: '生成失败', icon: 'none' })
+      this.setData({ saving: false })
+    }
   },
 
   // 使用 Canvas 2D 渲染小票样式图片

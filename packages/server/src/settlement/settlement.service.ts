@@ -645,6 +645,22 @@ export class SettlementService {
   }
 
   /**
+   * 获取进行中的结算轮次（公开接口，无 userId 鉴权）
+   * 用于分享总结等公开场景
+   */
+  async getActiveRoundsPublic(bookId: string) {
+    const rounds = await this.roundRepo.find({
+      where: { bookId },
+      order: { createdAt: 'DESC' },
+    })
+    if (rounds.length === 0) return []
+    const statusMap = await this.computeRoundStatuses(rounds)
+    return rounds
+      .filter((r) => statusMap.get(r.id) === 'active')
+      .map((r) => ({ ...r, status: 'active' as const }))
+  }
+
+  /**
    * 查找账本"进行中"的轮次（存在待确认 pending 转账）。无则返回 null。
    */
   private async findActiveRound(bookId: string): Promise<SettlementRound | null> {

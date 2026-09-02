@@ -1,7 +1,8 @@
-import { Controller, Get, Param, NotFoundException } from '@nestjs/common'
+import { Controller, Get, Param, NotFoundException, BadRequestException } from '@nestjs/common'
 import { ShareTokenService } from './share-token.service'
 import { BookService } from '../book/book.service'
 import { TransactionService } from '../transaction/transaction.service'
+import { SettlementService } from '../settlement/settlement.service'
 
 /**
  * 分享总结公开接口（无需登录）
@@ -12,6 +13,7 @@ export class ShareSummaryController {
     private readonly shareTokenService: ShareTokenService,
     private readonly bookService: BookService,
     private readonly transactionService: TransactionService,
+    private readonly settlementService: SettlementService,
   ) {}
 
   /**
@@ -36,89 +38,132 @@ export class ShareSummaryController {
     // 3. 获取账单列表（公开场景取全部，可见性由令牌控制）
     const allTxs = await this.transactionService.listAll(token.bookId)
 
-    // 4. 根据配置过滤账单
-    const txs = token.config.includeUnsettled
-      ? allTxs
-      : allTxs.filter((t) => !!t.personSettledAt || !!t.settledRoundId)
+    // 4. 获取进行中的结算轮次（用于判断"已结算"）
+    // 注意：由于是公开接口，无法调用需要 userId 的方法，这里直接查询数据库
+    const activeRounds = await this.settlementService.getActiveRoundsPublic(token.bookId)
+    const activeRoundIds = new Set(activeRounds.map((r) => r.id))
 
-    // 5. 根据 groupBy 聚合数据
+    // 5. 根据配置过滤账单
+    const isSettled = (t: any) =>
+      !!t.personSettledAt || (!!t.settledRoundId && !activeRoundIds.has(t.settledRoundId))
+
+    const txs = token.config.includeUnsettled
+      ? allTxs.filter((t) => t.type !== 'private') // 排除私账
+      : allTxs.filter((t) => t.type !== 'private' && isSettled(t))
+
+    // 6. 根据 groupBy 聚合数据
     let groups: any[] = []
     const groupBy = token.config.groupBy
 
     if (groupBy === 'person') {
-      // 按人聚合：统计每个人的支付总额
-      const payerMap = new Map<string, { userId: string; nickname: string; avatar: string; totalAmount: number; count: number }>()
+      // 按人聚合：统计每个人在所有账单中的消费份额总和（splits）
+      const personMap = new Map<
+        string,
+        {
+          userId: string
+          nickname: string
+          avatar: string
+          totalAmount: number
+          count: number
+          transactions: any[]
+        }
+      >()
 
       txs.forEach((t) => {
-        if (t.type === 'private') return // 私账不计入人员统计
-
-        const key = t.payerId
-        if (!payerMap.has(key)) {
-          const member = members.find((m) => m.userId === key)
-          payerMap.set(key, {
-            userId: key,
-            nickname: member?.nickname || '未知',
-            avatar: member?.avatar || '',
-            totalAmount: 0,
-            count: 0,
+        // 遍历每笔账单的 splits，累加每个人的份额
+        if (t.splits && t.splits.length > 0) {
+          t.splits.forEach((split: any) => {
+            const key = split.userId
+            if (!personMap.has(key)) {
+              const member = members.find((m) => m.userId === key)
+              personMap.set(key, {
+                userId: key,
+                nickname: member?.nickname || '未知',
+                avatar: member?.avatar || '',
+                totalAmount: 0,
+                count: 0,
+                transactions: [],
+              })
+            }
+            const item = personMap.get(key)!
+            item.totalAmount += split.amount
+            item.count += 1
+            item.transactions.push(t)
           })
         }
-        const item = payerMap.get(key)!
-        item.totalAmount += t.amount
-        item.count += 1
       })
 
-      groups = Array.from(payerMap.values())
+      groups = Array.from(personMap.values())
         .map((item) => ({
-          ...item,
+          key: item.userId,
+          userId: item.userId,
+          nickname: item.nickname,
+          avatar: item.avatar,
+          totalAmount: item.totalAmount,
           totalAmountText: (item.totalAmount / 100).toFixed(2),
+          count: item.count,
+          transactions: this.decorateTransactions(item.transactions),
         }))
         .sort((a, b) => b.totalAmount - a.totalAmount)
-
     } else if (groupBy === 'category') {
       // 按分类聚合
-      const catMap = new Map<string, { category: string; totalAmount: number; count: number }>()
+      const catMap = new Map<
+        string,
+        { category: string; totalAmount: number; count: number; transactions: any[] }
+      >()
 
       txs.forEach((t) => {
         const key = t.category || 'other'
         if (!catMap.has(key)) {
-          catMap.set(key, { category: key, totalAmount: 0, count: 0 })
+          catMap.set(key, { category: key, totalAmount: 0, count: 0, transactions: [] })
         }
         const item = catMap.get(key)!
         item.totalAmount += t.amount
         item.count += 1
+        item.transactions.push(t)
       })
 
       groups = Array.from(catMap.values())
         .map((item) => ({
-          ...item,
+          key: item.category,
+          category: item.category,
+          totalAmount: item.totalAmount,
           totalAmountText: (item.totalAmount / 100).toFixed(2),
+          count: item.count,
+          transactions: this.decorateTransactions(item.transactions),
         }))
         .sort((a, b) => b.totalAmount - a.totalAmount)
-
     } else if (groupBy === 'paymentMethod') {
       // 按支付方式聚合
-      const payMap = new Map<string, { paymentMethod: string; totalAmount: number; count: number }>()
+      const payMap = new Map<
+        string,
+        { paymentMethod: string; totalAmount: number; count: number; transactions: any[] }
+      >()
 
       txs.forEach((t) => {
         const key = t.paymentMethod || 'wechat'
         if (!payMap.has(key)) {
-          payMap.set(key, { paymentMethod: key, totalAmount: 0, count: 0 })
+          payMap.set(key, { paymentMethod: key, totalAmount: 0, count: 0, transactions: [] })
         }
         const item = payMap.get(key)!
         item.totalAmount += t.amount
         item.count += 1
+        item.transactions.push(t)
       })
 
       groups = Array.from(payMap.values())
         .map((item) => ({
-          ...item,
+          key: item.paymentMethod,
+          paymentMethod: item.paymentMethod,
+          totalAmount: item.totalAmount,
           totalAmountText: (item.totalAmount / 100).toFixed(2),
+          count: item.count,
+          transactions: this.decorateTransactions(item.transactions),
         }))
         .sort((a, b) => b.totalAmount - a.totalAmount)
     }
 
-    // 6. 计算总金额
+    // 7. 计算总金额
     const totalAmount = txs.reduce((sum, t) => sum + t.amount, 0)
 
     return {
@@ -144,5 +189,44 @@ export class ShareSummaryController {
         expiresAt: token.expiresAt,
       },
     }
+  }
+
+  /**
+   * 装饰账单明细，添加前端需要的字段
+   */
+  private decorateTransactions(txs: any[]): any[] {
+    // 分类映射（前端常量）
+    const CATEGORY_MAP: Record<string, string> = {
+      food: '餐饮',
+      transport: '交通',
+      hotel: '住宿',
+      shopping: '购物',
+      entertainment: '娱乐',
+      medical: '医疗',
+      education: '教育',
+      other: '其他',
+    }
+
+    return txs.map((t) => ({
+      id: t.id,
+      note: t.note || '',
+      amount: t.amount,
+      amountText: (t.amount / 100).toFixed(2),
+      category: t.category,
+      categoryName: CATEGORY_MAP[t.category] || '其他',
+      paymentMethod: t.paymentMethod,
+      spentAt: this.formatDate(new Date(t.spentAt)),
+      type: t.type,
+    }))
+  }
+
+  /**
+   * 格式化日期为 YYYY-MM-DD
+   */
+  private formatDate(date: Date): string {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
   }
 }

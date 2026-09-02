@@ -8,6 +8,7 @@ import {
   Post,
   Query,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common'
 import { Res } from '@nestjs/common'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
@@ -203,7 +204,7 @@ export class BookController {
 
     // 验证令牌归属账本
     if (token.bookId !== id) {
-      throw new Error('令牌与账本不匹配')
+      throw new BadRequestException('令牌与账本不匹配')
     }
 
     // 必须是成员才能生成分享码
