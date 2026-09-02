@@ -1,7 +1,8 @@
 <view class="share-summary-page">
   <!-- 加载中 -->
   <view wx:if="{{loading}}" class="loading-state">
-    <van-loading size="24px" vertical>加载中...</van-loading>
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
   </view>
 
   <!-- 已过期 -->
