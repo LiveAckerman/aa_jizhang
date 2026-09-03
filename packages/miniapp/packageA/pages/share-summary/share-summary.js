@@ -280,23 +280,29 @@ Page({
               return reject(e)
             }
 
-            // 等两帧确保绘制真正落到 buffer（官方建议延迟导出）
-            canvas.requestAnimationFrame(() => {
-              canvas.requestAnimationFrame(() => {
-                wx.canvasToTempFilePath({
-                  canvas,
-                  x: 0,
-                  y: 0,
-                  width: pxW,
-                  height: pxH,
-                  destWidth: pxW, // 必须显式传，否则默认再乘一次 dpr → 超 4096
-                  destHeight: pxH,
-                  fileType: 'png',
-                  success: (r) => resolve(r.tempFilePath),
-                  fail: (err) => reject(err), // 把真实 errMsg 抛出去
-                })
+            // 延迟一帧确保绘制落盘（用 setTimeout，兼容性优于 requestAnimationFrame）
+            setTimeout(() => {
+              wx.canvasToTempFilePath({
+                canvas,
+                x: 0,
+                y: 0,
+                width: pxW,
+                height: pxH,
+                destWidth: pxW, // 必须显式传，否则默认再乘一次 dpr → 超 4096
+                destHeight: pxH,
+                fileType: 'png',
+                success: (r) => {
+                  // 立即提取字符串路径，不持有 r 对象本身
+                  const path = String((r && r.tempFilePath) || '')
+                  if (!path) return reject(new Error('导出路径为空'))
+                  resolve(path)
+                },
+                fail: (err) => {
+                  // 只保留错误信息字符串，不透传原始 err 对象（可能引用 canvas）
+                  reject(new Error(String((err && err.errMsg) || '导出失败')))
+                },
               })
-            })
+            }, 50)
           })
       })
     })
@@ -430,10 +436,11 @@ Page({
   saveToAlbum(filePath) {
     return new Promise((resolve, reject) => {
       wx.saveImageToPhotosAlbum({
-        filePath,
-        success: resolve,
+        filePath: String(filePath || ''),
+        // 不把回调结果对象透传出去，避免被 SDK 日志层序列化
+        success: () => resolve(),
         fail: (err) => {
-          const msg = (err && err.errMsg) || ''
+          const msg = String((err && err.errMsg) || '')
           if (msg.includes('auth deny') || msg.includes('auth denied')) {
             wx.hideLoading()
             wx.showModal({
@@ -441,14 +448,15 @@ Page({
               content: '请在设置中允许访问相册后重试',
               confirmText: '去设置',
               success: (res) => {
-                if (res.confirm) wx.openSetting()
+                if (res && res.confirm) wx.openSetting()
               },
             })
             const e = new Error('相册权限被拒绝')
             e.__handled = true // 标记：已弹窗，外层不再 toast
             return reject(e)
           }
-          reject(err)
+          // 只保留错误信息字符串，不透传原始 err 对象
+          reject(new Error(msg || '保存失败'))
         },
       })
     })

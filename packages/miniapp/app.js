@@ -40,16 +40,11 @@ App({
       }
     }
 
-    // 隐私授权处理：当某 API 需要隐私弹窗时，微信会调此回调
-    if (wx.onNeedPrivacyAuthorization) {
-      wx.onNeedPrivacyAuthorization((resolve) => {
-        // 直接调起微信官方隐私弹窗（基础库 >= 2.32.3），用户同意后自动放行
-        wx.requirePrivacyAuthorize({
-          success: () => resolve({ event: 'agree', buttonId: '' }),
-          fail: () => resolve({ event: 'disagree' }),
-        })
-      })
-    }
+    // 注意：不要注册 wx.onNeedPrivacyAuthorization！
+    // 注册它 = 声明使用「自定义隐私弹窗」，回调里必须展示自己的弹窗 UI。
+    // 曾经在 handler 里调 wx.requirePrivacyAuthorize，而后者会再次触发本 handler，
+    // 造成无限递归（saveImageToPhotosAlbum 等隐私接口调用时爆栈 Maximum call stack size exceeded）。
+    // 不注册时，微信会自动弹官方默认隐私弹窗（需在后台配置隐私协议，已配置）。
   },
 
   /** 是否已登录 */
