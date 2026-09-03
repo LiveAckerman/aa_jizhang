@@ -319,7 +319,7 @@ Page({
 
   // 绘制小票内容（复刻页面视觉：白色圆角卡片 + 品牌主色 + 圆形头像 + 明细全展开）
   drawTicket(ctx, width, height) {
-    const { book, summary, groups, config } = this.data
+    const { book, summary, groups, config, groupBy } = this.data
     const PRIMARY = '#4097a9'
     const DARK = '#2f4159'
     const GRAY = '#8091a5'
