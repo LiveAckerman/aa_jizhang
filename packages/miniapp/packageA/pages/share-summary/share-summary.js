@@ -296,43 +296,49 @@ Page({
             canvas.height = pxH
             ctx.scale(dpr, dpr) // 之后按 CSS 尺寸绘制
 
-            try {
-              this.drawTicket(ctx, BASE_W, cssH)
-            } catch (e) {
-              return reject(e)
-            }
-
-            // 延迟一帧确保绘制落盘（用 setTimeout，兼容性优于 requestAnimationFrame）
-            setTimeout(() => {
-              wx.canvasToTempFilePath({
-                canvas,
-                x: 0,
-                y: 0,
-                width: pxW,
-                height: pxH,
-                destWidth: pxW, // 必须显式传，否则默认再乘一次 dpr → 超 4096
-                destHeight: pxH,
-                fileType: 'png',
-                success: (r) => {
-                  // 立即提取字符串路径，不持有 r 对象本身
-                  const path = String((r && r.tempFilePath) || '')
-                  if (!path) return reject(new Error('导出路径为空'))
-                  resolve(path)
-                },
-                fail: (err) => {
-                  // 只保留错误信息字符串，不透传原始 err 对象（可能引用 canvas）
-                  reject(new Error(String((err && err.errMsg) || '导出失败')))
-                },
+            // 先并行下载封面 + 头像（失败自动降级为色块），再绘制
+            this.preloadImages(canvas)
+              .then((imgs) => {
+                try {
+                  this.drawTicket(ctx, BASE_W, cssH, imgs)
+                } catch (e) {
+                  return reject(e)
+                }
+                // 延迟一帧确保绘制落盘（用 setTimeout，兼容性优于 requestAnimationFrame）
+                setTimeout(() => {
+                  wx.canvasToTempFilePath({
+                    canvas,
+                    x: 0,
+                    y: 0,
+                    width: pxW,
+                    height: pxH,
+                    destWidth: pxW, // 必须显式传，否则默认再乘一次 dpr → 超 4096
+                    destHeight: pxH,
+                    fileType: 'png',
+                    success: (r) => {
+                      // 立即提取字符串路径，不持有 r 对象本身
+                      const path = String((r && r.tempFilePath) || '')
+                      if (!path) return reject(new Error('导出路径为空'))
+                      resolve(path)
+                    },
+                    fail: (err) => {
+                      // 只保留错误信息字符串，不透传原始 err 对象（可能引用 canvas）
+                      reject(new Error(String((err && err.errMsg) || '导出失败')))
+                    },
+                  })
+                }, 50)
               })
-            }, 50)
+              .catch(reject)
           })
       })
     })
   },
 
   // 绘制小票内容（复刻页面视觉：白色圆角卡片 + 品牌主色 + 圆形头像 + 明细全展开）
-  drawTicket(ctx, width, height) {
+  // imgs: { cover, avatarMap } —— 预加载好的封面/头像 Image，缺失时降级为色块
+  drawTicket(ctx, width, height, imgs) {
     const { book, summary, groups, config, groupBy } = this.data
+    const images = imgs || { cover: null, avatarMap: {} }
     const PRIMARY = '#4097a9'
     const DARK = '#2f4159'
     const GRAY = '#8091a5'
@@ -363,20 +369,43 @@ Page({
       ctx.closePath()
     }
 
+    // 工具函数：圆角裁剪绘制图片（封面用）
+    const drawRoundImage = (img, x, yy, w, h, r) => {
+      ctx.save()
+      rrect(x, yy, w, h, r)
+      ctx.clip()
+      ctx.drawImage(img, x, yy, w, h)
+      ctx.restore()
+    }
+
+    // 工具函数：圆形裁剪绘制图片（头像用）
+    const drawCircleImage = (img, cx, cy, radius) => {
+      ctx.save()
+      ctx.beginPath()
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2)
+      ctx.clip()
+      ctx.drawImage(img, cx - radius, cy - radius, radius * 2, radius * 2)
+      ctx.restore()
+    }
+
     // ========== 1. 账本信息卡片 ==========
     const infoCardH = 84
     rrect(cardX, y, cardW, infoCardH, 14)
     ctx.fillStyle = '#ffffff'
     ctx.fill()
-    // 封面（用色块代替，若书有 coverUrl 此处不上网络图，保持简单）
-    rrect(cardX + 14, y + 16, 52, 52, 12)
-    ctx.fillStyle = LIGHT
-    ctx.fill()
-    ctx.fillStyle = PRIMARY
-    ctx.font = 'bold 22px sans-serif'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText('账', cardX + 40, y + 42)
+    // 封面：有真实封面图则绘制，否则色块 + "账" 占位
+    if (images.cover) {
+      drawRoundImage(images.cover, cardX + 14, y + 16, 52, 52, 12)
+    } else {
+      rrect(cardX + 14, y + 16, 52, 52, 12)
+      ctx.fillStyle = LIGHT
+      ctx.fill()
+      ctx.fillStyle = PRIMARY
+      ctx.font = 'bold 22px sans-serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText('账', cardX + 40, y + 42)
+    }
     // 名称 + 成员数
     ctx.fillStyle = DARK
     ctx.font = 'bold 17px sans-serif'
@@ -430,17 +459,23 @@ Page({
       rrect(cardX, y, cardW, 60, 14)
       ctx.fillStyle = '#ffffff'
       ctx.fill()
-      if (groupBy === 'person' && group.avatar) {
-        // 圆形头像（用色块占位，不加载网络图）
-        ctx.beginPath()
-        ctx.arc(cardX + 34, y + 30, 20, 0, Math.PI * 2)
-        ctx.fillStyle = LIGHT
-        ctx.fill()
-        ctx.fillStyle = PRIMARY
-        ctx.font = 'bold 16px sans-serif'
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-        ctx.fillText(headText[0] || '', cardX + 34, y + 31)
+      if (groupBy === 'person') {
+        const avatarImg = images.avatarMap[group.key]
+        if (avatarImg) {
+          // 真实圆形头像
+          drawCircleImage(avatarImg, cardX + 34, y + 30, 20)
+        } else {
+          // 降级：色块 + 首字
+          ctx.beginPath()
+          ctx.arc(cardX + 34, y + 30, 20, 0, Math.PI * 2)
+          ctx.fillStyle = LIGHT
+          ctx.fill()
+          ctx.fillStyle = PRIMARY
+          ctx.font = 'bold 16px sans-serif'
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText(headText[0] || '', cardX + 34, y + 31)
+        }
       }
       // 名称
       ctx.fillStyle = DARK
@@ -522,6 +557,65 @@ Page({
   truncate(str, max) {
     if (!str) return ''
     return str.length > max ? str.substring(0, max) + '…' : str
+  },
+
+  // 下载单张网络图并解码为 canvas Image（失败返回 null，不阻断整体）
+  loadImage(canvas, url) {
+    return new Promise((resolve) => {
+      if (!url || typeof url !== 'string') return resolve(null)
+      let settled = false
+      const done = (val) => {
+        if (settled) return
+        settled = true
+        resolve(val)
+      }
+      // 超时保护：单图 6s 内没结果就降级，避免卡死整个保存流程
+      setTimeout(() => done(null), 6000)
+      // 本地/临时路径直接解码，网络图先 downloadFile 落地
+      const decode = (path) => {
+        const img = canvas.createImage()
+        img.onload = () => done(img)
+        img.onerror = () => done(null) // 解码失败兜底 null
+        img.src = path
+      }
+      if (/^https?:\/\//.test(url)) {
+        wx.downloadFile({
+          url,
+          success: (r) => {
+            if (r.statusCode === 200 && r.tempFilePath) decode(r.tempFilePath)
+            else done(null)
+          },
+          fail: () => done(null),
+        })
+      } else {
+        decode(url)
+      }
+    })
+  },
+
+  // 预加载图片所需的所有网络图（封面 + 头像），返回 { cover, avatarMap }
+  async preloadImages(canvas) {
+    const { book, groups, groupBy } = this.data
+    // 封面
+    const coverP = this.loadImage(canvas, book && book.coverUrl)
+    // 头像：仅 person 维度需要，按 key 去重
+    const avatarTasks = []
+    const avatarKeys = []
+    if (groupBy === 'person') {
+      groups.forEach((g) => {
+        if (g.avatar) {
+          avatarKeys.push(g.key)
+          avatarTasks.push(this.loadImage(canvas, g.avatar))
+        }
+      })
+    }
+    const results = await Promise.all([coverP, ...avatarTasks])
+    const cover = results[0]
+    const avatarMap = {}
+    avatarKeys.forEach((k, i) => {
+      avatarMap[k] = results[i + 1]
+    })
+    return { cover, avatarMap }
   },
 
   // 保存到相册（Promise）
