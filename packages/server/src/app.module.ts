@@ -48,6 +48,8 @@ import { ShareToken } from './share-token/share-token.entity'
         username: config.get('DB_USERNAME'),
         password: config.get('DB_PASSWORD'),
         database,
+        // 禁用 SSL（某些远程数据库不支持 SSL 或配置有问题）
+        ssl: false,
         entities: [User, Book, BookMember, BookGroup, Transaction, TransactionLog, Settlement, SettlementRound, TxShareSettlement, ShareToken],
         // 自动同步表结构：默认关闭（生产安全）。本地开发需自动建表时在 .env 设 DB_SYNCHRONIZE=true。
         // 生产改表走 migration（见 data-source.ts + pnpm migration:*），避免误删列/丢数据。
@@ -59,10 +61,12 @@ import { ShareToken } from './share-token/share-token.entity'
           max: 10, // 池最大连接数
           // 空闲连接 10s 后主动回收，需远小于服务端/NAT idle 超时，防止拿到死连接
           idleTimeoutMillis: 10000,
-          connectionTimeoutMillis: 10000, // 建连超时
+          connectionTimeoutMillis: 30000, // 建连超时 30s（远程数据库需要更长时间）
           keepAlive: true, // 开启 TCP keepalive
           keepAliveInitialDelayMillis: 5000, // 5s 后开始发 keepalive 探测包
           allowExitOnIdle: false,
+          // 查询超时
+          statement_timeout: 30000,
         },
         // 连接被服务端异常关闭时自动重试，避免请求直接 500
         retryAttempts: 5,

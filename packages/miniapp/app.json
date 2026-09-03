@@ -71,7 +71,7 @@
       "desc": "用于记录消费发生的地点，便于账单管理"
     },
     "scope.writePhotosAlbum": {
-      "desc": "用于将账单总结保存为图片到相册"
+      "desc": "用于将账本总结保存为图片到相册"
     }
   },
   "__usePrivacyCheck__": true

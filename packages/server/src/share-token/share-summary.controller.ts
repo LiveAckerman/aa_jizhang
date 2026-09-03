@@ -118,7 +118,7 @@ export class ShareSummaryController {
           totalAmount: item.totalAmount,
           totalAmountText: (item.totalAmount / 100).toFixed(2),
           count: item.count,
-          transactions: this.decorateTransactions(item.transactions),
+          transactions: this.decorateTransactions(item.transactions, members),
         }))
         .sort((a, b) => b.totalAmount - a.totalAmount)
     } else if (groupBy === 'category') {
@@ -146,7 +146,7 @@ export class ShareSummaryController {
           totalAmount: item.totalAmount,
           totalAmountText: (item.totalAmount / 100).toFixed(2),
           count: item.count,
-          transactions: this.decorateTransactions(item.transactions),
+          transactions: this.decorateTransactions(item.transactions, members),
         }))
         .sort((a, b) => b.totalAmount - a.totalAmount)
     } else if (groupBy === 'paymentMethod') {
@@ -174,7 +174,7 @@ export class ShareSummaryController {
           totalAmount: item.totalAmount,
           totalAmountText: (item.totalAmount / 100).toFixed(2),
           count: item.count,
-          transactions: this.decorateTransactions(item.transactions),
+          transactions: this.decorateTransactions(item.transactions, members),
         }))
         .sort((a, b) => b.totalAmount - a.totalAmount)
     }
@@ -210,7 +210,7 @@ export class ShareSummaryController {
   /**
    * 装饰账单明细，添加前端需要的字段
    */
-  private decorateTransactions(txs: any[]): any[] {
+  private decorateTransactions(txs: any[], members: any[]): any[] {
     // 分类映射（前端常量）
     const CATEGORY_MAP: Record<string, string> = {
       food: '餐饮',
@@ -223,17 +223,23 @@ export class ShareSummaryController {
       other: '其他',
     }
 
-    return txs.map((t) => ({
-      id: t.id,
-      note: t.note || '',
-      amount: t.amount,
-      amountText: (t.amount / 100).toFixed(2),
-      category: t.category,
-      categoryName: CATEGORY_MAP[t.category] || '其他',
-      paymentMethod: t.paymentMethod,
-      spentAt: this.formatDate(new Date(t.spentAt)),
-      type: t.type,
-    }))
+    return txs.map((t) => {
+      const payer = members.find((m) => m.userId === t.payerId)
+      return {
+        id: t.id,
+        note: t.note || '',
+        amount: t.amount,
+        amountText: (t.amount / 100).toFixed(2),
+        category: t.category,
+        categoryName: CATEGORY_MAP[t.category] || '其他',
+        paymentMethod: t.paymentMethod,
+        spentAt: this.formatDate(new Date(t.spentAt)),
+        type: t.type,
+        payerId: t.payerId,
+        payerNickname: payer?.nickname || '未知',
+        payerAvatar: payer?.avatar || '',
+      }
+    })
   }
 
   /**

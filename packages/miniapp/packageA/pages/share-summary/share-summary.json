@@ -1,7 +1,8 @@
 {
-  "navigationBarTitleText": "账单总结",
+  "navigationBarTitleText": "账本总结",
   "enablePullDownRefresh": true,
   "usingComponents": {
-    "van-icon": "@vant/weapp/icon/index"
+    "van-icon": "@vant/weapp/icon/index",
+    "primary-button": "/components/primary-button/primary-button"
   }
 }

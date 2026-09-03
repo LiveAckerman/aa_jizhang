@@ -110,7 +110,12 @@
               wx:for-item="tx"
               class="tx-item"
             >
-              <!-- 分类/支付方式模式显示 icon，人员模式不显示头像 -->
+              <!-- 付款人头像区域（按分类/支付方式时显示） -->
+              <view wx:if="{{groupBy !== 'person'}}" class="tx-payer">
+                <image wx:if="{{tx.payerAvatar}}" class="tx-payer-avatar" src="{{tx.payerAvatar}}" mode="aspectFill" />
+                <view wx:else class="tx-payer-avatar tx-payer-avatar-fallback">{{tx.payerNickname[0]}}</view>
+              </view>
+              <!-- 分类图标区域 -->
               <view class="tx-icon">
                 <image wx:if="{{tx.categorySvg}}" class="tx-icon-svg" src="{{tx.categorySvg}}" mode="aspectFit" />
                 <van-icon wx:else name="{{tx.categoryIcon || 'shopping-cart-o'}}" size="22px" color="#4097a9" />
@@ -119,7 +124,7 @@
                 <view class="tx-title-row">
                   <text class="tx-cat">{{tx.categoryName}}</text>
                 </view>
-                <text class="tx-note">{{tx.note || '无备注'}}</text>
+                <text class="tx-note">{{tx.note || tx.payerNickname + ' 付款'}}</text>
               </view>
               <view class="tx-right">
                 <text class="tx-amount">¥{{tx.amountText}}</text>
@@ -133,14 +138,20 @@
 
     <!-- 底部操作区 -->
     <view class="footer-actions">
-      <button class="btn-share" open-type="share">
-        <van-icon name="share-o" size="18px" />
-        <text>分享</text>
-      </button>
-      <button class="btn-save" bindtap="onSaveImage" disabled="{{saving}}">
-        <van-icon name="photo-o" size="18px" />
-        <text>{{saving ? '生成中...' : '保存图片'}}</text>
-      </button>
+      <primary-button
+        class="footer-btn"
+        type="outline"
+        text="分享"
+        open-type="share"
+      />
+      <primary-button
+        class="footer-btn"
+        type="primary"
+        text="保存图片"
+        loading-text="生成中..."
+        loading="{{saving}}"
+        bind:tap="onSaveImage"
+      />
     </view>
 
     <!-- 离屏 Canvas（用于生成图片，用户不可见） -->

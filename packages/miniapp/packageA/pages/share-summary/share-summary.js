@@ -147,6 +147,15 @@ Page({
         key: g.key || g.userId, // 确保有 key 字段
         label: g.nickname || '未知成员',
         sublabel: `共 ${g.count} 笔`,
+        // 给每个 transaction 添加分类图标信息
+        transactions: (g.transactions || []).map((tx) => {
+          const cat = CATEGORY_MAP[tx.category] || CATEGORY_MAP.other
+          return {
+            ...tx,
+            categoryIcon: cat.icon,
+            categorySvg: cat.svgIcon || '',
+          }
+        }),
       }))
     } else if (groupBy === 'category') {
       return groups.map((g) => {
@@ -158,6 +167,12 @@ Page({
           icon: cat.icon,
           svgIcon: cat.svgIcon || '',
           sublabel: `共 ${g.count} 笔`,
+          // 分类模式下，transaction 已经有了分类信息，只需要添加图标
+          transactions: (g.transactions || []).map((tx) => ({
+            ...tx,
+            categoryIcon: cat.icon,
+            categorySvg: cat.svgIcon || '',
+          })),
         }
       })
     } else if (groupBy === 'paymentMethod') {
@@ -169,6 +184,15 @@ Page({
           label: pay.name,
           icon: pay.icon,
           sublabel: `共 ${g.count} 笔`,
+          // 支付方式模式下，需要添加分类图标信息
+          transactions: (g.transactions || []).map((tx) => {
+            const cat = CATEGORY_MAP[tx.category] || CATEGORY_MAP.other
+            return {
+              ...tx,
+              categoryIcon: cat.icon,
+              categorySvg: cat.svgIcon || '',
+            }
+          }),
         }
       })
     }
@@ -215,10 +239,13 @@ Page({
 
         const canvas = res[0].node
         const ctx = canvas.getContext('2d')
-        const dpr = wx.getSystemInfoSync().pixelRatio
+        // 用 getWindowInfo 替代已废弃的 getSystemInfoSync（后者在部分真机触发堆栈溢出）
+        const winInfo = wx.getWindowInfo ? wx.getWindowInfo() : { pixelRatio: 2 }
+        // dpr 限制在 [1, 3]，避免异常值导致 canvas 尺寸过大
+        const dpr = Math.min(3, Math.max(1, winInfo.pixelRatio || 2))
 
-        // Canvas 宽度 750rpx（逻辑像素），高度动态计算
-        const width = 375 // 物理像素
+        // Canvas 宽度 375（逻辑像素），高度动态计算
+        const width = 375
         const itemHeight = 60 // 每项高度
         const baseHeight = 300 + this.data.groups.length * itemHeight
 
@@ -257,7 +284,7 @@ Page({
     ctx.fillStyle = '#1a1a1a'
     ctx.font = 'bold 22px sans-serif'
     ctx.textAlign = 'center'
-    ctx.fillText('账单总结', width / 2, y)
+    ctx.fillText('账本总结', width / 2, y)
     y += 40
 
     // 账本名称

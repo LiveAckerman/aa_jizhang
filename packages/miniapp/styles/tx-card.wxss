@@ -62,6 +62,11 @@
   margin-right: 20rpx;
   flex-shrink: 0;
 }
+.tx-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+}
 .tx-icon-svg {
   width: 44rpx;
   height: 44rpx;
@@ -88,6 +93,11 @@
   font-size: 30rpx;
   font-weight: 500;
   color: var(--text-primary);
+  flex-shrink: 0;
+}
+.tx-payer {
+  font-size: 24rpx;
+  color: var(--text-secondary);
   flex-shrink: 0;
 }
 .tx-note {
