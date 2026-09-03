@@ -1,8 +1,36 @@
 <view class="share-summary-page">
   <!-- 整页骨架屏：首次加载 -->
-  <view wx:if="{{loading}}" class="loading-state">
-    <view class="loading-spinner"></view>
-    <text class="loading-text">加载中...</text>
+  <view wx:if="{{loading && !book}}" class="skeleton-container">
+    <!-- 骨架屏：账本信息卡片 -->
+    <view class="skeleton-header">
+      <view class="skeleton-avatar-large"></view>
+      <view class="skeleton-line w200 h40"></view>
+      <view class="skeleton-line w120 h24"></view>
+    </view>
+
+    <!-- 骨架屏：总览卡片 -->
+    <view class="skeleton-summary">
+      <view class="skeleton-row">
+        <view class="skeleton-line w80 h28"></view>
+        <view class="skeleton-line w120 h40"></view>
+      </view>
+      <view class="skeleton-row">
+        <view class="skeleton-line w80 h28"></view>
+        <view class="skeleton-line w100 h28"></view>
+      </view>
+    </view>
+
+    <!-- 骨架屏：分组列表 -->
+    <view class="skeleton-list">
+      <view class="skeleton-list-item" wx:for="{{[1,2,3]}}" wx:key="*this">
+        <view class="skeleton-avatar"></view>
+        <view class="skeleton-mid">
+          <view class="skeleton-line w120 h28"></view>
+          <view class="skeleton-line w80 h24"></view>
+        </view>
+        <view class="skeleton-line w100 h32"></view>
+      </view>
+    </view>
   </view>
 
   <!-- 已过期 -->
