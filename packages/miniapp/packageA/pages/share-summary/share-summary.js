@@ -7,6 +7,7 @@ Page({
     bookId: '',       // 从 book-detail 直接进入时使用
     isOwner: true,    // 从 book-detail 进入时为 true，分享链接进入为 false
     book: null,
+    headerCard: null,  // 通用 book-card 头部数据
     config: null,
     summary: null,
     groups: [],
@@ -104,8 +105,20 @@ Page({
       const decorated = this.decorateGroups(groups, config.groupBy)
       wx.setNavigationBarTitle({ title: `${book.name} · 账本总结` })
 
+      // 组装通用 book-card 头部数据（复用 book-detail 的顶部卡片样式）
+      const headerCard = {
+        name: book.name,
+        coverUrl: book.coverUrl,
+        members: (book.members || []).map((m, i) => ({ avatar: m.avatar, userId: String(i) })),
+        bookTotalText: summary.totalAmountText,
+        myTotalText: summary.totalAmountText,
+        hasPrivate: false,
+        dateText: `${book.memberCount || 0} 人参与`,
+      }
+
       this.setData({
         book,
+        headerCard,
         config,
         summary,
         groups: decorated,

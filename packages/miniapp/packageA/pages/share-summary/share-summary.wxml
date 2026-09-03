@@ -43,22 +43,13 @@
 
   <!-- 正常内容 -->
   <view wx:else class="content">
-    <!-- 账本信息卡片 -->
-    <view class="book-card">
-      <view class="book-info">
-        <image wx:if="{{book.coverUrl}}" class="book-cover" src="{{book.coverUrl}}" mode="aspectFill" />
-        <view wx:else class="book-cover-placeholder">
-          <van-icon name="photo-o" size="28px" color="#8091a5" />
-        </view>
-        <view class="book-meta">
-          <text class="book-name">{{book.name}}</text>
-          <text class="book-member-count">{{book.memberCount}} 人参与</text>
-        </view>
-      </view>
-      <view class="member-avatars">
-        <image wx:for="{{book.members}}" wx:key="index" class="member-avatar" src="{{item.avatar}}" mode="aspectFill" />
-      </view>
-    </view>
+    <!-- 顶部账本卡片（复用 book-detail 样式） -->
+    <book-card
+      wx:if="{{headerCard}}"
+      mode="detail"
+      book="{{headerCard}}"
+      readOnly="{{true}}"
+    />
 
     <!-- 总览卡片 -->
     <view class="summary-card">
