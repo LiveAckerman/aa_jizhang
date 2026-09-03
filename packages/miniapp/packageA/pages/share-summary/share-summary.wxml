@@ -154,7 +154,7 @@
       />
     </view>
 
-    <!-- 离屏 Canvas（用于生成图片，用户不可见） -->
-    <canvas type="2d" id="summaryCanvas" style="position: fixed; left: -9999px; top: -9999px; width: 375px; height: 1000px;"></canvas>
+    <!-- 离屏 Canvas（用于生成图片，用户不可见；尺寸动态绑定，不能用 wx:if/hidden 隐藏） -->
+    <canvas type="2d" id="summaryCanvas" style="position: fixed; left: -9999px; top: -9999px; width: {{canvasW}}px; height: {{canvasH}}px;"></canvas>
   </view>
 </view>

@@ -17,6 +17,9 @@ Page({
     expandedMap: {},
     groupBy: 'person',
     includeUnsettled: false,
+    // 离屏 canvas 尺寸（CSS px），导出前按内容动态计算
+    canvasW: 375,
+    canvasH: 600,
   },
 
   onLoad(query) {
@@ -208,66 +211,95 @@ Page({
   },
 
   // 保存图片到相册
-  onSaveImage() {
+  async onSaveImage() {
     if (this.data.saving) return
     this.setData({ saving: true })
+    wx.showLoading({ title: '生成中...', mask: true })
 
     try {
-      // 延迟绘制，确保数据已加载
-      setTimeout(() => {
-        this.renderToCanvas()
-      }, 100)
+      const tempFilePath = await this.renderToImage()
+      await this.saveToAlbum(tempFilePath)
+      wx.hideLoading()
+      wx.showToast({ title: '已保存到相册', icon: 'success' })
     } catch (e) {
-      console.error('保存图片失败', e)
-      wx.showToast({ title: '生成失败', icon: 'none' })
+      // 打出真实错误，便于定位（不再吞掉 errMsg）
+      console.error('[share-summary] 生成/保存失败:', (e && e.errMsg) || (e && e.message) || e)
+      wx.hideLoading()
+      // 权限弹窗已在 saveToAlbum 内处理，这里不再重复提示
+      if (!(e && e.__handled)) {
+        wx.showToast({ title: '生成失败', icon: 'none' })
+      }
+    } finally {
       this.setData({ saving: false })
     }
   },
 
-  // 使用 Canvas 2D 渲染小票样式图片
-  renderToCanvas() {
-    const query = wx.createSelectorQuery()
-    query
-      .select('#summaryCanvas')
-      .fields({ node: true, size: true })
-      .exec((res) => {
-        if (!res || !res[0]) {
-          wx.showToast({ title: '初始化失败', icon: 'none' })
-          this.setData({ saving: false })
-          return
-        }
+  // 渲染并导出为临时图片（Promise）
+  renderToImage() {
+    const CANVAS_MAX = 4096 // 微信 Canvas 2D 单边像素上限
+    const BASE_W = 375 // 逻辑宽度（CSS px）
+    // 高度测量必须与 drawTicket 的排版累计增量一致（含底部留白）
+    // drawTicket: 进 groups 循环前累计 ~290，每组 60，循环后水印+日期收尾 ~90
+    const HEADER = 300
+    const ITEM = 60
+    const FOOTER = 90
+    const cssH = Math.min(HEADER + this.data.groups.length * ITEM + FOOTER, CANVAS_MAX)
 
-        const canvas = res[0].node
-        const ctx = canvas.getContext('2d')
-        // 用 getWindowInfo 替代已废弃的 getSystemInfoSync（后者在部分真机触发堆栈溢出）
-        const winInfo = wx.getWindowInfo ? wx.getWindowInfo() : { pixelRatio: 2 }
-        // dpr 限制在 [1, 3]，避免异常值导致 canvas 尺寸过大
-        const dpr = Math.min(3, Math.max(1, winInfo.pixelRatio || 2))
+    return new Promise((resolve, reject) => {
+      // 先把内容高度同步到 canvas 的 CSS 尺寸，setData 回调里再查询节点
+      this.setData({ canvasW: BASE_W, canvasH: cssH }, () => {
+        this.createSelectorQuery()
+          .select('#summaryCanvas')
+          .fields({ node: true, size: true })
+          .exec((res) => {
+            // 注意：绝不 console.log(res) —— canvas 节点含循环引用，序列化会爆栈
+            if (!res || !res[0] || !res[0].node) {
+              return reject(new Error('canvas 节点获取失败'))
+            }
+            const canvas = res[0].node
+            const ctx = canvas.getContext('2d')
 
-        // Canvas 宽度 375（逻辑像素），高度动态计算
-        const width = 375
-        const itemHeight = 60 // 每项高度
-        const baseHeight = 300 + this.data.groups.length * itemHeight
+            // 安全 dpr：设备 dpr 与 4096/边长 取最小，保证物理像素不超上限
+            const winInfo = wx.getWindowInfo ? wx.getWindowInfo() : { pixelRatio: 2 }
+            const rawDpr = Math.min(3, Math.max(1, winInfo.pixelRatio || 2))
+            const dpr = Math.max(
+              1,
+              Math.min(rawDpr, CANVAS_MAX / BASE_W, CANVAS_MAX / cssH),
+            )
 
-        canvas.width = width * dpr
-        canvas.height = baseHeight * dpr
-        ctx.scale(dpr, dpr)
+            // backing store 物理像素，取整避免 stride 对齐导致斜切
+            const pxW = Math.round(BASE_W * dpr)
+            const pxH = Math.round(cssH * dpr)
+            canvas.width = pxW
+            canvas.height = pxH
+            ctx.scale(dpr, dpr) // 之后按 CSS 尺寸绘制
 
-        // 绘制内容
-        this.drawTicket(ctx, width, baseHeight)
+            try {
+              this.drawTicket(ctx, BASE_W, cssH)
+            } catch (e) {
+              return reject(e)
+            }
 
-        // 导出图片
-        wx.canvasToTempFilePath({
-          canvas,
-          success: (res) => {
-            this.saveToAlbum(res.tempFilePath)
-          },
-          fail: () => {
-            wx.showToast({ title: '生成失败', icon: 'none' })
-            this.setData({ saving: false })
-          },
-        })
+            // 等两帧确保绘制真正落到 buffer（官方建议延迟导出）
+            canvas.requestAnimationFrame(() => {
+              canvas.requestAnimationFrame(() => {
+                wx.canvasToTempFilePath({
+                  canvas,
+                  x: 0,
+                  y: 0,
+                  width: pxW,
+                  height: pxH,
+                  destWidth: pxW, // 必须显式传，否则默认再乘一次 dpr → 超 4096
+                  destHeight: pxH,
+                  fileType: 'png',
+                  success: (r) => resolve(r.tempFilePath),
+                  fail: (err) => reject(err), // 把真实 errMsg 抛出去
+                })
+              })
+            })
+          })
       })
+    })
   },
 
   // 绘制小票内容
@@ -394,32 +426,31 @@ Page({
     ctx.fillText(dateText, width / 2, y)
   },
 
-  // 保存到相册
+  // 保存到相册（Promise）
   saveToAlbum(filePath) {
-    wx.saveImageToPhotosAlbum({
-      filePath,
-      success: () => {
-        wx.showToast({ title: '已保存到相册', icon: 'success' })
-        this.setData({ saving: false })
-      },
-      fail: (err) => {
-        console.error('保存失败', err)
-        if (err.errMsg && err.errMsg.includes('auth deny')) {
-          wx.showModal({
-            title: '需要相册权限',
-            content: '请在设置中允许访问相册',
-            confirmText: '去设置',
-            success: (res) => {
-              if (res.confirm) {
-                wx.openSetting()
-              }
-            },
-          })
-        } else {
-          wx.showToast({ title: '保存失败', icon: 'none' })
-        }
-        this.setData({ saving: false })
-      },
+    return new Promise((resolve, reject) => {
+      wx.saveImageToPhotosAlbum({
+        filePath,
+        success: resolve,
+        fail: (err) => {
+          const msg = (err && err.errMsg) || ''
+          if (msg.includes('auth deny') || msg.includes('auth denied')) {
+            wx.hideLoading()
+            wx.showModal({
+              title: '需要相册权限',
+              content: '请在设置中允许访问相册后重试',
+              confirmText: '去设置',
+              success: (res) => {
+                if (res.confirm) wx.openSetting()
+              },
+            })
+            const e = new Error('相册权限被拒绝')
+            e.__handled = true // 标记：已弹窗，外层不再 toast
+            return reject(e)
+          }
+          reject(err)
+        },
+      })
     })
   },
 
