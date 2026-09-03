@@ -238,12 +238,21 @@ Page({
   renderToImage() {
     const CANVAS_MAX = 4096 // 微信 Canvas 2D 单边像素上限
     const BASE_W = 375 // 逻辑宽度（CSS px）
-    // 高度测量必须与 drawTicket 的排版累计增量一致（含底部留白）
-    // drawTicket: 进 groups 循环前累计 ~290，每组 60，循环后水印+日期收尾 ~90
-    const HEADER = 300
-    const ITEM = 60
-    const FOOTER = 90
-    const cssH = Math.min(HEADER + this.data.groups.length * ITEM + FOOTER, CANVAS_MAX)
+    // 高度按内容精确测量（与 drawTicket 的排版增量一致）
+    // 顶部：y起始16 + 账本信息卡96 + 汇总卡130 + 明细标题40 = 282
+    // 每组：分组头68 + 明细行 txN*52 + 8
+    // 底部：水印+日期 约 50
+    const HEADER = 282
+    const GROUP_HEAD = 68
+    const TX_ROW = 52
+    const FOOTER = 50
+    let contentH = HEADER
+    this.data.groups.forEach((g) => {
+      const txN = (g.transactions || []).length
+      contentH += GROUP_HEAD + txN * TX_ROW + 8
+    })
+    contentH += FOOTER
+    const cssH = Math.min(Math.ceil(contentH), CANVAS_MAX)
 
     return new Promise((resolve, reject) => {
       // 先把内容高度同步到 canvas 的 CSS 尺寸，setData 回调里再查询节点
@@ -308,128 +317,198 @@ Page({
     })
   },
 
-  // 绘制小票内容
+  // 绘制小票内容（复刻页面视觉：白色圆角卡片 + 品牌主色 + 圆形头像 + 明细全展开）
   drawTicket(ctx, width, height) {
     const { book, summary, groups, config } = this.data
+    const PRIMARY = '#4097a9'
+    const DARK = '#2f4159'
+    const GRAY = '#8091a5'
+    const LIGHT = '#f2f6f7'
+    const ACCENT = '#fa9583'
+    const BORDER = '#eceff1'
 
-    // 背景色
-    ctx.fillStyle = '#ffffff'
+    // 背景（浅色渐变）
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height)
+    bgGrad.addColorStop(0, '#eef5f6')
+    bgGrad.addColorStop(1, '#f6f1ea')
+    ctx.fillStyle = bgGrad
     ctx.fillRect(0, 0, width, height)
 
-    let y = 40
+    const PAD = 16 // 页面左右边距
+    const cardX = PAD
+    const cardW = width - PAD * 2
+    let y = 16
 
-    // 标题
-    ctx.fillStyle = '#1a1a1a'
+    // 工具函数：圆角矩形
+    const rrect = (x, yy, w, h, r) => {
+      ctx.beginPath()
+      ctx.moveTo(x + r, yy)
+      ctx.arcTo(x + w, yy, x + w, yy + h, r)
+      ctx.arcTo(x + w, yy + h, x, yy + h, r)
+      ctx.arcTo(x, yy + h, x, yy, r)
+      ctx.arcTo(x, yy, x + w, yy, r)
+      ctx.closePath()
+    }
+
+    // ========== 1. 账本信息卡片 ==========
+    const infoCardH = 84
+    rrect(cardX, y, cardW, infoCardH, 14)
+    ctx.fillStyle = '#ffffff'
+    ctx.fill()
+    // 封面（用色块代替，若书有 coverUrl 此处不上网络图，保持简单）
+    rrect(cardX + 14, y + 16, 52, 52, 12)
+    ctx.fillStyle = LIGHT
+    ctx.fill()
+    ctx.fillStyle = PRIMARY
     ctx.font = 'bold 22px sans-serif'
     ctx.textAlign = 'center'
-    ctx.fillText('账本总结', width / 2, y)
-    y += 40
-
-    // 账本名称
-    ctx.font = '18px sans-serif'
-    ctx.fillStyle = '#4097a9'
-    ctx.fillText(book.name || '账本', width / 2, y)
-    y += 30
-
-    // 分隔线
-    ctx.strokeStyle = '#e0e0e0'
-    ctx.lineWidth = 1
-    ctx.beginPath()
-    ctx.moveTo(20, y)
-    ctx.lineTo(width - 20, y)
-    ctx.stroke()
-    y += 30
-
-    // 总金额
-    ctx.fillStyle = '#1a1a1a'
-    ctx.font = '16px sans-serif'
+    ctx.textBaseline = 'middle'
+    ctx.fillText('账', cardX + 40, y + 42)
+    // 名称 + 成员数
+    ctx.fillStyle = DARK
+    ctx.font = 'bold 17px sans-serif'
     ctx.textAlign = 'left'
-    ctx.fillText('总计金额', 40, y)
-    ctx.textAlign = 'right'
-    ctx.fillStyle = '#fa9583'
+    ctx.textBaseline = 'alphabetic'
+    ctx.fillText(this.truncate(book.name || '账本', 16), cardX + 78, y + 34)
+    ctx.fillStyle = GRAY
+    ctx.font = '12px sans-serif'
+    ctx.fillText(`${book.memberCount || 0} 人参与`, cardX + 78, y + 54)
+    y += infoCardH + 12
+
+    // ========== 2. 汇总卡片 ==========
+    const sumCardH = 118
+    rrect(cardX, y, cardW, sumCardH, 14)
+    ctx.fillStyle = '#ffffff'
+    ctx.fill()
+    const rowY = y + 40
+    // 总金额行
+    ctx.fillStyle = GRAY
+    ctx.font = '13px sans-serif'
+    ctx.textAlign = 'left'
+    ctx.fillText('总金额', cardX + 20, rowY)
+    ctx.fillStyle = ACCENT
     ctx.font = 'bold 24px sans-serif'
-    ctx.fillText(`¥${summary.totalAmountText}`, width - 40, y)
-    y += 30
-
-    // 账单笔数
-    ctx.textAlign = 'left'
-    ctx.fillStyle = '#1a1a1a'
-    ctx.font = '16px sans-serif'
-    ctx.fillText('账单笔数', 40, y)
     ctx.textAlign = 'right'
-    ctx.fillText(`${summary.txCount} 笔`, width - 40, y)
-    y += 30
-
-    // 统计维度
+    ctx.fillText(`¥${summary.totalAmountText}`, cardX + cardW - 20, rowY)
+    // 账单笔数 + 统计维度
+    ctx.fillStyle = GRAY
+    ctx.font = '12px sans-serif'
     ctx.textAlign = 'left'
-    ctx.fillText('统计维度', 40, y)
+    ctx.fillText(`账单 ${summary.txCount} 笔`, cardX + 20, rowY + 30)
     ctx.textAlign = 'right'
     const modeText = config.groupBy === 'person' ? '按人员' : config.groupBy === 'category' ? '按分类' : '按支付方式'
-    ctx.fillText(modeText, width - 40, y)
-    y += 30
+    ctx.fillText(modeText, cardX + cardW - 20, rowY + 30)
+    // 结算状态
+    ctx.textAlign = 'left'
+    ctx.fillText(config.includeUnsettled ? '含未结算' : '仅已结算', cardX + 20, rowY + 48)
+    y += sumCardH + 12
 
-    // 分隔线
-    ctx.beginPath()
-    ctx.moveTo(20, y)
-    ctx.lineTo(width - 20, y)
-    ctx.stroke()
-    y += 30
-
-    // 明细标题
-    ctx.fillStyle = '#5c6b7a'
+    // ========== 3. 明细（全展开） ==========
+    ctx.fillStyle = DARK
     ctx.font = 'bold 16px sans-serif'
     ctx.textAlign = 'left'
-    ctx.fillText('明细统计', 40, y)
-    y += 30
+    ctx.fillText('明细统计', cardX + 4, y + 16)
+    y += 40
 
-    // 绘制每一项
-    groups.forEach((group, index) => {
-      ctx.fillStyle = '#1a1a1a'
-      ctx.font = '16px sans-serif'
-      ctx.textAlign = 'left'
-
-      // 限制标签长度，避免溢出
-      const label = group.label.length > 10 ? group.label.substring(0, 10) + '...' : group.label
-      ctx.fillText(label, 40, y)
-
-      ctx.textAlign = 'right'
-      ctx.fillStyle = '#4097a9'
-      ctx.font = 'bold 18px sans-serif'
-      ctx.fillText(`¥${group.totalAmountText}`, width - 40, y)
-
-      y += 25
-
-      // 副标签（笔数）
-      ctx.fillStyle = '#8091a5'
-      ctx.font = '14px sans-serif'
-      ctx.textAlign = 'left'
-      ctx.fillText(group.sublabel, 40, y)
-
-      y += 35
-
-      // 分隔线（最后一项不画）
-      if (index < groups.length - 1) {
-        ctx.strokeStyle = '#f5f5f5'
+    groups.forEach((group) => {
+      // 分组卡片头部
+      const headText = this.truncate(group.label || '', 10)
+      // 头像（person 模式）或图标色块
+      rrect(cardX, y, cardW, 60, 14)
+      ctx.fillStyle = '#ffffff'
+      ctx.fill()
+      if (groupBy === 'person' && group.avatar) {
+        // 圆形头像（用色块占位，不加载网络图）
         ctx.beginPath()
-        ctx.moveTo(40, y - 10)
-        ctx.lineTo(width - 40, y - 10)
-        ctx.stroke()
+        ctx.arc(cardX + 34, y + 30, 20, 0, Math.PI * 2)
+        ctx.fillStyle = LIGHT
+        ctx.fill()
+        ctx.fillStyle = PRIMARY
+        ctx.font = 'bold 16px sans-serif'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(headText[0] || '', cardX + 34, y + 31)
       }
+      // 名称
+      ctx.fillStyle = DARK
+      ctx.font = 'bold 16px sans-serif'
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'alphabetic'
+      ctx.fillText(headText, cardX + 62, y + 27)
+      ctx.fillStyle = GRAY
+      ctx.font = '11px sans-serif'
+      ctx.fillText(group.sublabel || '', cardX + 62, y + 45)
+      // 金额
+      ctx.fillStyle = PRIMARY
+      ctx.font = 'bold 16px sans-serif'
+      ctx.textAlign = 'right'
+      ctx.fillText(`¥${group.totalAmountText}`, cardX + cardW - 18, y + 32)
+      y += 60 + 8
+
+      // 该分组下所有明细行（全部展开）
+      const txs = group.transactions || []
+      if (txs.length > 0) {
+        rrect(cardX, y, cardW, txs.length * 52, 0)
+      }
+      txs.forEach((tx, i) => {
+        const rowH = 52
+        // 每行背景
+        ctx.fillStyle = i % 2 === 0 ? '#fafbfc' : '#ffffff'
+        ctx.fillRect(cardX + 2, y, cardW - 4, rowH)
+        // 分类图标色块
+        rrect(cardX + 12, y + 10, 32, 32, 8)
+        ctx.fillStyle = LIGHT
+        ctx.fill()
+        ctx.fillStyle = PRIMARY
+        ctx.font = '13px sans-serif'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(this.truncate(tx.categoryName || '', 2), cardX + 28, y + 27)
+        // 备注 + 日期
+        ctx.fillStyle = DARK
+        ctx.font = '13px sans-serif'
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'alphabetic'
+        const note = this.truncate(tx.note || '无备注', 18)
+        ctx.fillText(note, cardX + 54, y + 22)
+        ctx.fillStyle = GRAY
+        ctx.font = '11px sans-serif'
+        ctx.fillText(tx.spentAt || '', cardX + 54, y + 40)
+        // 金额
+        ctx.fillStyle = DARK
+        ctx.font = 'bold 14px sans-serif'
+        ctx.textAlign = 'right'
+        ctx.fillText(`¥${tx.amountText}`, cardX + cardW - 14, y + 30)
+        y += rowH
+        // 分隔线
+        if (i < txs.length - 1) {
+          ctx.strokeStyle = BORDER
+          ctx.lineWidth = 1
+          ctx.beginPath()
+          ctx.moveTo(cardX + 12, y)
+          ctx.lineTo(cardX + cardW - 12, y)
+          ctx.stroke()
+        }
+      })
+      y += 8
     })
 
-    y += 20
-
-    // 底部水印
+    // ========== 4. 底部水印 + 日期 ==========
+    y += 12
     ctx.fillStyle = '#c4c4c4'
-    ctx.font = '12px sans-serif'
+    ctx.font = '11px sans-serif'
     ctx.textAlign = 'center'
     ctx.fillText('一起分账吧 · 多人记账 简单明了', width / 2, y)
-    y += 20
-
-    // 日期
+    y += 18
     const now = new Date()
     const dateText = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
     ctx.fillText(dateText, width / 2, y)
+  },
+
+  // 截断文本（超长加省略号）
+  truncate(str, max) {
+    if (!str) return ''
+    return str.length > max ? str.substring(0, max) + '…' : str
   },
 
   // 保存到相册（Promise）
