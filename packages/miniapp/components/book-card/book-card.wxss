@@ -162,9 +162,14 @@
 }
 
 .bc-date {
+  padding: 8rpx 20rpx;
+  border-radius: 20rpx;
+  background: rgba(0, 0, 0, 0.5);
   font-size: 22rpx;
-  color: rgba(255, 255, 255, 0.75);
+  font-weight: 500;
+  color: #fff;
   flex-shrink: 0;
+  backdrop-filter: blur(8rpx);
 }
 
 .bc-amount-value {
