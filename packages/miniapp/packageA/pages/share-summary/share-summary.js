@@ -24,9 +24,13 @@ Page({
   },
 
   onLoad(query) {
+    // 统一读取 groupBy 参数（分享链接带的查看维度，保持发送者的选择）
+    const validGroupBy = ['person', 'category', 'payment']
+    const groupBy = validGroupBy.includes(query.groupBy) ? query.groupBy : 'person'
+
     // 从 book-detail 直接进入：携带 bookId
     if (query.bookId) {
-      this.setData({ bookId: query.bookId, isOwner: true })
+      this.setData({ bookId: query.bookId, isOwner: true, groupBy })
       this.initWithBookId(query.bookId)
       wx.showShareMenu({ withShareTicket: false })
       return
@@ -46,18 +50,18 @@ Page({
       return
     }
 
-    this.setData({ tokenId, isOwner: false })
+    this.setData({ tokenId, isOwner: false, groupBy })
     this.loadData()
   },
 
   onShareAppMessage() {
-    const { book, tokenId } = this.data
+    const { book, tokenId, groupBy } = this.data
     if (!book || !tokenId) {
       return { title: '查看账本总结', path: '/pages/books/books' }
     }
     return {
       title: `${book.name} - 账本总结`,
-      path: `/packageA/pages/share-summary/share-summary?token=${tokenId}`,
+      path: `/packageA/pages/share-summary/share-summary?token=${tokenId}&groupBy=${groupBy}`,
       imageUrl: 'https://cdn.ljw44.com/images/share-summary.jpg',
     }
   },
