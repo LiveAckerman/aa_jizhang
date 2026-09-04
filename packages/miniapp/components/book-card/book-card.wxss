@@ -102,6 +102,12 @@
   z-index: 10;
 }
 
+/* readOnly 模式右上角容器 */
+.bc-top-right {
+  display: flex;
+  align-items: center;
+}
+
 .bc-share-btn {
   width: 56rpx;
   min-width: 56rpx;

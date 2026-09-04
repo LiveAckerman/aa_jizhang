@@ -28,12 +28,16 @@
           <van-icon name="share-o" size="18px" color="#fff" />
         </button>
       </view>
+
+      <!-- readOnly 模式：右上角显示 dateText（x 人参与） -->
+      <view wx:if="{{readOnly && book.dateText}}" class="bc-top-right">
+        <text class="bc-date">{{book.dateText}}</text>
+      </view>
     </view>
 
    <view class="bc-name-row">
         <text class="bc-name">{{book.name}}</text>
         <text wx:if="{{book.statusBadge}}" class="bc-badge">{{book.statusBadge}}</text>
-        <text wx:elif="{{book.dateText}}" class="bc-date">{{book.dateText}}</text>
       </view>
 
     <!-- 底部：名称 + 金额块 -->
