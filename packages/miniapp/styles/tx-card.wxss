@@ -31,7 +31,7 @@
 
 /* 付款人头像 */
 .tx-payer {
-  margin-right: 16rpx;
+  /* margin-right: 16rpx; */
   flex-shrink: 0;
 }
 .tx-payer-avatar {
