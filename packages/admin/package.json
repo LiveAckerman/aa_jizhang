@@ -1,0 +1,48 @@
+{
+  "name": "@departure/admin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "一起分账吧独立只读 AdminJS 后台",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "pnpm build && node --test dist/test/*.test.js",
+    "verify:live": "tsx src/verify-live.ts",
+    "verify:statistics": "tsx src/verify-statistics-boundaries.ts",
+    "verify:production-assets": "tsx src/verify-production-assets.ts",
+    "hash-password": "tsx src/hash-password.ts"
+  },
+  "dependencies": {
+    "@adminjs/express": "6.1.1",
+    "@adminjs/sql": "2.2.6",
+    "@babel/plugin-syntax-import-assertions": "7.29.7",
+    "adminjs": "7.8.17",
+    "bcryptjs": "3.0.2",
+    "dotenv": "17.4.2",
+    "express": "4.21.2",
+    "express-formidable": "1.2.0",
+    "express-rate-limit": "8.7.0",
+    "express-session": "1.18.2",
+    "helmet": "8.1.0",
+    "knex": "2.5.1",
+    "react": "18.3.1",
+    "session-file-store": "1.5.0",
+    "tslib": "2.8.1"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.3",
+    "@types/express-session": "1.18.2",
+    "@types/node": "20.19.11",
+    "@types/react": "18.3.31",
+    "@types/session-file-store": "1.2.5",
+    "@types/supertest": "6.0.3",
+    "supertest": "7.1.4",
+    "tsx": "4.20.5",
+    "typescript": "5.9.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

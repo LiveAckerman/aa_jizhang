@@ -2,6 +2,7 @@
  * 一起分账吧 - 小程序入口
  */
 const { API_BASE_URL } = require('./config/index')
+const { trackAppVisit } = require('./utils/analytics')
 
 App({
   globalData: {
@@ -45,6 +46,11 @@ App({
     // 曾经在 handler 里调 wx.requirePrivacyAuthorize，而后者会再次触发本 handler，
     // 造成无限递归（saveImageToPhotosAlbum 等隐私接口调用时爆栈 Maximum call stack size exceeded）。
     // 不注册时，微信会自动弹官方默认隐私弹窗（需在后台配置隐私协议，已配置）。
+  },
+
+  /** 冷启动和每次从后台回到前台各调用一次；登录态变化不会触发此采集。 */
+  onShow() {
+    trackAppVisit(this)
   },
 
   /** 是否已登录 */
