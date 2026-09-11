@@ -36,6 +36,7 @@ export const createAdminRuntime = async (
   const componentLoader = new ComponentLoader()
   const dashboardComponent = componentLoader.add('StatisticsDashboard', './components/dashboard')
   const mediaComponent = componentLoader.add('MediaProperty', './components/media-property')
+  const moneyComponent = componentLoader.add('MoneyProperty', './components/money-property')
   const userComponent = componentLoader.add('UserProperty', './components/user-property')
   const splitsComponent = componentLoader.add('SplitsProperty', './components/splits-property')
   const relatedRecordsComponent = componentLoader.add('RelatedRecordsProperty', './components/related-records-property')
@@ -49,6 +50,7 @@ export const createAdminRuntime = async (
     componentLoader,
     resources: buildResources(database, {
       media: mediaComponent,
+      money: moneyComponent,
       user: userComponent,
       splits: splitsComponent,
       relatedRecords: relatedRecordsComponent,

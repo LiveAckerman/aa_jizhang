@@ -219,6 +219,7 @@ class TransactionResource extends SqlResource {
 
 type PropertyComponents = {
   media: string
+  money: string
   user: string
   splits: string
   relatedRecords: string
@@ -664,10 +665,16 @@ export const buildResources = (
             ['other', '其他'],
           ]),
         },
-        amount: { description: 'CNY 金额，单位：分' },
+        amount: {
+          components: { list: components.money, show: components.money },
+          description: 'CNY 金额，列表与详情按元展示。',
+        },
         images: { components: { list: components.media, show: components.media } },
         splits: { components: { show: components.splits } },
-        originalAmount: { description: 'currency 对应的原币金额，单位：分' },
+        originalAmount: {
+          components: { list: components.money, show: components.money },
+          description: 'currency 对应的原币金额，列表与详情按元展示。',
+        },
         participantIds: {
           type: 'mixed',
           isVisible: { list: false, filter: false, show: false, edit: true },

@@ -64,8 +64,8 @@ export const zhCNTranslations = {
     },
     transactions: {
       properties: {
-        id: '账单 ID', bookId: '账本 ID', type: '账单类型', amount: '人民币金额（分）',
-        currency: '原始币种', originalAmount: '原币金额（分）', exchangeRate: '兑人民币汇率',
+        id: '账单 ID', bookId: '账本 ID', type: '账单类型', amount: '人民币金额（元）',
+        currency: '原始币种', originalAmount: '原币金额（元）', exchangeRate: '兑人民币汇率',
         category: '分类', paymentMethod: '支付方式', note: '备注', payerId: '付款人',
         creatorId: '创建者', splitMethod: '分账方式', participantIds: '参与人',
         splits: '分账明细',
