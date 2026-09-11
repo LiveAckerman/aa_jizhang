@@ -21,6 +21,11 @@ build/
 npm-debug.log*
 pnpm-debug.log*
 
+# AdminJS 本地文件会话（单实例部署）
+packages/admin/.sessions/
+# AdminJS 在开发/启动时生成的前端 bundle
+packages/admin/.adminjs/
+
 # 微信开发者工具
 packages/miniapp/project.private.config.json
 # 构建 npm 产物（由 node_modules 自动生成）

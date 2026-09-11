@@ -22,6 +22,11 @@ import { Settlement } from './settlement/settlement.entity'
 import { SettlementRound } from './settlement/settlement-round.entity'
 import { TxShareSettlement } from './settlement/tx-share-settlement.entity'
 import { ShareToken } from './share-token/share-token.entity'
+import { AnalyticsModule } from './analytics/analytics.module'
+import { AppVisitEvent } from './analytics/app-visit-event.entity'
+import { AnalyticsCollectionStatus } from './analytics/analytics-collection-status.entity'
+import { AdminModule } from './admin/admin.module'
+import { AdminAuditLog } from './admin/admin-audit-log.entity'
 
 @Module({
   imports: [
@@ -50,7 +55,7 @@ import { ShareToken } from './share-token/share-token.entity'
         database,
         // 禁用 SSL（某些远程数据库不支持 SSL 或配置有问题）
         ssl: false,
-        entities: [User, Book, BookMember, BookGroup, Transaction, TransactionLog, Settlement, SettlementRound, TxShareSettlement, ShareToken],
+        entities: [User, Book, BookMember, BookGroup, Transaction, TransactionLog, Settlement, SettlementRound, TxShareSettlement, ShareToken, AppVisitEvent, AnalyticsCollectionStatus, AdminAuditLog],
         // 自动同步表结构：默认关闭（生产安全）。本地开发需自动建表时在 .env 设 DB_SYNCHRONIZE=true。
         // 生产改表走 migration（见 data-source.ts + pnpm migration:*），避免误删列/丢数据。
         synchronize: config.get('DB_SYNCHRONIZE') === 'true',
@@ -84,6 +89,8 @@ import { ShareToken } from './share-token/share-token.entity'
     SettlementModule,
     OcrModule,
     ShareTokenModule,
+    AnalyticsModule,
+    AdminModule,
   ],
 })
 export class AppModule {}
