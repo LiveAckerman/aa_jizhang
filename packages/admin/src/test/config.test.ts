@@ -20,6 +20,21 @@ test('non-production always uses aa_jizhang_test', () => {
   assert.equal(new URL(config.databaseUrl).pathname, '/aa_jizhang_test')
 })
 
+test('AdminJS can use a separate read-only database account', () => {
+  const config = loadConfig({
+    ...baseEnv(),
+    ADMIN_DB_HOST: 'reader-db.example.test',
+    ADMIN_DB_PORT: '55432',
+    ADMIN_DB_USERNAME: 'admin_reader',
+    ADMIN_DB_PASSWORD: 'reader-password',
+  })
+  const url = new URL(config.databaseUrl)
+  assert.equal(url.hostname, 'reader-db.example.test')
+  assert.equal(url.port, '55432')
+  assert.equal(url.username, 'admin_reader')
+  assert.equal(url.password, 'reader-password')
+})
+
 test('production requires explicit database opt-in', () => {
   const env = { ...baseEnv(), NODE_ENV: 'production' }
   assert.throws(() => loadConfig(env), /ADMIN_ALLOW_PRODUCTION_DB=true/)

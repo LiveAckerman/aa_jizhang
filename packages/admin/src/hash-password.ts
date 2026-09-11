@@ -33,7 +33,6 @@ try {
   output.muted = false
   process.stdout.write('\n')
 
-  if (password.length < 12) throw new Error('密码至少需要 12 个字符')
   if (password !== confirmation) throw new Error('两次输入的密码不一致')
   console.log(await bcrypt.hash(password, 12))
 } catch (error) {

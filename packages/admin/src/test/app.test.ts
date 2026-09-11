@@ -28,6 +28,8 @@ before(async () => {
     sessionSecret: 'test-session-secret-with-at-least-32-characters',
     sessionDir,
     trustProxy: 0,
+    adminApiUrl: 'http://127.0.0.1:9080/api',
+    adminApiToken: '',
   }
   const admin = new AdminJS({ rootPath: '/admin', resources: [], componentLoader: new ComponentLoader() })
   app = await createApp(admin, config)

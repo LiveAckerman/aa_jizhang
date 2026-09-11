@@ -62,6 +62,13 @@ export class TransactionService {
     return computeSplits(method, amount, dto.participantIds, dto.splits)
   }
 
+  /** 取原始账单实体（仅供内部管理接口与业务编排使用）。 */
+  async getRaw(id: string): Promise<Transaction> {
+    const tx = await this.txRepo.findOne({ where: { id } })
+    if (!tx) throw new NotFoundException('账单不存在')
+    return tx
+  }
+
   /** 分金额 → 元字符串 */
   private centToYuan(cent: number | null | undefined): string {
     if (cent == null) return '0.00'

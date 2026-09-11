@@ -25,6 +25,9 @@ export const zhCNTranslations = {
     transactions: '账单',
     业务数据: '业务数据',
   },
+  pages: {
+    statistics: '数据统计',
+  },
   components: {
     LanguageSelector: { availableLanguages: { 'zh-CN': '简体中文' } },
     Login: {
@@ -48,21 +51,24 @@ export const zhCNTranslations = {
         isProfileComplete: '资料已完善', hasPromptedProfile: '已提示完善资料',
         hasUsedWechatAvatar: '使用过微信头像', hasUsedWechatNickname: '使用过微信昵称',
         createdAt: '注册时间', updatedAt: '更新时间',
+        relatedBooks: '参与的账本',
       },
     },
     books: {
       properties: {
         id: '账本 ID', name: '账本名称', scene: '场景', sceneName: '自定义场景',
-        icon: '图标', cover: '封面', description: '描述', ownerId: '创建者 ID',
+        icon: '图标', cover: '封面', description: '描述', ownerId: '创建者',
         archived: '已归档', createdAt: '创建时间', updatedAt: '更新时间',
+        relatedTransactions: '账本账单',
       },
     },
     transactions: {
       properties: {
         id: '账单 ID', bookId: '账本 ID', type: '账单类型', amount: '人民币金额（分）',
         currency: '原始币种', originalAmount: '原币金额（分）', exchangeRate: '兑人民币汇率',
-        category: '分类', paymentMethod: '支付方式', note: '备注', payerId: '付款人 ID',
-        creatorId: '创建者 ID', splitMethod: '分账方式', splits: '分账明细',
+        category: '分类', paymentMethod: '支付方式', note: '备注', payerId: '付款人',
+        creatorId: '创建者', splitMethod: '分账方式', participantIds: '参与人',
+        splits: '分账明细',
         settledRoundId: '结算轮次 ID', personSettledAt: '按人结清时间', images: '凭证图片',
         locationName: '地点名称', locationAddress: '详细地址', latitude: '纬度', longitude: '经度',
         spentAt: '消费时间', createdAt: '记录时间', updatedAt: '更新时间',

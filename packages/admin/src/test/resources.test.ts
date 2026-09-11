@@ -4,10 +4,16 @@ import { ForbiddenError } from 'adminjs'
 import type { ActionRequest } from 'adminjs'
 import {
   createReadActions,
+  isUuid,
   READ_ONLY_ACTIONS,
   sanitizeActionResponse,
   SENSITIVE_FIELDS,
 } from '../resources.js'
+
+test('user reference IDs are validated before querying PostgreSQL UUID columns', () => {
+  assert.equal(isUuid('9d73df0a-f7c6-4c67-b3a5-dbd4b51'), false)
+  assert.equal(isUuid('9d73df0a-f7c6-4c67-b3a5-dbd4b51a3c20'), true)
+})
 
 test('all default mutation actions are inaccessible on the server', () => {
   for (const action of ['new', 'edit', 'delete', 'bulkDelete'] as const) {

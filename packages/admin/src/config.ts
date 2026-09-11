@@ -17,6 +17,8 @@ export interface AdminConfig {
   sessionSecret: string
   sessionDir: string
   trustProxy: number
+  adminApiUrl: string
+  adminApiToken: string
 }
 
 const required = (env: NodeJS.ProcessEnv, name: string): string => {
@@ -37,15 +39,27 @@ const buildDatabaseUrl = (
   env: NodeJS.ProcessEnv,
   databaseName: string,
 ): string => {
+  const value = (name: string, fallbackName: string): string =>
+    required(env, env[name]?.trim() ? name : fallbackName)
+  const portValue = (name: string, fallbackName: string): string | undefined =>
+    env[name]?.trim() || env[fallbackName]?.trim()
   const url = new URL('postgresql://localhost')
-  url.hostname = required(env, 'DB_HOST')
-  url.port = String(parsePort(env.DB_PORT, 5432, 'DB_PORT'))
-  url.username = required(env, 'DB_USERNAME')
-  url.password = required(env, 'DB_PASSWORD')
+  url.hostname = value('ADMIN_DB_HOST', 'DB_HOST')
+  url.port = String(
+    parsePort(portValue('ADMIN_DB_PORT', 'DB_PORT'), 5432, 'ADMIN_DB_PORT/DB_PORT'),
+  )
+  url.username = value('ADMIN_DB_USERNAME', 'DB_USERNAME')
+  url.password = value('ADMIN_DB_PASSWORD', 'DB_PASSWORD')
   url.pathname = `/${databaseName}`
   url.searchParams.set('connect_timeout', '30')
   url.searchParams.set('statement_timeout', '30000')
-  if (env.DB_SSL === 'true') url.searchParams.set('sslmode', 'require')
+  const useSsl =
+    env.ADMIN_DB_SSL?.trim()
+      ? env.ADMIN_DB_SSL.trim() === 'true'
+      : env.DB_SSL === 'true'
+  if (useSsl) {
+    url.searchParams.set('sslmode', 'require')
+  }
   return url.toString()
 }
 
@@ -96,5 +110,7 @@ export const loadConfig = (env: NodeJS.ProcessEnv = process.env): AdminConfig =>
       env.ADMIN_SESSION_DIR?.trim() ||
       fileURLToPath(new URL('../.sessions', import.meta.url)),
     trustProxy,
+    adminApiUrl: env.ADMIN_API_URL?.trim() || 'http://127.0.0.1:9080/api',
+    adminApiToken: env.ADMIN_API_TOKEN?.trim() || '',
   }
 }
