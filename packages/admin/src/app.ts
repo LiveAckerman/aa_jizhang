@@ -16,7 +16,7 @@ import { createStatisticsHandler } from './statistics.js'
 import { zhCNTranslations } from './translations.js'
 
 const require = createRequire(import.meta.url)
-const lightboxStylesPath = require.resolve('yet-another-react-lightbox/styles.css')
+const lightboxStylesPath = new URL('../../../node_modules/yet-another-react-lightbox/dist/styles.css', import.meta.url).pathname
 
 AdminJS.registerAdapter({ Database, Resource })
 
